@@ -28,6 +28,7 @@ use App\Repository\ConfiguracionRepository;
 use App\Repository\DiasPagoRepository;
 use App\Repository\LotesRepository;
 use App\Repository\VwContratoRepository;
+use App\Repository\VwCuotaPendienteRepository;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -52,7 +53,7 @@ class CobranzaController extends AbstractController
      * @Route("/", name="cobranza_index", methods={"GET"})
      */
     public function index(ContratoRepository $contratoRepository, 
-                        CuotaRepository $cuotaRepository,
+                        VwCuotaPendienteRepository $cuotaRepository,
                         ConfiguracionRepository $configuracionRepository,
                         PaginatorInterface $paginator,
                         ModuloPerRepository $moduloPerRepository,
@@ -153,21 +154,21 @@ class CobranzaController extends AbstractController
             case 8:
             case 13:
             
-                $query=$cuotaRepository->findVencimiento(null,null,$compania,$filtro,null,true,$fecha, true,true);
+                $query=$cuotaRepository->findVencimiento(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             case 7://tramitador
-                $query=$cuotaRepository->findVencimiento($user->getId(),null,$compania,$filtro,7,true,$fecha,true,true);
+                $query=$cuotaRepository->findVencimiento($user->getId(),null,$compania,$filtro,7,true,$fecha,true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             case 6: //abogado
-                $query=$cuotaRepository->findVencimiento($user->getId(),null,$compania,$filtro,6,true,$fecha, true,true);
+                $query=$cuotaRepository->findVencimiento($user->getId(),null,$compania,$filtro,6,true,$fecha, true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             case 11://Administrativo
 
                 //$query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha,true);
-                $query=$cuotaRepository->findVencimiento(null,null,$compania,$filtro,null,true,$fecha, true,true);
+                $query=$cuotaRepository->findVencimiento(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
             break;
             case 12://Cobradores
@@ -185,21 +186,21 @@ class CobranzaController extends AbstractController
                     $fecha.="$and co.idLote is null ";
                 }
                 
-                $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha,true,true);
+                $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha,true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             
             case 1://administrador y jefes    
             case 3:
                 $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual()],["valMin"=>'ASC']);
-                $query=$cuotaRepository->findVencimiento(null,null,$compania,$filtro,null,true,$fecha, true,true);
-                $queryTotales=$vwContratoRepository->findVencimientoGroup(null,null,$compania,$filtro,null,true,$fechaVW, true,true);
+                $query=$cuotaRepository->findVencimiento(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
+                $queryTotales=$vwContratoRepository->findVencimientoGroup(null,null,$compania,$filtro,null,true,$fechaVW, true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
 
                 break;
             default:
                 //$query=$contratoRepository->findByPers(null,null,$compania,$filtro,null,$fecha,true);
-                $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha,true,true);
+                $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha,true,true,$status);
                 $companias=$cuentaRepository->findByPers(null);
                 
             break;
@@ -234,10 +235,10 @@ class CobranzaController extends AbstractController
     }
 
     /**
-     * @Route("/cobranza_ia", name="cobranza_index_ia", methods={"GET"})
+     * @Route("/ia", name="cobranza_index_ia", methods={"GET"})
      */
     public function indexIA(ContratoRepository $contratoRepository, 
-                        CuotaRepository $cuotaRepository,
+                        VwCuotaPendienteRepository $cuotaRepository,
                         ConfiguracionRepository $configuracionRepository,
                         PaginatorInterface $paginator,
                         ModuloPerRepository $moduloPerRepository,
@@ -338,21 +339,21 @@ class CobranzaController extends AbstractController
             case 8:
             case 13:
             
-                $query=$cuotaRepository->findVencimiento(null,null,$compania,$filtro,null,true,$fecha, true,true);
+                $query=$cuotaRepository->findVencimientoIA(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             case 7://tramitador
-                $query=$cuotaRepository->findVencimiento($user->getId(),null,$compania,$filtro,7,true,$fecha,true,true);
+                $query=$cuotaRepository->findVencimientoIA($user->getId(),null,$compania,$filtro,7,true,$fecha,true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             case 6: //abogado
-                $query=$cuotaRepository->findVencimiento($user->getId(),null,$compania,$filtro,6,true,$fecha, true,true);
+                $query=$cuotaRepository->findVencimientoIA($user->getId(),null,$compania,$filtro,6,true,$fecha, true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             case 11://Administrativo
 
                 //$query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha,true);
-                $query=$cuotaRepository->findVencimiento(null,null,$compania,$filtro,null,true,$fecha, true,true);
+                $query=$cuotaRepository->findVencimientoIA(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
             break;
             case 12://Cobradores
@@ -370,21 +371,21 @@ class CobranzaController extends AbstractController
                     $fecha.="$and co.idLote is null ";
                 }
                 
-                $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha,true,true);
+                $query=$cuotaRepository->findVencimientoIA(null,null,null,$filtro,null,true,$fecha,true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             
             case 1://administrador y jefes    
             case 3:
                 $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual()],["valMin"=>'ASC']);
-                $query=$cuotaRepository->findVencimiento(null,null,$compania,$filtro,null,true,$fecha, true,true);
-                $queryTotales=$vwContratoRepository->findVencimientoGroup(null,null,$compania,$filtro,null,true,$fechaVW, true,true);
+                $query=$cuotaRepository->findVencimientoIA(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
+                $queryTotales=$vwContratoRepository->findVencimientoGroupIA(null,null,$compania,$filtro,null,true,$fechaVW, true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
 
                 break;
             default:
                 //$query=$contratoRepository->findByPers(null,null,$compania,$filtro,null,$fecha,true);
-                $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha,true,true);
+                $query=$cuotaRepository->findVencimientoIA(null,null,null,$filtro,null,true,$fecha,true,true,$status);
                 $companias=$cuentaRepository->findByPers(null);
                 
             break;
@@ -399,7 +400,7 @@ class CobranzaController extends AbstractController
             100 /*limit per page*/,
             array());
         
-        return $this->render('cobranza/index.html.twig', [
+        return $this->render('cobranza/indexIA.html.twig', [
             'cuotas' => $cuotas,
             'bFiltro'=>$filtro,
             'bFolio'=>$folio,

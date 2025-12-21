@@ -3,21 +3,21 @@
 namespace App\Repository;
 
 use App\Entity\Configuracion;
-use App\Entity\Cuota;
+use App\Entity\VwCuotaPendiente;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @method Cuota|null find($id, $lockMode = null, $lockVersion = null)
- * @method Cuota|null findOneBy(array $criteria, array $orderBy = null)
- * @method Cuota[]    findAll()
- * @method Cuota[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method VwCuotaPendiente|null find($id, $lockMode = null, $lockVersion = null)
+ * @method VwCuotaPendiente|null findOneBy(array $criteria, array $orderBy = null)
+ * @method VwCuotaPendiente[]    findAll()
+ * @method VwCuotaPendiente[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class CuotaRepository extends ServiceEntityRepository
+class VwCuotaPendienteRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Cuota::class);
+        parent::__construct($registry, VwCuotaPendiente::class);
     }
     public function findVencimiento($usuario=null,$empresa=null,$compania=null,$filtro=null,$tipoUsuario=null,$vigente=true, $otros=null,$conrestriccion=true,$esCobranza=false,$segmento=null){
         
@@ -34,7 +34,12 @@ class CuotaRepository extends ServiceEntityRepository
         if($conrestriccion==true){
             if($vigente){
                 if($esCobranza){
-                               
+                    /**
+                     * JRM: 2025-12-20 - Se agrega filtro por segmento, para que muestre solo las cuotas mayores a la 3
+                     */
+                    if($segmento!=null && $segmento==1){
+                        $query->andWhere('c.numero < 3');
+                    }                     
                     $query->andWhere('(c.monto>(c.pagado+'.$configuracion->getDeudaMinima().') or c.pagado is null)');
                    
 
@@ -109,7 +114,12 @@ class CuotaRepository extends ServiceEntityRepository
         if($conrestriccion==true){
             if($vigente){
                 if($esCobranza){
-          
+                    /**
+                     * JRM: 2025-12-20 - Se agrega filtro por segmento, para que muestre solo las cuotas mayores a la 3
+                     */
+                    if($segmento!=null && $segmento==1){
+                        $query->andWhere('c.numero >= 3');
+                    }
                     $query->andWhere('(c.monto>(c.pagado+'.$configuracion->getDeudaMinima().') or c.pagado is null)');
                 }else{
                     $query->andWhere('c.monto>=(c.pagado+'.$configuracion->getDeudaMinima().') or c.pagado is null');

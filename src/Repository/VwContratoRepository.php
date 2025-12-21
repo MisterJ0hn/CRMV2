@@ -535,7 +535,7 @@ class VwContratoRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();*/
     }
 
-    public function findVencimientoGroup($usuario=null,$empresa=null,$compania=null,$filtro=null,$tipoUsuario=null,$vigente=true, $otros=null,$conrestriccion=true,$esCobranza=false){
+    public function findVencimientoGroup($usuario=null,$empresa=null,$compania=null,$filtro=null,$tipoUsuario=null,$vigente=true, $otros=null,$conrestriccion=true,$esCobranza=false,$segmento=null){
         $query=$this->createQueryBuilder('c');
 
         $query->select(array('c','count(c.id)','sum(c.monto)'));
@@ -545,7 +545,69 @@ class VwContratoRepository extends ServiceEntityRepository
         
         if($conrestriccion==true){
             if($vigente){
-               
+               if($segmento!=null && $segmento==1){
+                    $query->andWhere(' c.numero < 3');
+               }
+                $query->andWhere(' c.isFinalizado = false or c.isFinalizado is null'); 
+
+            }else{
+                $query->andWhere(' c.isFinalizado=true');
+            }
+        }
+        
+
+        if(!is_null($empresa)){
+            
+            $query->andWhere('cu.empresa = '.$empresa);
+        }
+        switch($tipoUsuario){
+            case 6://Abogado
+                if(!is_null($usuario)){
+                    $query->andWhere('a.abogado = '.$usuario)
+                    ->andWhere("DATEDIFF(now(),c.fechaPago)<=30")
+                    ->andWhere("c.numero=1");
+
+                }
+                break;
+            case 7://Tramitador
+                if(!is_null($usuario))
+                    $query->andWhere('c.tramitador = '.$usuario);
+                break;
+        }
+        
+        
+        if(!is_null($filtro)){ 
+            $query->andWhere("(c.nombre like '%$filtro%' or c.rut like '%$filtro%')")
+         ;
+
+        }
+        if(!is_null($compania)){
+            $query->andWhere('a.cuenta = '.$compania);
+        }
+        
+        if(!is_null($otros) && $otros!=''){ 
+            $query->andWhere($otros)
+         ;
+
+        }
+    
+        return $query->getQuery()
+            ->getResult()
+        ;
+    }
+    public function findVencimientoGroupIA($usuario=null,$empresa=null,$compania=null,$filtro=null,$tipoUsuario=null,$vigente=true, $otros=null,$conrestriccion=true,$esCobranza=false,$segmento=null){
+        $query=$this->createQueryBuilder('c');
+
+        $query->select(array('c','count(c.id)','sum(c.monto)'));
+       
+        $query->join('c.agenda','a');
+        $query->join('a.cuenta','cu');
+        
+        if($conrestriccion==true){
+            if($vigente){
+               if($segmento!=null && $segmento==1){
+                    $query->andWhere(' c.numero >= 3');
+               }
                 $query->andWhere(' c.isFinalizado = false or c.isFinalizado is null'); 
 
             }else{
