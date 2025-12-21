@@ -1,0 +1,9 @@
+# /config/packages/knp_snappy.yaml
+knp_snappy:
+  process_timeout: 60
+  pdf: 
+    enabled: true
+    binary: "wkhtmltopdf"
+    options:
+      []
+  temporary_folder: "%kernel.cache_dir%/snappy"

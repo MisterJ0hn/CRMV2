@@ -1,0 +1,46 @@
+{{ form_start(form) }}
+    <div class="card">
+	<div class="card-body">
+
+		<section>	
+			<div class="row">
+                <div class="col-sm-6 col-md-6">
+					<small class="text-muted">Nombre</small>
+					{{form_row(form.nombre,{'label':false,'attr':{'class':'form-control','maxlength':'50'}})}}
+				</div>
+				<div class="col-sm-6 col-md-3">
+					<small class="text-muted">{{nombreCuenta|default('Compañia')}} *</small>
+				
+					<select name="cboEmpresa[]" class="select2" multiple="multiple" data-placeholder="Selecciona compañias" style="width: 100%;" required>
+						<option></option>
+						{% for cuenta in cuentas %}
+							<option value="{{cuenta.id}}"
+							{% if cuentas_sel is defined %}
+								{% for usuarioCuent in cuentas_sel %}
+									{% if usuarioCuent.cuenta.id==cuenta.id %}
+										selected
+									{% endif %}
+								{% endfor %}
+							{% endif %}
+							>{{cuenta.nombre}}</option>
+						{% endfor %}}
+					</select>
+				</div>
+
+
+
+
+            </div>
+        </section>
+    </div>
+    <div class="card-footer">
+    <button class="btn btn-success">{{ button_label|default('Guardar') }}</button>
+    </div>
+    <script>
+		$(function () {
+			//Initialize Select2 Elements
+			$('.select2').select2();
+			
+		});
+	</script>
+{{ form_end(form) }}

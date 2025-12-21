@@ -1,0 +1,1 @@
+INSERT INTO `codi_ejamtest`.`modulo` (`id`, `nombre`, `ruta`, `nombre_alt`, `descripcion`) VALUES (NULL, 'reporte_encuestas', 'reporte_encuestas', 'Reporte Encuestas', NULL), (NULL, 'reporte_gestiones', 'reporte_gestiones', 'Reporte Gestiones', NULL);

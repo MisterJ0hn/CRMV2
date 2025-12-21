@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Importacion index{% endblock %}
+
+{% block body %}
+<div class="card">
+    <div class="card-header">
+        <a href="{{ path('importacion_new') }}" class="btn btn-primary"><i class="fas fa-file-upload"></i></a>
+    </div>
+    <div class="card-body">
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>{{ knp_pagination_sortable(importacions, 'Nombre Archivo', 'nombre') }} {% if importacions.isSorted('nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                <th>{{ knp_pagination_sortable(importacions, 'Usuario carga', 'usuarioCarga.nombre') }} {% if importacions.isSorted('usuarioCarga.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                <th>{{ knp_pagination_sortable(importacions, 'Fecha carga', 'fechaCarga') }} {% if importacions.isSorted('fechaCarga') %} <i class="fas fa-sort"></i>{% endif %}</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for importacion in importacions %}
+            <tr>
+                <td>{{ importacion.id }}</td>
+                <td>{{ importacion.nombre }}</td>
+                <td>{{ importacion.usuarioCarga.nombre }}</td>
+                <td>{{ importacion.fechaCarga ? importacion.fechaCarga|date('Y-m-d H:i:s') : '' }}</td>
+                
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4">no hay importaciones</td>
+            </tr>
+        {% endfor %}
+        <div class="navigation">
+               {{ knp_pagination_render(importacions,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
+               'position': 'centered',
+               'rounded': true,
+               }) }}
+           </div>
+        </tbody>
+    </table>
+</div>
+</div>
+    
+{% endblock %}

@@ -1,0 +1,95 @@
+
+<div class="card">
+    <div class="card-body">
+        
+        {{ form_start(form) }}
+        <div class="row">
+        <div class="col-sm-6 col-md-2">
+                <small class="text-muted">Destino</small><br>
+                <select name="cboDestino" class="form-control destino" required>
+                    <option value=''>Seleccione Destino</option>
+                    {% for usuarioTipo in usuarioTipos %}
+                        {% if usuarioTipo.id != 9  %}
+                        {% if usuarioTipo.id != 8  %}
+                   
+                        {% if usuarioTipo.id != 1  %}
+                        
+                        <option value="{{usuarioTipo.id}}">{{usuarioTipo.nombre}}</option>
+               
+                        {% endif %}
+                        {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                </select>
+            </div>
+            <div class="col-sm-6 col-md-1 ">
+                <div class="loading"></div>
+            </div>
+            <div class="col-sm-6 col-md-2">
+                <small class="text-muted">Encargado</small><br>
+                <select name="cboEncargado" class="form-control encargado" required>
+                    <option value=''>Seleccione Usuario</option>
+                    
+                </select>
+                <p class="encargado-bloqueado"></p>
+            </div>
+            <div class="col-sm-6 col-md-2">
+                 <small class="text-muted" >Categorización *</small>
+                {{form_row(form.importancia,{'label':false,'attr':{'class':'form-control importancia','required':true}})}}
+            </div>
+            <div class="col-sm-6 col-md-2">
+                <small class="text-muted">Fecha Resuelto</small><br>
+                
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted">Fecha Cerrado</small><br>
+            </div>
+            <div class="col-sm-6 col-md-9">
+                 <small class="text-muted t-cuotas" >Comentario: max 500 caract. *</small>
+                {{form_row(form.motivo,{'label':false,'attr':{'class':'form-control cuotas number','required':true,'autocomplete':"ÑÖcompletes","size":500}})}}
+            </div>
+            <div class="col-sm-6 col-md-3 p-4">
+                <button class="btn btn-primary">{{ button_label|default('Ingresar Ticket') }}</button>
+            </div>
+        </div>
+        {{ form_end(form) }}
+        
+    </div>
+</div>
+<script>
+    $('.destino').on('change',function(){
+        $.ajax({
+            url:"/ticket/{{contrato_id}}/usuarios",
+            type: "get",
+            dataType: "html",
+            data: "perfil_id="+$(this).val(),
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+                $(".encargado").show();
+                $(".encargado-bloqueado").html("");
+                $(".loading").html(' <div class="overlay"><i class="fas fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+                
+            },
+            success:function(data){
+                $(".encargado").html(data);
+                $(".loading").html('');
+                if($(".encargado").val()!=""){
+                    $(".encargado").hide();
+                    $(".encargado-bloqueado").html($('.encargado option:selected').text());
+                }
+            }
+
+        });
+    });
+
+    $('.importancia').append($('<option>', {
+        value: 0,
+        text: 'Seleccione'
+    }));
+    $('.importancia').val('0').change();
+
+</script>

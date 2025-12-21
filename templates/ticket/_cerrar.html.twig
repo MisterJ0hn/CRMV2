@@ -1,0 +1,35 @@
+{{ form_start(form) }}
+            {{form_row(form.motivo,{'label':false,'attr':{'class':'form-control cuotas number','required':true,'style':'visibility:hidden'}})}}
+        
+        <div class="row">
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted">Destino</small><br>
+                {{ ticket.destino.nombre }}
+            </div>
+            <div class="col-sm-6 col-md-1 ">
+                <div class="loading"></div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted">Encargado</small><br>
+                {{ ticket.encargado.nombre }}
+            </div>
+            <div class="col-sm-6 col-md-5">
+                <small class="text-muted">Categorización</small><br>
+                {{ ticket.importancia.Categorizacion }}
+            </div>
+            <div class="col-sm-6 col-md-2">
+                <small class="text-muted">Fecha Resuelto</small><br>
+                {{ ticket.fechaRespuesta ? ticket.fechaRespuesta|date('Y-m-d H:i'):''}}
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted">Fecha Ultima Gestión</small><br>
+                {{ ticket.fechaUltimaGestion ? ticket.fechaUltimaGestion|date('Y-m-d H:i'):''}}
+            </div>
+             <div class="col-sm-12 col-md-12">
+                           </div>
+
+            <div class="col-sm-12 col-md-12">
+                
+            </div>
+        </div>
+{{ form_end(form) }}

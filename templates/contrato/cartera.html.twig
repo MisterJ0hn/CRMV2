@@ -1,0 +1,92 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Editar Cartera{% endblock %}
+
+{% block body %}
+
+<div class="row">
+    <div class="col-sm-12  col-md-8">
+
+        <div class="card">
+            <div class="card-header">
+                <h1>Folio: {{contrato.id}}</h1>
+            </div>
+            <div class="card-body table-responsive pad">
+                <form action="{{path('contrato_cartera',{'id':contrato.id}) }}" method="POST">
+                    <div class="row">
+                        <div class="col-sm-6 col-md-3">
+                            <small class="text-muted">Cartera</small><br>
+                            <select name="cboCarteras" id="" class="form-control carteras">
+                                {% for cartera in carteras %}
+                                    <option value="{{cartera.id}}"
+                                    {% if cartera.id == contrato.cartera.id %}
+                                        selected
+                                    {% endif %}
+                                    >{{cartera.nombre}}</option>
+                                {% endfor %}
+                            </select>
+                            
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <small class="text-muted">Tramitador</small><br>
+                            <div class="asociado"></div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12 col-md-3">
+                            <button class="btn btn-primary">Modificar</button>
+                            
+                        </div>
+                        </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+   
+    $.ajax({
+    url:"/contrato/"+$(".carteras").val()+"/tramitador",
+    type: "post",
+    dataType: "html",
+    cache: false,
+    contentType: false,
+    processData: false,
+    async: true,
+    beforeSend: function(){
+        //$("#status").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+        
+    },
+    success:function(data){
+        console.log(data);
+        data_array= JSON.parse(data);
+        console.log(data_array);
+        $(".asociado").html(data_array['nombre']);
+        //$("#contrato").html("");
+    }});    
+
+    $(".carteras").on('change',function(){
+        $.ajax({
+            url:"/contrato/"+$(this).val()+"/tramitador",
+            type: "post",
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+                //$("#status").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+                
+            },
+            success:function(data){
+                console.log(data);
+                data_array= JSON.parse(data);
+                console.log(data_array);
+                $(".asociado").html(data_array['nombre']);
+                //$("#contrato").html("");
+            }});
+        
+    })
+</script>
+{% endblock %}

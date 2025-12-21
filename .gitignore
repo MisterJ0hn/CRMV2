@@ -1,0 +1,6 @@
+/var/
+/vendor/
+/bin/
+/1.-\ entregables/
+/public
+.env

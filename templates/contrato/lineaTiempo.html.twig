@@ -1,0 +1,355 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Contrato{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-sm-12 col-md-12">
+        <div class="card">
+            <div class="card-body table-responsive pad">
+                <h1>Folio: {{contrato.folio}}</h1>
+                <h4>Datos Cliente</h4>
+                <div class="row">
+                    <div class="col-sm-12 col-md-4">
+                        <small class="text-muted">Compañia</small>
+                        <p>{{contrato.agenda.cuenta}}</p>
+                    </div>
+                    <div class="col-sm-12 col-md-4">
+                        <small class="text-muted">Sucursal</small>
+                        <p>{{contrato.sucursal.nombre}}</p>   
+                        
+                    </div>
+                    <div class="col-sm-12 col-md-4">
+                        <small class="text-muted">Clave Unica</small>
+                        <div class="input-group">
+                            <input type="password" name="txtClaveUnica" id="txtClaveUnica" value="{{contrato.claveUnica}}">  
+                            <div class="input-group-append">
+                                <button type="button" class="btn btn-primary btn-ver" ><i class="fa fa-eye"></i></button>
+                                <button type="button" class="btn btn-danger btn-ocultar" ><i class="fa fa-eye-slash"></i></button>
+                                <button type="button" class="btn btn-success btn-modificar" ><i class="fas fa-edit"></i></button>
+                                <button type="button" class="btn btn-secondary btn-OK"><i class="fas fa-check"></i></button>
+
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-4">
+                        <small class="text-muted">Abogado</small><br>
+                        <p>{{contrato.agenda.abogado.nombre}}</p>                    
+                    </div>
+                    <div class="col-sm-12 col-md-4">
+                        <small class="text-muted">Tramitador</small><br>
+                        <p>{{contrato.tramitador ? contrato.tramitador.nombre:''}}</p>                    
+                    </div>
+                    <div class="col-sm-12 col-md-4">
+                        <small class="text-muted">Fecha Contrato</small><br>
+                        <p>{{contrato.fechaCreacion|date('Y-m-d')}}</p>                    
+                    </div>
+                    
+                    <div class="col-sm-12 col-md-4">
+                        <small class="text-muted">Nombre</small><br>
+                        <p>{{contrato.nombre}}</p>                    
+                    </div>
+                    <div class="col-sm-12 col-md-4">
+                        <small class="text-muted">Rut</small><br>
+                        <p>{{contrato.rut}}</p>    
+                    </div>
+                    <div class="col-sm-12 col-md-4">
+                        <small class="text-muted">Teléfono</small><br>
+                        <p>{{contrato.telefono}}</p>   
+                    </div>
+                    <div class="col-sm-12 col-md-4">
+                        <small class="text-muted">Teléfono Recado</small><br>
+                    
+                        <p>{{contrato.telefonoRecado}}</p>   
+                    </div>
+                    <div class="col-sm-12 col-md-4">
+                        <small class="text-muted">Email</small><br>
+                        <p>{{contrato.email}}</p>   
+                    </div>
+
+                    <div class="col-sm-12 col-md-3">
+                        <small class="text-muted">Dirección</small><br>
+                        
+                        <p>{{contrato.direccion}}</p>   
+                    </div>
+                </div>
+            </div>
+            {% if contrato.contratoCasetrackings|length >0  %}
+                
+            
+            <div class="card-footer">
+                 <a href="{{path('contrato_archivos_casetracking',{'id':contrato.id})}}" type="button" class="btn btn-primary" >Archivos CaseTracking</a> 
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12 col-md-12">
+                <div class="card">
+                    
+                    <div class="card-body table-responsive">
+                        <!-- The time line -->
+                        <div class="row">
+                            <a class="btn btn-primary" data-toggle="collapse" href="#collapseExample" role="button" aria-expanded="false" aria-controls="collapseExample"><i class="fa fa-plus bg-blue"></i></a>
+                            &nbsp; &nbsp;
+                            <h3>Contacto al Cliente</h3>
+                        </div>
+                        
+                        <div >
+                            <form  id="frmObservacion" class="frmObservacion" method="post" action="{{path('contrato_observacion_sac',{'id':contrato.id}) }}" onsubmit="return confirm('Estas seguro de ingresar esta observación?');" required>
+                             
+                                <textarea class="form-control" name="txtObservacion"></textarea>
+                                <button class="btn btn-primary" >Guardar Observación</button>
+                            </form>
+
+                        </div>
+                        
+                        <div class="collapse" id="collapseExample">
+                            <div class="timeline">
+                            <!-- timeline time label -->
+                               
+                            {% for observacion in observaciones %}
+                                <div>
+                                    <i class="fa fa-comments bg-blue"></i>
+                                    <div class="timeline-item">
+                                        <span class="time"><i class="fas fa-clock"></i>{{ observacion.fechaRegistro | date('Y-m-d H:i') }}</span>
+                                        <h3 class="timeline-header"><a href="#">{{ observacion.usuarioRegistro.nombre }}</a> <!-- usuario --> </h3>
+
+                                        <div class="timeline-body">
+                                            {{ observacion.observacion | raw }}
+                                        </div>
+                                    
+                                    </div>
+                                </div>
+                            {% endfor %}
+                                <div>
+                                    <i class="fa fa-comments bg-blue"></i>
+                                    <div class="timeline-item">
+                                        <span class="time"><i class="fas fa-clock"></i>{{ contrato.fechaCreacion | date('Y-m-d H:i') }}</span>
+                                        <h3 class="timeline-header"><a href="#">{{ contrato.agenda.abogado.nombre}}</a> <!-- usuario --> </h3>
+
+                                        <div class="timeline-body">
+                                            {{ contrato.observacion | raw }}
+                                        </div>
+                                    
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-body table-responsive pad">
+                <table class="table table-head-fixed text-nowrap table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Servicio</th>
+                            <th>Causa/Rol</th>
+                            <th>Id Causa</th>
+                            <th>Caratulado</th>
+                            <th>Juzgado</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    {% for causa in contrato.agenda.causas %}
+                    {% if causa.estado == true %}
+                        <tr>
+                            <td>
+                            {{causa.id}}
+                            </td>
+                            <td>
+                                {{causa.materiaEstrategia.estrategiaJuridica}}
+                            </td>
+                             <td>
+                                {{causa.letra}}-{{causa.rol}}-{{causa.anio}}
+                            </td>
+                            <td>
+                                {{causa.idCausa}}
+                            </td>
+                            <td>
+                                {{causa.causaNombre}}
+                            </td>
+                            <td>
+                                {{causa.juzgadoCuenta is null?'':causa.juzgadoCuenta.juzgado}}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
+                                    {% if causa.causaFinalizada %}
+                                        <a href="#" class="btn  btn-sm btn-success"><i class="fas fa-check-circle"></i></a>
+                                    {% else %}
+                                        <a href="#" class="btn  btn-sm btn-danger"><i class="fas fa-times"></i></a>
+                                    {% endif %}
+                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" 
+                                        data-whatever="@fat"
+                                        data-servicio="{{causa.materiaEstrategia.estrategiaJuridica}}"
+                                        data-idcausa="{{causa.idCausa}}"
+                                        data-letra="{{causa.letra}}"
+                                        data-rol="{{causa.rol}}"
+                                        data-anio="{{causa.anio}}"
+                                        data-nombre="{{causa.causaNombre}}"
+                                        data-juzgado="{{causa.juzgadoCuenta is null?'':causa.juzgadoCuenta.id}}"
+                                        data-causa="{{causa.id}}"
+                                        ><i class="fas fa-edit"></i></button>
+                                        <a href="{{ path('contrato_linea_tiempo_detalle', {'id': causa.id}) }}" class="btn  btn-sm text-white bg-dark">LT</a>
+                                        <a href="{{path('contrato_archivos_index',{'id':causa.id})}}" type="button" class="btn btn-success btn-sm" ><i class="fas fa-paperclip"></i></a>
+                                        {% if causa.materiaEstrategia.estrategiaJuridica.id == 4 %}
+                                          <a href="{{path('contrato_linea_tiempo_reporte',{'id':causa.id})}}" type="button" class="btn btn-warning btn-sm" ><i class="fas fa-clipboard-list"></i></a>                                          
+                                        {% endif %}
+                                </div>                        
+                            </td>
+                        </tr>
+                    {% endif %}
+                    {% endfor %}
+                </table>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+ 
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Editar</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="" method="post" id="frmEditar">
+                <div class="row">
+                    <div class="col-sm-12 col-md-6 submateria">
+                        
+                    </div>
+                    <div class="col-sm-12 col-md-3 "> 
+
+                        <div class="row">
+                            <div class="col-sm-12 col-md-3 ml-0 mr-0 pl-0 pr-0">
+                                <input type="text" name="txtLetra" placeholder="Letra" class="form-control txtLetra" size="3" maxlength="10"> 
+                            </div>
+                            <div class="col-sm-12 col-md-1 ml-0 mr-0 pl-0 pr-0" align="center">
+                                -
+                            </div>
+                            <div class="col-sm-12 col-md-3 ml-0 mr-0 pl-0 pr-0">
+                                <input type="text" name="txtRol" placeholder="N°" class="form-control txtRol" size="6" maxlength="255">
+                            </div>
+                            <div class="col-sm-12 col-md-1 ml-0 mr-0 pl-0 pr-0" align="center">
+                                -
+                            </div>
+                            <div class="col-sm-12 col-md-3 ml-0 mr-0 pl-0 pr-0">
+                                <input type="text" name="txtAnio" placeholder="Año" class="form-control txtAnio" size="4" maxlength="4">
+                            </div>
+
+                        </div>
+                        <small class="text-muted">Formato: Letra-Rol-Año</small>
+                    </div>  
+                    <div class="col-sm-12 col-md-3 ">
+                        <p class="txtNombreCausa"></p>
+                        
+                        
+                    </div> 
+                    <div class="col-sm-12 col-md-6 ">
+                        <input type="text" name="txtCaratulado" placeholder="Caratulado" class="form-control txtCaratulado" size="50" maxlength="30">
+                        <small class="text-muted">Caracteres max. 50</small>
+                    </div> 
+                    <div class="col-sm-12 col-md-6">
+                        
+                        <select name="juzgado" class="form-control juzgado">
+                            <option value=""> Seleccione Juzgado </option>
+                            {% for juzgado in juzgados %}
+                                <option value="{{juzgado.juzgado.id}}">{{juzgado.juzgado.nombre}}</option>
+                            {% endfor %}
+                        </select> 
+                    </div>   
+                    <div class="col-sm-12 col-md-12">
+                        <input type="hidden" class="hdCausa">
+                        <button type="submit" class="btn btn-primary btn-agregar" >Modficar</button>
+
+                    </div>  
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $('.btn-ocultar').hide();
+    $('.btn-modificar').hide();
+     $('.btn-OK').hide();
+    $('#exampleModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget) // Button that triggered the modal
+        var recipient = button.data('whatever')
+        var causa = button.data('causa')
+        var idCausa = button.data('idcausa')
+        var servicio = button.data('servicio')
+        var nombre = button.data('nombre')
+        var juzgado = button.data('juzgado')
+        var anio = button.data('anio')
+        var rol = button.data('rol')
+        var letra = button.data('letra')
+        var url=button.data('url') // Extract info from data-* attributes
+        // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+        // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+        
+        $(".submateria").html(servicio)
+        $(".txtNombreCausa").html(idCausa)
+        $(".txtLetra").val(letra)
+        $(".txtRol").val(rol)
+        $(".txtAnio").val(anio)
+        $(".txtCaratulado").val(nombre)
+        $(".juzgado").val(juzgado)
+        $(".hdCausa").val(causa)
+        $("#frmEditar").attr("action","/contrato/"+causa+"/modificar_servicio")
+        
+
+    })
+
+    $('.btn-ver').on('click', function () {
+        $("#txtClaveUnica").attr('type', 'text'); 
+        $(this).hide();
+        $('.btn-ocultar').show();
+    });
+    $('.btn-ocultar').on('click', function () {
+        $("#txtClaveUnica").attr('type', 'password'); 
+        $(this).hide();
+        $('.btn-ver').show();
+    });
+    $("#txtClaveUnica").on('change',function(){
+        $('.btn-modificar').show();
+        $('.btn-OK').hide();
+    })
+    $('.btn-modificar').on('click',function(){
+        $.ajax({
+            url:"{{path('contrato_mod_clave_unica',{'id':contrato.id})}}",
+            type: "get",
+            data:"txtClaveUnica="+encodeURIComponent($('#txtClaveUnica').val()),
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+                
+            },
+            success:function(data){
+                $('.btn-OK').show();
+                $('.btn-modificar').hide();
+                $('.btn-OK').hide(3000);
+            }
+
+        });
+    });
+    
+</script>
+{% endblock %}

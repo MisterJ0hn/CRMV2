@@ -1,0 +1,142 @@
+{{ form_start(form,{'attr':{'onsubmit':'return validarut()'}}) }}
+    
+
+    <div class="row">
+        <div class="col-sm-6 col-md-3">
+            <small class="text-muted">Nombre Cliente</small>
+            {{form_row(form.nombreCliente,{'label':false,'attr':{'class':'form-control','required':true}})}}
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <small class="text-muted">Rut Cliente</small>
+            {{form_row(form.rutCliente,{'label':false,'attr':{'class':'form-control format-rut'}})}}
+        </div>
+       
+        <div class="col-sm-6 col-md-3">
+            <small class="text-muted">Email Cliente</small>
+            {{form_row(form.emailCliente,{'label':false,'attr':{'class':'form-control'}})}}
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <small class="text-muted">Telefono Movil</small>
+            {{form_row(form.telefonoCliente,{'label':false,'attr':{'class':'form-control telefonoCliente','required':true}})}}
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <small class="text-muted">Telefono Recado Cliente</small>
+            {{form_row(form.telefonoRecadoCliente,{'label':false,'attr':{'class':'form-control telefonoRecado'}})}}
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <small class="text-muted">Ciudad Cliente</small>
+            {{form_row(form.ciudadCliente,{'label':false,'attr':{'class':'form-control'}})}}
+        </div>
+
+        <div class="col-sm-6 col-md-3">
+            <small class="text-muted">Canal</small>
+            {{form_row(form.canal,{'label':false,'attr':{'class':'form-control canal'}})}}
+            
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <small class="text-muted">Compañia</small>
+            <select name="cboCuenta" class="form-control" onchange="javascript:agendadores(this.value)" required>
+                <option value=""></option>
+   
+                {% for cuenta in cuentas %}
+                    <option value="{{cuenta.id}}">{{cuenta.nombre}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-sm-6 col-md-3" id="agendadores">
+            
+            
+        </div>
+
+        <div class="col-sm-6 col-md-12">
+            <small class="text-muted">Mas Información</small>
+            {{form_row(form.obsFormulario,{'label':false,'attr':{'class':'form-control','sizes':'3' }})}}
+            
+        </div>
+    </div>
+    <button type="button" class="btn btn-primary btn-cargar">{{ button_label|default('Cargar') }}</button>
+{{ form_end(form) }}
+
+<script>
+    $('.canal').append($('<option>', {
+        value: 0,
+        text: 'Seleccione'
+    }));
+    $('.canal').val('0').change();
+
+
+    $(".format-rut").rut();
+    function agendadores(id){
+        if(id>0){
+            $.ajax({
+                url:"/agenda/"+id+"/agendadores",
+                type: "post",
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                async: true,
+                beforeSend: function(){
+                    $("#agendadores").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+                    
+                },
+                success:function(data){
+                    $("#agendadores").html(data);
+                }
+        
+            });
+        }else{
+            $("#agendadores").html('Sin Agendadores');
+        }
+        
+        
+    }
+    
+    function validarut(){
+
+        if($(".format-rut").val()=="") return true;
+        if($.validateRut($(".format-rut").val())) {
+            return true;
+        }
+        alert("Rut no valido");
+        $(".format-rut").focus();
+        return false;
+    }
+    function validarTelefono(telefono){
+        var resultado=false;
+        $.ajax({
+                url:"/agenda/"+telefono+"/validartelefonoagenda",
+                type: "get",
+                dataType: "json",
+                cache: false,
+                contentType: false,
+                processData: false,
+                async: false,
+                success:function(data){
+                    console.log("data",data);
+                    resultado = data.valido;
+                }
+        
+            });
+            return resultado;
+    }
+
+    $(".btn-cargar").click(function(){
+        console.log("click btn-cargar");
+        
+        var registrar1=validarTelefono($(".telefonoCliente").val());
+        var registrar2=validarTelefono($(".telefonoRecado").val());
+        console.log("registrar1",registrar1);
+        console.log("registrar2",registrar2);   
+
+        if( !registrar1 || !registrar2){
+            if(!confirm("El teléfono ya se encuentra registrado en la agenda. ¿Desea continuar?")){
+                return false;
+            }       
+        }
+        $("form").submit();
+    });
+
+  
+
+</script>

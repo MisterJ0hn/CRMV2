@@ -1,0 +1,80 @@
+{{ form_start(form) }}
+<section>
+<div class="row">
+    <div class="col-sm-12  col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h1>Configuraciones Comisiones</h1>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-12 col-md-3">
+                        <small class="text-muted">Dias max. comision cobrador</small>
+                        {{form_row(form.maxDiasComision,{'label':false,'attr':{'class':'form-control'}})}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-12  col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h1>Configuraciones Desiste</h1>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-12 col-md-3">
+                        <small class="text-muted">Valor Multa</small>
+                        {{form_row(form.valorMulta,{'label':false,'attr':{'class':'form-control'}})}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
+<section>
+<div class="row">
+    <div class="col-sm-12  col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h1>Configuraciones Toku</h1>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <small class="text-muted">Toku Secret</small>
+                        {{form_row(form.tokuSecret,{'label':false,'attr':{'class':'form-control'}})}}
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <small class="text-muted">Api Key</small>
+                        {{form_row(form.tokuId,{'label':false,'attr':{'class':'form-control'}})}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-12  col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h1>Configuraciones FanPage</h1>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-12 col-md-6">
+                        <small class="text-muted">Access Token</small>
+                        {{form_row(form.accessToken,{'label':false,'attr':{'class':'form-control'}})}}
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <small class="text-muted">Verify Token</small>
+                        {{form_row(form.verifyToken,{'label':false,'attr':{'class':'form-control'}})}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</section>      
+    <button class="btn btn-primary">{{ button_label|default('Save') }}</button>
+{{ form_end(form) }}

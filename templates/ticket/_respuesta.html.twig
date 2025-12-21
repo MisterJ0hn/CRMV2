@@ -1,0 +1,61 @@
+{{ form_start(form,{'attr':{'id':'frmResuelto'}}) }}
+            {{form_row(form.motivo,{'label':false,'attr':{'class':'form-control cuotas number','required':true,'style':'visibility:hidden'}})}}
+            <input type="hidden" id="hdSoloObservacion" name="hdSoloObservacion" value="0">
+            <input type="hidden" id="hdRechazada" name="hdRechazada" value="0">
+        <div class="row">
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted">Destino</small><br>
+                {{ ticket.destino.nombre }}
+            </div>
+            <div class="col-sm-6 col-md-1 ">
+                <div class="loading"></div>
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted">Encargado</small><br>
+                {{ ticket.encargado.nombre }}
+            </div>
+            <div class="col-sm-6 col-md-5">
+                <small class="text-muted">Categorización</small><br>
+                {{ ticket.importancia.Categorizacion }}
+            </div>
+            <div class="col-sm-6 col-md-4">
+                <small class="text-muted">F. Resuelto</small><br>
+                {{ ticket.fechaRespuesta ? ticket.fechaRespuesta|date('Y-m-d H:i'):''}}
+            </div>
+            <div class="col-sm-6 col-md-3">
+                <small class="text-muted">F. Ult. Gestión</small><br>
+                <label></label>
+            </div>
+             <div class="col-sm-12 col-md-12">
+                <h4>Comentario</h4>
+                
+                <input type="text" class="form-control txtObservacion" name="txtObservacion" size=500 required>
+                 <small class="text-muted">max 500 caract.</small><br><br>
+            </div>
+
+            <div class="col-sm-12 col-md-12">
+                <button class="btn btn-primary">Resuelto</button> 
+                <button type="button" class="btn btn-secondary btn-observacion">Grabar Observación</button> 
+                <button type="button" class="btn btn-danger btn-rechazar" {% if rechazado %}
+                    hidden
+                {% endif %}>Rechazar</button>
+                <button type="button" class="btn btn-info" data-toggle="modal" data-target="#card-reasignar">Reasignar</button>
+            </div>
+        </div>
+{{ form_end(form) }}
+
+<script>
+    $(".btn-observacion").click(function(){
+        $("#hdSoloObservacion").val(1);
+        $("#frmResuelto").submit();
+    });
+    $(".btn-rechazar").click(function(){
+
+        if($(".txtObservacion").val().length < 1){
+            alert("Ingrese un comentario para continuar.");
+        }else{
+            $("#hdRechazada").val(1);
+            $("#frmResuelto").submit();
+        }
+    });
+</script>

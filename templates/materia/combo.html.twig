@@ -1,0 +1,4 @@
+
+{% for materia_cuenta in cuenta_materias %}
+<option value="{{ materia_cuenta.materia.id }}" selected>{{ materia_cuenta.materia.nombre }}</option>
+{% endfor %}

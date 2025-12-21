@@ -1,0 +1,140 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Pagos{% endblock %}
+
+{% block body %}
+<section>
+{% if sesion.getSesion.usuarioTipo.id == 1 %}
+    <div class="alert alert-warning">
+        <h1>Total Pagos: <strong>${{total|number_format(0,',','.')}}</strong></h1>
+    </div>
+{% endif %}
+    
+
+</section>
+    <form action="" class="form-envio" method="get">
+        {{ include('/cuadrosBusquedas/busquedaContrato.html.twig', {'TipoFiltro':TipoFiltro}) }}
+    </form>
+    <div class="card">
+        
+        <div class="card-body table-responsive p-0" style="height: 500px;">
+        
+            <div class="col-md-6 col-sm-12">
+
+            
+            <table class="table table-head-fixed text-nowrap table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>{{ knp_pagination_sortable(pagos, 'Folio', 'pago.contrato.folio') }} {% if pagos.isSorted('pago.contrato.folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                         <th>{{ knp_pagination_sortable(pagos, 'AgendaId', 'pago.contrato.agenda.id') }} {% if pagos.isSorted('pago.contrato.agenda.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        
+                        <th>{{ knp_pagination_sortable(pagos, 'Id Pago', 'pago.id') }} {% if pagos.isSorted('pago.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>Cuota</th>
+                        
+                        <th>{{ knp_pagination_sortable(pagos, 'Cliente', 'pago.contrato.nombre') }} {% if pagos.isSorted('pago.contrato.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>Colaborador</th>
+                        <th>{{ knp_pagination_sortable(pagos, 'Fecha Pago', 'pago.fechaPago') }} {% if pagos.isSorted('pago.fechaPago') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(pagos, 'Fecha Registro', 'pago.fechaRegistro') }} {% if pagos.isSorted('pago.fechaRegistro') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(pagos, 'Tipo Deposito', 'pago.pagoTipo') }} {% if pagos.isSorted('pago.pagoTipo') %} <i class="fas fa-sort"></i>{% endif %}</th> 
+                        <th>{{ knp_pagination_sortable(pagos, 'Cta. Cte.', 'pago.cuentaCorriente') }} {% if pagos.isSorted('pago.cuentaCorriente') %} <i class="fas fa-sort"></i>{% endif %}</th> 
+                        
+                        <th>{{ knp_pagination_sortable(pagos, 'Canal', 'pago.pagoCanal') }} {% if pagos.isSorted('pago.pagoCanal') %} <i class="fas fa-sort"></i>{% endif %}</th> 
+                        <th>{{ knp_pagination_sortable(pagos, 'Boleta', 'pago.boleta') }} {% if pagos.isSorted('pago.boleta') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(pagos, 'Monto Pagado', 'pago.monto') }} {% if pagos.isSorted('pago.monto') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                {% set total=0 %}
+                {% set num=1 %}
+                {% for pago in pagos %}
+              
+                
+                    <tr>
+                        <td>{{ pago.contrato.folio }}</td>
+                        <td>{{ pago.contrato.agenda.id }}</td>
+                        <td>{{ pago.id }}</td>
+                        <td>{% for pagoCuota in pago.pagoCuotas %}
+                            {{ pagoCuota.cuota.numero }}
+                            {% if not loop.last %}
+                                ,
+                            {% endif %}
+                        {% endfor %}</td>
+                        <td>{{ pago.contrato.nombre }}
+                        <td>{{ pago.usuarioRegistro.nombre}}</td>
+                        <td>{{ pago.fechaPago|date("Y-m-d H:i")}}</td>
+                        <td>{{ pago.fechaRegistro|date("Y-m-d H:i") }}</td>
+                        <td>{{ pago.pagoTipo }}</td>
+                        <td>{{ pago.cuentaCorriente.nombre }}</td>
+                        <td>{{ pago.pagoCanal }}</td>
+                        <td align="right">
+                            {% if pago.boleta == 0 %}
+                                <a href="{{ path('pago_edit',{'id':pago.id}) }}" class="btn btn-primary"><i class="fas fa-edit"></i></a>
+                            {% else %}
+                            {{ pago.boleta }}
+                            {% endif %}
+                        </td>
+                        <td align="right">${{ pago.monto|number_format(0, ',', '.') }}</td>
+                       
+                        {% set total = total + pago.monto %}
+                        {% set num = num + 1 %}
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5">No hay pagos</td>
+                    </tr>
+                {% endfor %}
+                
+                    <tr>
+                    <td colspan="4" align="right">Total:</td>
+                    <td  align="right">
+                         <strong>${{ total|number_format(0,",",".") }}</strong>
+                    </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        </div>
+        <div class="card-footer">
+            <div class="card-footer clearfix">
+                {# display navigation #}
+           <div class="navigation">
+               {{ knp_pagination_render(pagos,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
+               'position': 'centered',
+               'rounded': true,
+               }) }}
+           </div>
+       </div>
+            
+        </div>
+    </div>
+    <script>
+        $('#bFecha').daterangepicker({
+        
+            "drops": "down",
+            "startDate":"{{dateInicio}}",
+            "endDate": "{{dateFin}}",
+            "locale": {
+                "format": "YYYY-MM-DD",
+                "applyLabel": "Apply",
+                "cancelLabel": "Cancel",
+            }
+        }, function(start, end, label) {
+        console.log('New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD') + ' (predefined range: ' + label + ')');
+        
+        });
+
+        $(".btn-export-excel").on("click",function(){
+            $(".form-envio").attr("action","/pago/resumen_excel");
+            $(".form-envio").submit();
+            $("button").prop('disabled',false);
+
+        });
+         $(".btn-buscar").on("click",function(){
+            $(".form-envio").attr("action","/pago/resumen");
+            $(".form-envio").submit();
+            $("button").prop('disabled',false);
+
+        });
+    </script>
+{% endblock %}
