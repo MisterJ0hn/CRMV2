@@ -771,6 +771,266 @@ class CobranzaController extends AbstractController
         return $this->file($temp_file, $fileName, ResponseHeaderBag::DISPOSITION_INLINE);
     }
 
+     /**
+     * @Route("/excel_ia", name="cobranza_excel_ia", methods={"GET"})
+     */
+    public function cobranzaExcelIA(ContratoRepository $contratoRepository, 
+                                VwCuotaPendienteRepository $cuotaRepository,
+                                ModuloPerRepository $moduloPerRepository,
+                                CuentaRepository $cuentaRepository,
+                                ConfiguracionRepository $configuracionRepository,
+                                VwContratoRepository $vwContratoRepository,
+                                Request $request,
+                                CuotaRepository $cuotaRepo,
+                                VencimientoRepository $vencimientoRepository): Response
+    {
+        $this->denyAccessUnlessGranted('view','cobranza_excel');
+         $user=$this->getUser();
+        $pagina=$moduloPerRepository->findOneByName('cobranza',$user->getEmpresaActual());
+        $vencimiento=$vencimientoRepository->findOneMaxNotNull($user->getEmpresaActual(),'v.valMax','ASC');
+        $filtro=null;
+        $folio=null;
+        $compania=null;
+        $queryTotales="";
+        $segmento="";
+        
+        $configuracion = $configuracionRepository->find(1);
+        //   "maximo ".$vencimiento->getValMax();
+        //$vencimiento=$vencimientoArray[0];
+        $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'soloPorAdmin'=>false],["valMin"=>'ASC']);
+        $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
+        $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
+        if($user->getUsuarioTipo()->getId() == 1 || $user->getUsuarioTipo()->getId()==3){
+            $otros=" 1=1 ";
+            $otrosVW=" 1=1 ";
+        }
+       
+        $fecha=null;
+        $fechaVW=null;
+        $error='';
+        $status=1;
+        $error_toast="";
+        
+       
+        if(null !== $request->query->get('error_toast')){
+            $error_toast=$request->query->get('error_toast');
+        }
+        if(null !== $request->query->get('bFolio') && $request->query->get('bFolio')!=''){
+            $folio=$request->query->get('bFolio');
+            $otros.=" and (co.folio= $folio or co.agenda= $folio)";
+            $otrosVW.=" and (c.folio= $folio or c.agenda= $folio)";
+            $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
+            $dateFin=date('Y-m-d');
+           // $fecha=$otros;
+
+        }else{
+           
+            if(null == $status){
+
+            }else{
+            
+                if(null != $request->query->get('bStatus')){
+                    $status=$request->query->get('bStatus');
+                }
+                $vencimiento=$vencimientoRepository->find($status);
+                if($vencimiento->getValMax() !== null && $vencimiento->getValMin() > 0){
+                    $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
+                    $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),c.proximoVencimiento) <= '.$vencimiento->getValMax();
+                }else if($vencimiento->getValMin()==0){
+                    $otros=' DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
+                    $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) <= '.$vencimiento->getValMax();
+                }else{
+                    $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
+                    $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
+                }
+               // error_log("\n otros : ".$otros,3,"/home/micrm.cl/test/TokuWebhook_log");
+                
+            }
+            //error_log("\n otros : ".$otros,3,"/home/micrm.cl/test/TokuWebhook_log");
+            if(null !== $request->query->get('bFiltro') && $request->query->get('bFiltro')!=''){
+                $filtro=$request->query->get('bFiltro');
+            }
+            if(null !== $request->query->get('bCompania') && $request->query->get('bCompania')!=0){
+                $compania=$request->query->get('bCompania');
+            }
+            if(null !== $request->query->get('bFecha')){
+                $aux_fecha=explode(" - ",$request->query->get('bFecha'));
+                $dateInicio=$aux_fecha[0];
+                $dateFin=$aux_fecha[1];
+            }else{
+                $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
+                $dateFin=date('Y-m-d');
+
+            }
+            /*$fecha="c.fechaPago between '$dateInicio' and '$dateFin 23:59:59' ";
+            $fechaVW="c.fechaPago between '$dateInicio' and '$dateFin 23:59:59' ";
+            */
+        }
+        $fecha.=$otros." and a.status != 13";
+        $fechaVW.=$otrosVW." and a.status != 13";
+        
+        switch($user->getUsuarioTipo()->getId()){
+            
+            
+            case 4:
+            case 8:
+            case 13:
+            
+                $query=$cuotaRepository->findVencimientoIA(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+                break;
+            case 7://tramitador
+                $query=$cuotaRepository->findVencimientoIA($user->getId(),null,$compania,$filtro,7,true,$fecha,true,true,$status);
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+                break;
+            case 6: //abogado
+                $query=$cuotaRepository->findVencimientoIA($user->getId(),null,$compania,$filtro,6,true,$fecha, true,true,$status);
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+                break;
+            case 11://Administrativo
+
+                //$query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha,true);
+                $query=$cuotaRepository->findVencimientoIA(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+            break;
+            case 12://Cobradores
+                $lotes=array();
+                foreach($user->getUsuarioLotes() as $usuarioLote){
+                    $lotes[]=$usuarioLote->getLote()->getId();
+                }
+               
+                    $and=" and ";
+                
+                if(count($lotes)>0){
+
+                    $fecha.="$and co.idLote in (".implode(",",$lotes).") ";
+                }else{
+                    $fecha.="$and co.idLote is null ";
+                }
+                
+                $query=$cuotaRepository->findVencimientoIA(null,null,null,$filtro,null,true,$fecha,true,true,$status);
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+                break;
+            
+            case 1://administrador y jefes    
+            case 3:
+                $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual()],["valMin"=>'ASC']);
+                $query=$cuotaRepository->findVencimientoIA(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
+                $queryTotales=$vwContratoRepository->findVencimientoGroupIA(null,null,$compania,$filtro,null,true,$fechaVW, true,true,$status);
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+
+                break;
+            default:
+                //$query=$contratoRepository->findByPers(null,null,$compania,$filtro,null,$fecha,true);
+                $query=$cuotaRepository->findVencimientoIA(null,null,null,$filtro,null,true,$fecha,true,true,$status);
+                $companias=$cuentaRepository->findByPers(null);
+                
+            break;
+        }
+        //$companias=$cuentaRepository->findByPers($user->getId());
+        //$query=$contratoRepository->findAll();
+
+
+        $spreadSheet=new Spreadsheet();
+
+        /* @var $sheet \PhpOffice\PhpSpreadsheet\Writer\Xlsx\Worksheet */
+        $sheet = $spreadSheet->getActiveSheet();
+        $sheet->setCellValue('A1', 'Folio');
+        $sheet->setCellValue('B1', 'AgendaId');
+        $sheet->setCellValue('C1', 'Lote');
+        $sheet->setCellValue('D1', 'Cobrador');
+        $sheet->setCellValue('E1', 'Cliente');
+        $sheet->setCellValue('F1', 'Teléfono');
+        $sheet->setCellValue('G1', 'Email');
+        $sheet->setCellValue('H1', 'Vcto');
+        $sheet->setCellValue('I1', 'D.Mora');
+        $sheet->setCellValue('J1', 'V.Cuota');
+        $sheet->setCellValue('K1', '$Mora');
+        $sheet->setCellValue('L1', 'U.Pago');
+        $sheet->setCellValue('M1', 'U.Gestión');
+        $sheet->setCellValue('N1', 'U.Rpta');
+        $sheet->setCellValue('O1', 'Comprómiso');
+        $sheet->setCellValue('P1', 'C.Pgada');
+        $sheet->setCellValue('Q1', 'Q.Gestión');
+        $sheet->setCellValue('R1', 'Anexo');
+
+
+        $sheet = $spreadSheet->getActiveSheet();
+        $i=2;
+        foreach($query as $cuota){
+           
+        
+            $sheet->setCellValue('A'.$i, $cuota->getContrato()->getFolio());
+            $sheet->setCellValue('B'.$i, $cuota->getContrato()->getAgenda()->getId());
+             $sheet->setCellValue('C'.$i, $cuota->getIdLote()->getNombre());
+            
+            $loteNombre="";
+            if($cuota->getContrato()->getIdLote()){
+            
+                foreach( $cuota->getContrato()->getIdLote()->getUsuarioLotes() as $usuarioLote){
+                    $loteNombre=$usuarioLote->getLote()->getNombre();  
+                }
+            }
+            $sheet->setCellValue('D'.$i, $loteNombre);
+
+            $sheet->setCellValue('E'.$i, $cuota->getContrato()->getCliente()->getNombre());
+            $sheet->setCellValue('F'.$i, $cuota->getContrato()->getTelefono());
+            $sheet->setCellValue('G'.$i, $cuota->getContrato()->getCliente()->getEmail());
+            $sheet->setCellValue('H'.$i, $cuota->getFechaPago()->format('Y-m-d'));
+            $diasMora = (new \DateTime())->diff($cuota->getFechaPago())->days;
+            $sheet->setCellValue('I'.$i, $diasMora);
+            $monto = 0;
+            if($cuota->getIsMulta()!=true){
+                $monto = $cuota->getMonto();
+            }
+            $sheet->setCellValue('J'.$i,  $monto);
+            $vencimiento = $vencimientoRepository->findOneMaxNotNull($cuota->getContrato()->getEmpresa()->getId(),'v.valMax','ASC');
+            $otros=' c.fechaPago<=now() and DATEDIFF(now(),co.proximoVencimiento)>'.$vencimiento->getValMax();
+            //$otros="";
+            $deudaTotal=$cuotaRepo->deudaTotal($cuota->getContrato(),$otros);
+            $mora  = 0;
+            if(count($deudaTotal)>0){
+                $mora = $deudaTotal[0][1]-$deudaTotal[0][2];
+            }
+            $sheet->setCellValue('K'.$i, $mora);
+
+            $sheet->setCellValue('L'.$i, $cuota->getContrato()->getFechaUltimaGestion() ? $cuota->getContrato()->getFechaUltimaGestion()->format('Y-m-d') : '');
+            $sheet->setCellValue('M'.$i, $cuota->getContrato()->getUltimaFuncion() ? $cuota->getContrato()->getUltimaFuncion()->format('Y-m-d') : '');
+            $sheet->setCellValue('N'.$i, 'U.Rpta');
+            $sheet->setCellValue('O'.$i, $cuota->getContrato()->getFechaCompromiso() ? $cuota->getContrato()->getFechaCompromiso()->format('Y-m-d') : '');
+
+            $ultimaCuota=$cuotaRepo->findCuotasTotales($cuota->getContrato()->getId());
+            $ultimaCuotaPagada=$cuotaRepo->findUltimaPagada($cuota->getContrato()->getId());
+            $pagado=0;
+            $cuentaPagada='';
+            if($ultimaCuotaPagada){
+                $pagado=$ultimaCuotaPagada->getNumero();
+            }
+            $cuentaPagada= $pagado."/".$ultimaCuota->getNumero();
+
+            $sheet->setCellValue('P'.$i, $cuentaPagada);
+            $sheet->setCellValue('Q'.$i, 'Q.Gestión');
+            $sheet->setCellValue('R'.$i, 'Anexo');
+
+                
+                $i++;
+          //  }else{
+           //     $endeuda= 0;
+           // }
+
+        }
+        $sheet->setTitle("Clientes Morosos");
+        // Create your Office 2007 Excel (XLSX Format)
+        $writer = new Xlsx($spreadSheet);
+        // Create a Temporary file in the system
+        $fileName = $vencimiento->getNombre() ."-".date('Ymd-Him').'.csv';
+        $temp_file = tempnam(sys_get_temp_dir(), $fileName);
+        // Create the excel file in the tmp directory of the system
+        $writer->save($temp_file);
+        // Return the excel file as an attachment
+        return $this->file($temp_file, $fileName, ResponseHeaderBag::DISPOSITION_INLINE);
+    }
+
     /**
      * @Route("/{id}", name="cobranza_show", methods={"GET"})
      */
