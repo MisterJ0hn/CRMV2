@@ -493,8 +493,9 @@ class CuotaRepository extends ServiceEntityRepository
     public function findUltimaPagada($idContrato): ?Cuota
     {
         return $this->createQueryBuilder('c')
-            ->andWhere('c.pagado=c.monto')
+            ->andWhere('c.pagado>=c.monto')
             ->andWhere('c.contrato = :val')
+            ->andWhere('c.anular is null or c.anular = 0')
             ->setParameter('val', $idContrato)
             ->orderBy('c.id', 'DESC')
             ->setMaxResults(1)

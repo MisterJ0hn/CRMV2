@@ -38,16 +38,10 @@ class VwCuotaPendienteRepository extends ServiceEntityRepository
                      * JRM: 2025-12-20 - Se agrega filtro por segmento, para que muestre solo las cuotas mayores a la 3
                      */
                     if($segmento!=null && $segmento==1){
-                        $query->andWhere('c.numero < 3');
+                        $query->andWhere('c.numero <= 3');
                     }                     
-                    $query->andWhere('(c.monto>(c.pagado+'.$configuracion->getDeudaMinima().') or c.pagado is null)');
-                   
-
-                }else{
-                    $query->andWhere('c.monto>=(c.pagado+'.$configuracion->getDeudaMinima().') or c.pagado is null');
+                  
                 }
-                
-                $query->andWhere('c.anular is null or c.anular = false');
                 $query->andWhere(' co.isFinalizado = false or co.isFinalizado is null'); 
 
             }else{
@@ -118,14 +112,10 @@ class VwCuotaPendienteRepository extends ServiceEntityRepository
                      * JRM: 2025-12-20 - Se agrega filtro por segmento, para que muestre solo las cuotas mayores a la 3
                      */
                     if($segmento!=null && $segmento==1){
-                        $query->andWhere('c.numero >= 3');
+                        $query->andWhere('c.numero > 3');
                     }
-                    $query->andWhere('(c.monto>(c.pagado+'.$configuracion->getDeudaMinima().') or c.pagado is null)');
-                }else{
-                    $query->andWhere('c.monto>=(c.pagado+'.$configuracion->getDeudaMinima().') or c.pagado is null');
-                }
-                
-                $query->andWhere('c.anular is null or c.anular = false');
+                    
+                }                                
                 $query->andWhere(' co.isFinalizado = false or co.isFinalizado is null'); 
 
             }else{
@@ -176,7 +166,7 @@ class VwCuotaPendienteRepository extends ServiceEntityRepository
         ;
     }
 
-    public function findVencimientoGroup($usuario=null,$empresa=null,$compania=null,$filtro=null,$tipoUsuario=null,$vigente=true, $otros=null,$conrestriccion=true,$esCobranza=false){
+    public function findVencimientoGroup($usuario=null,$empresa=null,$compania=null,$filtro=null,$tipoUsuario=null,$vigente=true, $otros=null,$conrestriccion=true,$esCobranza=false,$segmento=null){
         $query=$this->createQueryBuilder('c');
 
         $query->select(array('c','count(distinct c.id)','sum(c.monto)'));
@@ -187,12 +177,13 @@ class VwCuotaPendienteRepository extends ServiceEntityRepository
         if($conrestriccion==true){
             if($vigente){
                 if($esCobranza){
-                    $query->andWhere('c.monto>c.pagado or c.pagado is null');
-                }else{
-                    $query->andWhere('c.monto>=c.pagado or c.pagado is null');
+                     /**
+                     * JRM: 2025-12-20 - Se agrega filtro por segmento, para que muestre solo las cuotas mayores a la 3
+                     */
+                    if($segmento!=null && $segmento==1){
+                        $query->andWhere('c.numero <= 3');
+                    }                 
                 }
-                
-                $query->andWhere('c.anular is null or c.anular = false');
                 $query->andWhere(' co.isFinalizado = false or co.isFinalizado is null'); 
 
             }else{

@@ -546,7 +546,7 @@ class VwContratoRepository extends ServiceEntityRepository
         if($conrestriccion==true){
             if($vigente){
                if($segmento!=null && $segmento==1){
-                    $query->andWhere(' c.numero < 3');
+                    $query->andWhere(' c.numero <= 3');
                }
                 $query->andWhere(' c.isFinalizado = false or c.isFinalizado is null'); 
 
@@ -606,7 +606,7 @@ class VwContratoRepository extends ServiceEntityRepository
         if($conrestriccion==true){
             if($vigente){
                if($segmento!=null && $segmento==1){
-                    $query->andWhere(' c.numero >= 3');
+                    $query->andWhere(' c.numero > 3');
                }
                 $query->andWhere(' c.isFinalizado = false or c.isFinalizado is null'); 
 

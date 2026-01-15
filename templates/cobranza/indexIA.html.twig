@@ -5,55 +5,7 @@
 {% block body %}
 
     <section>
-    <div class="row">
-        {% set total = 0 %}
-        <!--<div class="col-sm-6 col-md-3">
-            
-            <div class="info-box">
-                <span class="info-box-icon "></span>
     
-                <div class="info-box-content">
-                <span class="info-box-text">Segmento</span>
-                <span class="info-box-number">Todos</span>
-            
-                <a href="#" class="small-box-footer" onclick="javascript:buscar('')">
-                    Ver mas <i class="fas fa-arrow-circle-right"></i>
-                </a>
-          
-                </div>
-
-                
-               
-            </div>
-            
-        </div>-->
-        {% for vencimiento in vencimientos  %}
-        <div class="col-sm-6 col-md-3">
-            
-            <div class="info-box">
-                <span class="info-box-icon {{vencimiento.color}}"><i class="{{ vencimiento.icono }}"></i></span>
-    
-                <div class="info-box-content">
-                <span class="info-box-text">{{vencimiento.nombre}}</span>
-                {% if sesion.getSesion.usuarioTipo.id == 1 %}
-                <span class="info-box-number">{{vencimiento.valMin}} -  {{vencimiento.valMax}} </span>
-                {% endif %}
-                <a href="#" class="small-box-footer" onclick="javascript:buscar({{vencimiento.id}})">
-                    Ver mas <i class="fas fa-arrow-circle-right"></i>
-                </a>
-          
-                </div>
-
-                
-                <!-- /.info-box-content -->
-            </div>
-            
-        </div>
-
-       
-       {% endfor %}
-        
-    </div>
     {% if queryTotales != "" %}
         <div class="alert alert-success" role="alert">
             <h4 class="alert-heading"> {{vencimientoSeleccionado.nombre}}</h4>
@@ -99,16 +51,12 @@
                         <button type="button" class="btn btn-primary buscar mt-3"><i class="fas fa-search"></i></button>
                     </div>
                     
-                    <!--<div class="col-sm-12 col-md-4 border-1">
-                        <div class="row">
-                            <div class="col">
-                                <input type="text" class="form-control" name="bFecha" id="bFecha"  value="" >
-                            </div>
-                            <div class="col-sm-12 col-md-1">
-                                <button type="button"  class="btn btn-secondary exportarxslx"><i class="fas fa-download"></i></button>
-                            </div>
-                       </div>
-                    </div>-->
+                    <div class="col-sm-12 col-md-2 mt-3">
+                       
+                           
+                                <button type="button"  class="btn btn-secondary exportarxslx mt-3"><i class="fas fa-download"></i></button>
+                      
+                    </div>
                    
                 </div>
                 </form>
@@ -121,18 +69,12 @@
                         <th>{{ knp_pagination_sortable(cuotas, 'Folio', 'contrato.folio') }} {% if cuotas.isSorted('contrato.folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>{{ knp_pagination_sortable(cuotas, 'AgendaId', 'contrato.agenda.id') }} {% if cuotas.isSorted('contrato.agenda.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>{{ knp_pagination_sortable(cuotas, 'Lote', 'contrato.idLote.nombre') }} {% if cuotas.isSorted('contrato.idLote.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
-           
                         <th>Cobrador</th>
                         <th>{{ knp_pagination_sortable(cuotas, 'Cliente', 'contrato.nombre') }} {% if cuotas.isSorted('contrato.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>{{ knp_pagination_sortable(cuotas, 'Telefono', 'contrato.telefono') }} {% if cuotas.isSorted('contrato.telefono') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>{{ knp_pagination_sortable(cuotas, 'Email', 'contrato.email') }} {% if cuotas.isSorted('contrato.email') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        
-                        <!--<th>{{ knp_pagination_sortable(cuotas, 'Rut', 'contrato.rut') }} {% if cuotas.isSorted('contrato.rut') %} <i class="fas fa-sort"></i>{% endif %}</th>-->
-                        <!--<th>{{ knp_pagination_sortable(cuotas, 'Fecha Contrato', 'contrato.fechaCreacion') }} {% if cuotas.isSorted('contrato.fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>-->
-                        <th>{{ knp_pagination_sortable(cuotas, 'Vcto', 'fechaPago') }} {% if cuotas.isSorted('fechaPago') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                            <th>{{ knp_pagination_sortable(cuotas, 'Vcto', 'fechaPago') }} {% if cuotas.isSorted('fechaPago') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>D.Mora</th>
-                        
-                        <!--<th>DSG</th>-->
                         <th>V.Cuota</th>
                         <th>$Mora</th>
                         <th>U.Pago</th>
@@ -258,14 +200,14 @@
         });
 
     $(".exportarxslx").on('click',function(){
-        $(".frmBuscar").attr('action',"{{path('cobranza_excel')}}");
+        $(".frmBuscar").attr('action',"{{path('cobranza_excel_ia')}}");
         $(".frmBuscar").submit();
 
         $("button").prop('disabled',false);
     });
 
     $(".buscar").on('click',function(){
-        $(".frmBuscar").attr('action',"{{path('cobranza_index')}}");
+        $(".frmBuscar").attr('action',"{{path('cobranza_index_ia')}}");
         $(".frmBuscar").submit();
     });
 

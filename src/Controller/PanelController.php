@@ -19,6 +19,8 @@ class PanelController extends AbstractController
     public function index(AgendaRepository $agendaRepository, 
                           PagoRepository $pagoRepository): Response
     {
+        $this->denyAccessUnlessGranted('view','panel');
+
         $otrosL='';
         $otrosA='';
         $otrosC='';

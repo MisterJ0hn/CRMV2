@@ -194,7 +194,7 @@ class CobranzaController extends AbstractController
             case 3:
                 $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual()],["valMin"=>'ASC']);
                 $query=$cuotaRepository->findVencimiento(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
-                $queryTotales=$vwContratoRepository->findVencimientoGroup(null,null,$compania,$filtro,null,true,$fechaVW, true,true,$status);
+                $queryTotales=$cuotaRepository->findVencimientoGroup(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
 
                 break;
@@ -247,9 +247,9 @@ class CobranzaController extends AbstractController
                         VwContratoRepository $vwContratoRepository,
                         VencimientoRepository $vencimientoRepository): Response
     {
-        $this->denyAccessUnlessGranted('view','cobranza');
+        $this->denyAccessUnlessGranted('view','cobranza_ia');
         $user=$this->getUser();
-        $pagina=$moduloPerRepository->findOneByName('cobranza',$user->getEmpresaActual());
+        $pagina=$moduloPerRepository->findOneByName('cobranza_ia',$user->getEmpresaActual());
         $vencimiento=$vencimientoRepository->findOneMaxNotNull($user->getEmpresaActual(),'v.valMax','ASC');
         $filtro=null;
         $folio=null;
@@ -952,8 +952,7 @@ class CobranzaController extends AbstractController
         $sheet->setCellValue('O1', 'Comprómiso');
         $sheet->setCellValue('P1', 'C.Pgada');
         $sheet->setCellValue('Q1', 'Q.Gestión');
-        $sheet->setCellValue('R1', 'Anexo');
-
+       
 
         $sheet = $spreadSheet->getActiveSheet();
         $i=2;
@@ -962,7 +961,7 @@ class CobranzaController extends AbstractController
         
             $sheet->setCellValue('A'.$i, $cuota->getContrato()->getFolio());
             $sheet->setCellValue('B'.$i, $cuota->getContrato()->getAgenda()->getId());
-             $sheet->setCellValue('C'.$i, $cuota->getIdLote()->getNombre());
+             $sheet->setCellValue('C'.$i, $cuota->getContrato()->getIdLote()->getNombre());
             
             $loteNombre="";
             if($cuota->getContrato()->getIdLote()){
@@ -973,9 +972,9 @@ class CobranzaController extends AbstractController
             }
             $sheet->setCellValue('D'.$i, $loteNombre);
 
-            $sheet->setCellValue('E'.$i, $cuota->getContrato()->getCliente()->getNombre());
+            $sheet->setCellValue('E'.$i, $cuota->getContrato()->getNombre());
             $sheet->setCellValue('F'.$i, $cuota->getContrato()->getTelefono());
-            $sheet->setCellValue('G'.$i, $cuota->getContrato()->getCliente()->getEmail());
+            $sheet->setCellValue('G'.$i, $cuota->getContrato()->getEmail());
             $sheet->setCellValue('H'.$i, $cuota->getFechaPago()->format('Y-m-d'));
             $diasMora = (new \DateTime())->diff($cuota->getFechaPago())->days;
             $sheet->setCellValue('I'.$i, $diasMora);
@@ -984,7 +983,7 @@ class CobranzaController extends AbstractController
                 $monto = $cuota->getMonto();
             }
             $sheet->setCellValue('J'.$i,  $monto);
-            $vencimiento = $vencimientoRepository->findOneMaxNotNull($cuota->getContrato()->getEmpresa()->getId(),'v.valMax','ASC');
+            $vencimiento = $vencimientoRepository->findOneMaxNotNull($cuota->getContrato()->getAgenda()->getCuenta()->getEmpresa()->getId(),'v.valMax','ASC');
             $otros=' c.fechaPago<=now() and DATEDIFF(now(),co.proximoVencimiento)>'.$vencimiento->getValMax();
             //$otros="";
             $deudaTotal=$cuotaRepo->deudaTotal($cuota->getContrato(),$otros);
@@ -993,10 +992,15 @@ class CobranzaController extends AbstractController
                 $mora = $deudaTotal[0][1]-$deudaTotal[0][2];
             }
             $sheet->setCellValue('K'.$i, $mora);
+            
+            $ultimoPago=0;
+            if($cuota->getIsMulta() != true){
+                $ultimoPago=$cuota->getMonto();
+            }
+            $sheet->setCellValue('L'.$i, $ultimoPago);
+            $sheet->setCellValue('M'.$i, $cuota->getContrato()->getFechaUltimaGestion() ? $cuota->getContrato()->getFechaUltimaGestion()->format('Y-m-d') : '');
+            $sheet->setCellValue('N'.$i, $cuota->getContrato()->getUltimaFuncion());
 
-            $sheet->setCellValue('L'.$i, $cuota->getContrato()->getFechaUltimaGestion() ? $cuota->getContrato()->getFechaUltimaGestion()->format('Y-m-d') : '');
-            $sheet->setCellValue('M'.$i, $cuota->getContrato()->getUltimaFuncion() ? $cuota->getContrato()->getUltimaFuncion()->format('Y-m-d') : '');
-            $sheet->setCellValue('N'.$i, 'U.Rpta');
             $sheet->setCellValue('O'.$i, $cuota->getContrato()->getFechaCompromiso() ? $cuota->getContrato()->getFechaCompromiso()->format('Y-m-d') : '');
 
             $ultimaCuota=$cuotaRepo->findCuotasTotales($cuota->getContrato()->getId());
@@ -1009,9 +1013,8 @@ class CobranzaController extends AbstractController
             $cuentaPagada= $pagado."/".$ultimaCuota->getNumero();
 
             $sheet->setCellValue('P'.$i, $cuentaPagada);
-            $sheet->setCellValue('Q'.$i, 'Q.Gestión');
-            $sheet->setCellValue('R'.$i, 'Anexo');
-
+            $sheet->setCellValue('Q'.$i, $cuota->getContrato()->getQMov());
+           
                 
                 $i++;
           //  }else{

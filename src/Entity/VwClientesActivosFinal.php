@@ -134,6 +134,11 @@ class VwClientesActivosFinal{
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $cuentaNombre;
+    /**
+     * @ORM\Column(type="datetime",nullable=true)
+     */
+    private $fechaObservacionCliente;
+
 
     public function getCuentaId()
     {
@@ -461,6 +466,15 @@ class VwClientesActivosFinal{
     {
         $this->cuentaNombre = $cuentaNombre;
     }
+    public function getFechaObservacionCliente()
+    {
+        return $this->fechaObservacionCliente;
+    }
 
+    public function setFechaObservacionCliente($fechaObservacionCliente): self
+    {
+        $this->fechaObservacionCliente = $fechaObservacionCliente;
+        return $this;
+    }
 
 }

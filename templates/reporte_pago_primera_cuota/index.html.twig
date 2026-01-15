@@ -1,13 +1,13 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello ReporteEncuestasController!{% endblock %}
+{% block title %}{% endblock %}
 
 {% block body %}
 
 
 <div class="form-container">
-    <h2>Exportar Encuestas Calidad</h2>
-    <form method="get" action="{{ path('app_reporte_encuestas_export') }}">
+    <h2>Exportar pago primera cuota</h2>
+    <form method="get" action="{{ path('app_reporte_pago_primera_cuota_export') }}" id="frmPagoPrimeraCuota">
     <div class="card">
         <div class="card-header">
             <h3>Seleccione rango de fechas</h3>
@@ -30,5 +30,13 @@
     </div>
     </form>
 </div>
+<script>
+    document.querySelector('form').addEventListener('submit', function () {
+        
+        $(".form-control").val();
+        $(".btn").prop('disabled',false);
+    });
 
+   
+</script>
 {% endblock %}

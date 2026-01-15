@@ -22,6 +22,7 @@ class ReporteEncuestasController extends AbstractController
      */
     public function index(): Response
     {
+        $this->denyAccessUnlessGranted('view','encuesta_calidad');
         return $this->render('reporte_encuestas/index.html.twig', [
             'controller_name' => 'ReporteEncuestasController',
         ]);
@@ -31,6 +32,7 @@ class ReporteEncuestasController extends AbstractController
      */
     public function gestiones(): Response
     {
+        $this->denyAccessUnlessGranted('view','gestiones_calidad');
         return $this->render('reporte_encuestas/gestiones.html.twig', [
             'controller_name' => 'ReporteGestionesController',
         ]);

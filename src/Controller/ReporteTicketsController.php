@@ -19,6 +19,7 @@ class ReporteTicketsController extends AbstractController
      */
     public function index(): Response
     {
+        $this->denyAccessUnlessGranted('view','reporte_tickets');
         return $this->render('reporte_tickets/index.html.twig', [
             'controller_name' => 'ReporteTicketsController',
         ]);

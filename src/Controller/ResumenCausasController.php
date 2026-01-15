@@ -405,9 +405,10 @@ class ResumenCausasController extends AbstractController
         $sheet->setCellValue('H1', 'Moroso');
         $sheet->setCellValue('I1', 'VIP');
         $sheet->setCellValue('J1', 'Rol');
-        $sheet->setCellValue('K1', 'U.Observación');
+        $sheet->setCellValue('K1', 'U.ObservaciónCausa');
         $sheet->setCellValue('L1', 'C.Finalizada');
         $sheet->setCellValue('M1', 'Telefono Cliente');
+        $sheet->setCellValue('N1', 'U.ObservacionCliente');
 
         $sheet = $spreadSheet->getActiveSheet();
         $i=2;
@@ -430,6 +431,7 @@ class ResumenCausasController extends AbstractController
            
                 $sheet->setCellValue('M'.$i, $agenda?$agenda->getTelefonoCliente():"");
             }
+            $sheet->setCellValue('N'.$i, $causa->getFechaObservacionCliente()?$causa->getFechaObservacionCliente():"");
             $i++;
         }
 

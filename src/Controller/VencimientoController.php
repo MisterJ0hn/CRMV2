@@ -67,7 +67,7 @@ class VencimientoController extends AbstractController
     {
         $form = $this->createForm(VencimientoType::class, $vencimiento);
         $form->add('monto_max');
-        $form->add('solo_por_admin',CheckboxType::class);
+        $form->add('solo_por_admin',CheckboxType::class,["required"=>false]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
