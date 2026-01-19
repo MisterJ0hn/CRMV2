@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Corte;
 use App\Entity\Cuenta;
 use App\Entity\JuzgadoCuenta;
 use App\Form\JuzgadoCuentaType;
@@ -88,6 +89,16 @@ class JuzgadoCuentaController extends AbstractController
         return $this->render('juzgado_cuenta/combo.html.twig', [
             'juzgadoCuentas' => $cuenta->getJuzgadoCuentas(),
             
+        ]);
+    }
+    /**
+     * @Route("/{id}/corte_combo", name="juzgado_corte_combo", methods={"GET","POST"})
+     */
+    public function corteCombo(Request $request, Corte $corte): Response
+    {
+
+        return $this->render('juzgado_cuenta/comboCorte.html.twig', [
+            'juzgados' => $corte->getJuzgados(),
         ]);
     }
 

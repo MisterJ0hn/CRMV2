@@ -3,7 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\ConfiguracionRepository;
-use App\Repository\VwPrimeraCuotaDeContratoRepository;
+use App\Repository\VwPrimeraCuotaDeContratoMasSuspendidosRepository;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -27,7 +27,7 @@ class ReportePagoPrimeraCuotaController extends AbstractController
     /**
      * @Route("/reporte_pago_primera_cuota_export", name="app_reporte_pago_primera_cuota_export")
      */
-    public function exportar(Request $request, VwPrimeraCuotaDeContratoRepository $primeraCuotaContratoRepository, ConfiguracionRepository $configuracionRepository): Response
+    public function exportar(Request $request, VwPrimeraCuotaDeContratoMasSuspendidosRepository $primeraCuotaContratoRepository, ConfiguracionRepository $configuracionRepository): Response
     {
 
         // Obtener las fechas de inicio y fin desde la solicitud
@@ -46,12 +46,12 @@ class ReportePagoPrimeraCuotaController extends AbstractController
             ->setCellValue('C1', 'fecha_contrato')
             ->setCellValue('D1', 'MontoContrato')
             ->setCellValue('E1', 'Cerrador')
-            
-            ->setCellValue('F1', 'fecha_vcto_1eraCuota')
-            ->setCellValue('G1', 'Monto_vcto_1eraCuota')
-            ->setCellValue('H1', 'Monto_pago_1eraCuota')
-            ->setCellValue('I1', 'Fecha_pago_1eraCuota')
-            ->setCellValue('J1', 'Status');
+            ->setCellValue('F1', 'Fecha Desiste')
+            ->setCellValue('G1', 'fecha_vcto_1eraCuota')
+            ->setCellValue('H1', 'Monto_vcto_1eraCuota')
+            ->setCellValue('I1', 'Monto_pago_1eraCuota')
+            ->setCellValue('J1', 'Fecha_pago_1eraCuota')
+            ->setCellValue('K1', 'Status');
 
         // Agregar datos
         $row = 2;
@@ -60,11 +60,11 @@ class ReportePagoPrimeraCuotaController extends AbstractController
 
         foreach ($cuotas as $cuota) {
            
-            $status="";
+            $status="Pendiente";
             if($cuota->getMonto()<=($cuota->getPagado()+$deudaMinima)){
-                $status="Pagado";
-            }else{
-                $status="Pendiente";
+                if($cuota->getPagado()>0){
+                    $status="Pagado";
+                }
             }
             if(!is_null($cuota->getContrato()->getFechaDesiste())){
                 $status="Desistido";
@@ -74,12 +74,12 @@ class ReportePagoPrimeraCuotaController extends AbstractController
                     ->setCellValue('C' . $row, is_null($cuota->getContrato()->getFechaCreacion())?"":$cuota->getContrato()->getFechaCreacion()->format('Y-m-d H:i:s'))
                     ->setCellValue('D' . $row,  $cuota->getContrato()->getMontoContrato())
                     ->setCellValue('E' . $row, $cuota->getContrato()->getAgenda()->getAbogado()->getNombre())
-                    
-                    ->setCellValue('F' . $row, is_null($cuota->getFechaVencimiento())?"":$cuota->getFechaVencimiento()->format('Y-m-d H:i:s'))
-                    ->setCellValue('G' . $row, $cuota->getMonto())
-                    ->setCellValue('H' . $row, $cuota->getPagado())
-                    ->setCellValue('I' . $row,  is_null($cuota->getFechaPago())?"":$cuota->getFechaPago()->format('Y-m-d H:i:s'))
-                    ->setCellValue('J' . $row, $status);
+                    ->setCellValue('F' . $row, is_null($cuota->getFechaDesiste())?"":$cuota->getFechaDesiste()->format('Y-m-d H:i:s'))
+                    ->setCellValue('G' . $row, is_null($cuota->getFechaVencimiento())?"":$cuota->getFechaVencimiento()->format('Y-m-d H:i:s'))
+                    ->setCellValue('H' . $row, $cuota->getMonto())
+                    ->setCellValue('I' . $row, $cuota->getPagado())
+                    ->setCellValue('J' . $row,  is_null($cuota->getFechaPago())?"":$cuota->getFechaPago()->format('Y-m-d H:i:s'))
+                    ->setCellValue('K' . $row, $status);
             $row++;
         }
 

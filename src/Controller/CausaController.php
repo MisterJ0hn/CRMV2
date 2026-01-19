@@ -57,7 +57,15 @@ class CausaController extends AbstractController
             $causa->setMateriaEstrategia($materiaEstrategiaRepository->find($request->query->get('cboSubMateria')));
         }
         if(null !== $request->query->get('juzgado')){
-            $causa->setJuzgadoCuenta($juzgadoCuentaRepository->find($request->query->get('juzgado')));
+            $juzgadoCuenta= $juzgadoCuentaRepository->find($request->query->get('juzgado'));
+            if($juzgadoCuenta){
+                $juzgado = $juzgadoCuenta->getJuzgado();
+                $causa->setJuzgadoCuenta($juzgadoCuenta);
+                if($juzgado->getCorte()!=null){
+                    $causa->setCorte($juzgado->getCorte());
+                }
+            }
+            
         }
         
         $entityManager->persist($causa);

@@ -745,7 +745,8 @@ class PanelAbogadoController extends AbstractController
             'sucursales'=>$sucursalRepository->findBy(['cuenta'=>$agenda->getCuenta()->getId()]),
             'regiones'=>$regionRepository->findAll(),
             'cuenta_materias'=>$cuenta_materia,
-             'contactos'=>$agendaContactoRepository->findAll(),
+            'contactos'=>$agendaContactoRepository->findAll(),
+            
         ] );
     }
     /**

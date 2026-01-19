@@ -25,18 +25,20 @@
             </div>
         </div>
         <div class="card-footer">
-            <button type="submit" class="btn btn-primary">Exportar</button>
+            <button type="button" class="btn btn-primary">Exportar</button>
         </div>
     </div>
     </form>
 </div>
 <script>
-    document.querySelector('form').addEventListener('submit', function () {
-        
-        $(".form-control").val();
-        $(".btn").prop('disabled',false);
+
+
+    $(".btn").on('click',function(){
+        $("#frmPagoPrimeraCuota").submit();
+        $("#frmPagoPrimeraCuota")[0].reset();
+        $(".btn").prop("disabled",false);
+       // $(".form-contro").val('');
     });
 
-   
 </script>
 {% endblock %}

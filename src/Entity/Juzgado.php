@@ -39,6 +39,16 @@ class Juzgado
      */
     private $juzgadoCuentas;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Corte::class, inversedBy="juzgados")
+     */
+    private $corte;
+
+    /**
+     * @ORM\Column(type="bigint", nullable=true)
+     */
+    private $pjudTribunalId;
+
 
 
     public function __construct()
@@ -136,6 +146,30 @@ class Juzgado
                 $juzgadoCuenta->setJuzgado(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getCorte(): ?Corte
+    {
+        return $this->corte;
+    }
+
+    public function setCorte(?Corte $corte): self
+    {
+        $this->corte = $corte;
+
+        return $this;
+    }
+
+    public function getPjudTribunalId(): ?string
+    {
+        return $this->pjudTribunalId;
+    }
+
+    public function setPjudTribunalId(?string $pjudTribunalId): self
+    {
+        $this->pjudTribunalId = $pjudTribunalId;
 
         return $this;
     }

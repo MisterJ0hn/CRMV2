@@ -332,6 +332,24 @@
     </div>
 </div>
         <div class="row">
+             <div class="col-sm-12 col-md-3">
+                
+                <select name="corte" class="form-control corte">
+                    <option value=""> Seleccione Corte </option>
+                    
+                </select> 
+            </div>   
+            <div class="col-sm-12 col-md-6">
+                
+                <select name="juzgado" class="form-control juzgado">
+                    <option value=""> Seleccione Juzgado </option>
+                    {% for juzgado in juzgados %}
+                        <option value="{{juzgado.id}}">{{juzgado.nombre}}</option>
+                    {% endfor %}
+                </select> 
+            </div>   
+        </div>
+        <div class="row">
             
                 <select name="cboMateria" class="form-control cbomateria" placeholder="Materias" style="visibility:hidden" >
                     
@@ -369,15 +387,7 @@
                 <input type="text" name="txtCaratulado" placeholder="Caratulado" class="form-control txtCaratulado" size="50" maxlength="30">
                 <small class="text-muted">Caracteres max. 50</small>
             </div> 
-            <div class="col-sm-12 col-md-3">
-                
-                <select name="juzgado" class="form-control juzgado">
-                    <option value=""> Seleccione Juzgado </option>
-                    {% for juzgado in juzgados %}
-                        <option value="{{juzgado.id}}">{{juzgado.nombre}}</option>
-                    {% endfor %}
-                </select> 
-            </div>   
+            
             <div class="col-sm-12 col-md-1">
                 <button type="button" class="btn btn-primary btn-agregar" onclick="javascript:agregarCausa()"><i class="fas fa-plus"></i></button>
 
@@ -592,6 +602,9 @@
             $('#controles').modal('hide');
             $(".btnGuardar").trigger("click");
         });
+        
+        obtenerCortes({{contrato.agenda.cuenta.id}});
+
 
     });
 
@@ -624,6 +637,7 @@
                     $('.txtNombreCausa').val("");
                     $('.txtCaratulado').val("");
                     $('.cboSubMateria').val("");
+                    $('.corte').val("");
                     $('.juzgado').val("");
                     $(".btn-agregar").attr("disabled", false);
                 }
@@ -677,7 +691,54 @@
             }
             });
     }
+    function obtenerCortes(cuenta){
+        if($(".cbomateria").val()=="1"){
+            $(".corte").show();
+            $.ajax({
+                url:"/materia/"+cuenta+"/corte_combo",
+                type: "post",
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                async: true,
+                beforeSend: function(){
+                    //$(".loading").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+                    
+                },
+                success:function(data){
+                    $(".corte").html(data);
+                    //$(".loading").html('');
+                    console.log(data);
+                }
+            });
+        }else{
+            $(".corte").hide();
+            $(".corte").val("");
+        }
 
+    }
+
+    $(".corte").on("change",function(){
+        $.ajax({
+                url:"/juzgado_cuenta/"+$(this).val()+"/corte_combo",
+                type: "post",
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                async: true,
+                beforeSend: function(){
+                    //$(".loading").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+                    
+                },
+                success:function(data){
+                    $(".juzgado").html(data);
+                    
+                }
+
+            });
+    });
     function  cambiaEstrategiaJuridica(value){
         $.ajax({
             url:"/estrategia_juridica/"+value+"/combo",

@@ -99,6 +99,7 @@ class CobranzaController extends AbstractController
             $otrosVW.=" and (c.folio= $folio or c.agenda= $folio)";
             $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
             $dateFin=date('Y-m-d');
+            $status=2;
            // $fecha=$otros;
 
         }else{
@@ -274,7 +275,17 @@ class CobranzaController extends AbstractController
         $status=1;
         $error_toast="";
         
-       
+       $vencimiento=$vencimientoRepository->find($status);
+        if($vencimiento->getValMax() !== null && $vencimiento->getValMin() > 0){
+            $otros='   DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
+            $otrosVW='  DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),c.proximoVencimiento) <= '.$vencimiento->getValMax();
+        }else if($vencimiento->getValMin()==0){
+            $otros='  DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
+            $otrosVW='  DATEDIFF(now(),c.proximoVencimiento) <= '.$vencimiento->getValMax();
+        }else{
+            $otros='  DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
+            $otrosVW='  DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
+        }
         if(null !== $request->query->get('error_toast')){
             $error_toast=$request->query->get('error_toast');
         }
@@ -287,28 +298,8 @@ class CobranzaController extends AbstractController
            // $fecha=$otros;
 
         }else{
-           
-            if(null == $status){
-
-            }else{
+            // error_log("\n otros : ".$otros,3,"/home/micrm.cl/test/TokuWebhook_log");
             
-                if(null != $request->query->get('bStatus')){
-                    $status=$request->query->get('bStatus');
-                }
-                $vencimiento=$vencimientoRepository->find($status);
-                if($vencimiento->getValMax() !== null && $vencimiento->getValMin() > 0){
-                    $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
-                    $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),c.proximoVencimiento) <= '.$vencimiento->getValMax();
-                }else if($vencimiento->getValMin()==0){
-                    $otros=' DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
-                    $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) <= '.$vencimiento->getValMax();
-                }else{
-                    $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
-                    $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
-                }
-               // error_log("\n otros : ".$otros,3,"/home/micrm.cl/test/TokuWebhook_log");
-                
-            }
             //error_log("\n otros : ".$otros,3,"/home/micrm.cl/test/TokuWebhook_log");
             if(null !== $request->query->get('bFiltro') && $request->query->get('bFiltro')!=''){
                 $filtro=$request->query->get('bFiltro');
@@ -329,6 +320,8 @@ class CobranzaController extends AbstractController
             $fechaVW="c.fechaPago between '$dateInicio' and '$dateFin 23:59:59' ";
             */
         }
+        
+
         $fecha.=$otros." and a.status != 13";
         $fechaVW.=$otrosVW." and a.status != 13";
         

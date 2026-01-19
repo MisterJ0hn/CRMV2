@@ -45,6 +45,11 @@ class Materia
      */
     private $carteras;
 
+    /**
+     * @ORM\Column(type="bigint", nullable=true)
+     */
+    private $pjudCompetenciaId;
+
     public function __construct()
     {
         $this->cuentaMaterias = new ArrayCollection();
@@ -172,6 +177,18 @@ class Materia
                 $cartera->setMateria(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getPjudCompetenciaId(): ?string
+    {
+        return $this->pjudCompetenciaId;
+    }
+
+    public function setPjudCompetenciaId(?string $pjudCompetenciaId): self
+    {
+        $this->pjudCompetenciaId = $pjudCompetenciaId;
 
         return $this;
     }

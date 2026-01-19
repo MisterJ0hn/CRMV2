@@ -107,6 +107,11 @@ class Causa
      */
     private $anio;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Corte::class, inversedBy="causas")
+     */
+    private $corte;
+
     public function __construct()
     {
         $this->lineaTiempoTerminadas = new ArrayCollection();
@@ -393,6 +398,18 @@ class Causa
     public function setAnio(?int $anio): self
     {
         $this->anio = $anio;
+
+        return $this;
+    }
+
+    public function getCorte(): ?Corte
+    {
+        return $this->corte;
+    }
+
+    public function setCorte(?Corte $corte): self
+    {
+        $this->corte = $corte;
 
         return $this;
     }

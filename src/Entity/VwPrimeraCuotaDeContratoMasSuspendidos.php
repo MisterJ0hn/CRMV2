@@ -2,15 +2,15 @@
 
 namespace App\Entity;
 
-use App\Repository\VwPrimeraCuotaDeContratoRepository;
+use App\Repository\VwPrimeraCuotaDeContratoMasSuspendidosRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=VwPrimeraCuotaDeContratoRepository::class)
+ * @ORM\Entity(repositoryClass=VwPrimeraCuotaDeContratoMasSuspendidosRepository::class)
  */
-class VwPrimeraCuotaDeContrato
+class VwPrimeraCuotaDeContratoMasSuspendidos
 {
     /**
      * @ORM\Id
@@ -18,7 +18,11 @@ class VwPrimeraCuotaDeContrato
      * @ORM\Column(type="integer")
      */
     private $id;
-
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $folio;
+    
     /**
      * @ORM\Column(type="integer")
      */
@@ -49,6 +53,11 @@ class VwPrimeraCuotaDeContrato
      * @ORM\JoinColumn(nullable=false)
      */
     private $contrato;
+
+     /**
+     * @ORM\Column(type="datetime")
+     */
+    private $fechaDesiste;
 
     public function getId(): ?int
     {
@@ -122,6 +131,18 @@ class VwPrimeraCuotaDeContrato
     public function setContrato(?Contrato $contrato): self
     {
         $this->contrato = $contrato;
+
+        return $this;
+    }
+
+    public function getFechaDesiste(): ?\DateTimeInterface
+    {
+        return $this->fechaDesiste;
+    }
+
+    public function setFechaDesiste(\DateTimeInterface $fechaDesiste): self
+    {
+        $this->fechaDesiste = $fechaDesiste;
 
         return $this;
     }
