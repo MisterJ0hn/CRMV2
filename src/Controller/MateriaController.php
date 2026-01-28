@@ -10,6 +10,7 @@ use App\Entity\Empresa;
 use App\Form\MateriaType;
 use App\Repository\CorteRepository;
 use App\Repository\CuentaMateriaRepository;
+use App\Repository\MateriaCorteRepository;
 use App\Repository\MateriaRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -140,12 +141,15 @@ class MateriaController extends AbstractController
     /**
      * @Route("/{id}/corte_combo", name="materia_corte_combo", methods={"GET","POST"})
      */
-    public function corteCombo(Cuenta $cuenta, CorteRepository $corteRepository, CuentaMateriaRepository $cuentaMateriaRepository): Response
+    public function corteCombo(Cuenta $cuenta, 
+                            CorteRepository $corteRepository, 
+                            CuentaMateriaRepository $cuentaMateriaRepository, 
+                            MateriaCorteRepository $materiaCorteRepository): Response
     {
         $cuentaMateria = $cuentaMateriaRepository->findOneBy(["cuenta"=>$cuenta->getId()]);
+        $materiaCortes = $materiaCorteRepository->findBy(['materia'=>$cuentaMateria->getMateria()]);    
         return $this->render('materia/comboCorte.html.twig', [
-            'cortes' => $corteRepository->findBy(['materia'=>$cuentaMateria->getMateria()]),
-            
+            'cortes' => $materiaCortes
         ]);
     }
     /**

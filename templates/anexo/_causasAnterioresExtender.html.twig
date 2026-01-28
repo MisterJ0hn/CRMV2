@@ -5,9 +5,13 @@
 
     <td>{{causa.id}}</td>
     <td><input type='hidden' value='{{causa.materiaEstrategia.id}}' name='hdSubMateria[]'  >{{causa.materiaEstrategia.estrategiaJuridica}}</td>
-    <td><input type='hidden' value='{{causa.idCausa}}' name='hdNombreCausa[]'  >{{causa.idCausa}}</td>
+    <td><input type='hidden' value='{{causa.letra}}' name='hdLetraCausa[]'  >
+        <input type='hidden' value='{{causa.rol}}' name='hdRolCausa[]'  >
+        <input type='hidden' value='{{causa.anio}}' name='hdAnioCausa[]'  >
+        {{causa.letra}}-{{causa.rol}}-{{causa.anio}}
+    </td>
     <td><input type='hidden' value='{{causa.causaNombre}}' name='hdCaratulado[]'  >{{causa.causaNombre}}</td>
-    <td><input type='hidden' value=' {{causa.juzgadoCuenta is null ? null : causa.juzgadoCuenta.id}}' name='hdJuzgado[]'  > {{causa.juzgadoCuenta is null ? '': causa.juzgadoCuenta.juzgado.nombre}}</td>
+    <td><input type='hidden' value=' {{causa.juzgado is null ? null : causa.juzgado.id}}' name='hdJuzgado[]'  > {{causa.juzgado is null ? '': causa.juzgado.nombre}}</td>
     <td><button type='button' class='btn btn-danger' onclick='javascript:eliminarCausa({{item}})' ><i class='fas fa-trash'></i></button></td>
 </tr>   
 {% set item = item + 1 %}

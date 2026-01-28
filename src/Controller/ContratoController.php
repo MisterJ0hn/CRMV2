@@ -55,6 +55,7 @@ use App\Repository\ComunaRepository;
 use App\Repository\ContratoAudiosRepository;
 use App\Repository\ContratoMeeRepository;
 use App\Repository\ContratoObservacionRepository;
+use App\Repository\CorteRepository;
 use App\Repository\CuadernoRepository;
 use App\Repository\CuentaMateriaRepository;
 use App\Repository\DetalleCuadernoRepository;
@@ -65,6 +66,7 @@ use App\Repository\LineaTiempoTerminadaRepository;
 
 use App\Repository\LineaTiempoEtapasRepository;
 use App\Repository\LineaTiempoObservacionRepository;
+use App\Repository\MateriaCorteRepository;
 use App\Repository\MateriaEstrategiaRepository;
 use App\Repository\MeeRepository;
 use App\Repository\UsuarioCarteraRepository;
@@ -1177,6 +1179,7 @@ class ContratoController extends AbstractController
                         ModuloPerRepository $moduloPerRepository,
                         MateriaEstrategiaRepository $materiaEstrategiaRepository,
                         CuentaMateriaRepository $cuentaMateriaRepository,
+                        MateriaCorteRepository $materiaCorteRepository,
                         ContratoObservacionRepository $contratoObservacionRepository): Response
     {
         $this->denyAccessUnlessGranted('create','linea_tiempo');
@@ -1189,6 +1192,7 @@ class ContratoController extends AbstractController
         return $this->render('contrato/lineaTiempo.html.twig', [
             'contrato' => $contrato,
             'pagina'=>$pagina->getNombre(),
+            'cortes'=>$materiaCorteRepository->findBy(['materia'=>$cuenta_materia->getMateria()->getId()]),
             'juzgados' => $cuenta->getJuzgadoCuentas(),
             'servicios'=>$materiaEstrategiaRepository->findBy(['materia'=>$cuenta_materia->getMateria()->getId(),'estado'=>1]),
             'observaciones'=>$contratoObservacionRepository->findBy(['contrato'=>$contrato],['fechaRegistro'=>'Desc']),
@@ -1813,14 +1817,19 @@ class ContratoController extends AbstractController
      */
     function modificarServicio(Causa $causa,Request $request,
                                 MateriaEstrategiaRepository $materiaEstrategiaRepository,
-                                JuzgadoCuentaRepository $juzgadoCuentaRepository)
+                                JuzgadoRepository $juzgadoRepository,
+                                CorteRepository $corteRepository
+                                ): Response
     {
 
         
-        if($request->request->get('juzgado')!=null){
-            $causa->setJuzgadoCuenta($juzgadoCuentaRepository->find($request->request->get('juzgado')));
+        if($request->request->get('juzgado')!=null){            
+            $causa->setJuzgado($juzgadoRepository->find($request->request->get('juzgado')));
+           
         }
-        
+        if($request->request->get('corte')!=null){            
+            $causa->setCorte($corteRepository->find($request->request->get('corte')));           
+        }
         if($request->request->get('txtNombreCausa')!=null){
             $causa->setIdCausa($request->request->get('txtNombreCausa'));
         }

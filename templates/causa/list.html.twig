@@ -6,7 +6,7 @@
     <tr>
         <th>Id Servicio</th>
         <th>Servicio</th>
-         <th>Causa/Rol</th>
+        <th>Causa/Rol</th>
         <th>Caratulado</th>
         <th>Juzgado</th>
         <th></th>
@@ -33,7 +33,7 @@
         {{causa.causaNombre}}
     </td>
     <td>
-        {{causa.juzgadoCuenta is null ? '': causa.juzgadoCuenta.juzgado.nombre}}
+        {{causa.juzgado is null ? '': causa.juzgado.nombre}}
    </td>
    <td>
        <button type="button" class="btn btn-danger btn-eliminar" onclick="javascript:eliminarCausa({{causa.id}})"><i class="fas fa-trash"></i></button>

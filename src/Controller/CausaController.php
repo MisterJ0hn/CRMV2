@@ -8,6 +8,7 @@ use App\Entity\MateriaEstrategia;
 use App\Repository\CausaRepository;
 use App\Repository\CuentaRepository;
 use App\Repository\JuzgadoCuentaRepository;
+use App\Repository\JuzgadoRepository;
 use App\Repository\MateriaEstrategiaRepository;
 use Doctrine\ORM\EntityManager;
 use Exception;
@@ -36,7 +37,7 @@ class CausaController extends AbstractController
     public function agregar(Agenda $agenda,
                             Request $request, 
                             MateriaEstrategiaRepository $materiaEstrategiaRepository,
-                            JuzgadoCuentaRepository $juzgadoCuentaRepository){
+                            JuzgadoRepository $juzgadoRepository){
         $entityManager = $this->getDoctrine()->getManager();
         $causa=new Causa();
         $causa->setEstado(1);
@@ -57,10 +58,9 @@ class CausaController extends AbstractController
             $causa->setMateriaEstrategia($materiaEstrategiaRepository->find($request->query->get('cboSubMateria')));
         }
         if(null !== $request->query->get('juzgado')){
-            $juzgadoCuenta= $juzgadoCuentaRepository->find($request->query->get('juzgado'));
-            if($juzgadoCuenta){
-                $juzgado = $juzgadoCuenta->getJuzgado();
-                $causa->setJuzgadoCuenta($juzgadoCuenta);
+            $juzgado= $juzgadoRepository->find($request->query->get('juzgado'));
+            $causa->setJuzgado($juzgado);
+            if($juzgado){                
                 if($juzgado->getCorte()!=null){
                     $causa->setCorte($juzgado->getCorte());
                 }

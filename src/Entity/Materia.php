@@ -50,11 +50,17 @@ class Materia
      */
     private $pjudCompetenciaId;
 
+    /**
+     * @ORM\OneToMany(targetEntity=MateriaCorte::class, mappedBy="materia")
+     */
+    private $materiaCortes;
+
     public function __construct()
     {
         $this->cuentaMaterias = new ArrayCollection();
         $this->materiaEstrategias = new ArrayCollection();
         $this->carteras = new ArrayCollection();
+        $this->materiaCortes = new ArrayCollection();
         
     }
 
@@ -189,6 +195,36 @@ class Materia
     public function setPjudCompetenciaId(?string $pjudCompetenciaId): self
     {
         $this->pjudCompetenciaId = $pjudCompetenciaId;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, MateriaCorte>
+     */
+    public function getMateriaCortes(): Collection
+    {
+        return $this->materiaCortes;
+    }
+
+    public function addMateriaCorte(MateriaCorte $materiaCorte): self
+    {
+        if (!$this->materiaCortes->contains($materiaCorte)) {
+            $this->materiaCortes[] = $materiaCorte;
+            $materiaCorte->setMateria($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMateriaCorte(MateriaCorte $materiaCorte): self
+    {
+        if ($this->materiaCortes->removeElement($materiaCorte)) {
+            // set the owning side to null (unless already changed)
+            if ($materiaCorte->getMateria() === $this) {
+                $materiaCorte->setMateria(null);
+            }
+        }
 
         return $this;
     }

@@ -24,12 +24,7 @@ class Corte
      */
     private $nombre;
 
-    /**
-     * @ORM\ManyToOne(targetEntity=Materia::class)
-     * @ORM\JoinColumn(nullable=false)
-     */
-    private $materia;
-
+    
     /**
      * @ORM\OneToMany(targetEntity=Juzgado::class, mappedBy="corte")
      */
@@ -45,10 +40,16 @@ class Corte
      */
     private $pjudCorteId;
 
+    /**
+     * @ORM\OneToMany(targetEntity=MateriaCorte::class, mappedBy="corte")
+     */
+    private $materiaCortes;
+
     public function __construct()
     {
         $this->juzgados = new ArrayCollection();
         $this->causas = new ArrayCollection();
+        $this->materiaCortes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -64,18 +65,6 @@ class Corte
     public function setNombre(string $nombre): self
     {
         $this->nombre = $nombre;
-
-        return $this;
-    }
-
-    public function getMateria(): ?Materia
-    {
-        return $this->materia;
-    }
-
-    public function setMateria(?Materia $materia): self
-    {
-        $this->materia = $materia;
 
         return $this;
     }
@@ -148,6 +137,36 @@ class Corte
     public function setPjudCorteId(?string $pjudCorteId): self
     {
         $this->pjudCorteId = $pjudCorteId;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, MateriaCorte>
+     */
+    public function getMateriaCortes(): Collection
+    {
+        return $this->materiaCortes;
+    }
+
+    public function addMateriaCorte(MateriaCorte $materiaCorte): self
+    {
+        if (!$this->materiaCortes->contains($materiaCorte)) {
+            $this->materiaCortes[] = $materiaCorte;
+            $materiaCorte->setCorte($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMateriaCorte(MateriaCorte $materiaCorte): self
+    {
+        if ($this->materiaCortes->removeElement($materiaCorte)) {
+            // set the owning side to null (unless already changed)
+            if ($materiaCorte->getCorte() === $this) {
+                $materiaCorte->setCorte(null);
+            }
+        }
 
         return $this;
     }

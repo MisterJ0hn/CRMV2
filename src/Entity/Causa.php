@@ -112,6 +112,11 @@ class Causa
      */
     private $corte;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Juzgado::class)
+     */
+    private $juzgado;
+
     public function __construct()
     {
         $this->lineaTiempoTerminadas = new ArrayCollection();
@@ -410,6 +415,18 @@ class Causa
     public function setCorte(?Corte $corte): self
     {
         $this->corte = $corte;
+
+        return $this;
+    }
+
+    public function getJuzgado(): ?Juzgado
+    {
+        return $this->juzgado;
+    }
+
+    public function setJuzgado(?Juzgado $juzgado): self
+    {
+        $this->juzgado = $juzgado;
 
         return $this;
     }

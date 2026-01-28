@@ -74,38 +74,63 @@
         
         {{ form_start(form,{'action': path('anexo_causas',{'id':contrato.id}), 'method': 'POST','attr':{'onsubmit':'return checkEnvio();'}}) }}
         <div class="row">
-            <select name="cboMateria" class="form-control cbomateria" placeholder="Materias" style="visibility:hidden" >
-
-                {% for cuenta_materia in cuenta_materias %}
-                <option value="{{ cuenta_materia.materia.id }}" selected>{{ cuenta_materia.materia.nombre }}</option>
-                {% endfor %}
-            </select>
-
+         <select name="cboMateria" class="form-control cbomateria" placeholder="Materias" style="visibility:hidden" >
+                    
+                    {% for cuenta_materia in cuenta_materias %}
+                    <option value="{{ cuenta_materia.materia.id }}" selected>{{ cuenta_materia.materia.nombre }}</option>
+                    {% endfor %}
+                </select>
             <div class="col-sm-12 col-md-3 submateria">
                 <select name="cboSubMateria" class="form-control cboSubMateria"  >
                     <option>Seleccione Servicio</option>
                 </select>
             </div>    
-            <div class="col-sm-12 col-md-3 ">
-                <input type="text" name="txtNombreCausa" placeholder="Id Causa" class="form-control txtNombreCausa" size="13" maxlength="13">
-                <small class="text-muted">Caracteres max. 13</small>
+            <div class="col-sm-12 col-md-4">
+                <div class="row">
+                    <div class="col-sm-12 col-md-3 ml-0 mr-0 pl-0 pr-0">
+                        <input type="text" name="txtLetra" placeholder="Letra" class="form-control txtLetra" size="3" maxlength="10"> 
+                    </div>
+                    <div class="col-sm-12 col-md-1 ml-0 mr-0 pl-0 pr-0" align="center">
+                        -
+                    </div>
+                    <div class="col-sm-12 col-md-3 ml-0 mr-0 pl-0 pr-0">
+                        <input type="text" name="txtRol" placeholder="N°" class="form-control txtRol" size="6" maxlength="255">
+                    </div>
+                    <div class="col-sm-12 col-md-1 ml-0 mr-0 pl-0 pr-0" align="center">
+                        -
+                    </div>
+                    <div class="col-sm-12 col-md-3 ml-0 mr-0 pl-0 pr-0">
+                        <input type="text" name="txtAnio" placeholder="Año" class="form-control txtAnio" size="4" maxlength="4">
+                    </div>
+                </div>
+               <small class="text-muted">Formato: Letra-Rol-Año</small>
             </div> 
-            <div class="col-sm-12 col-md-2 ">
-                <input type="text" name="txtCaratulado" placeholder="Caratulado" class="form-control txtCaratulado" size="30" maxlength="30">
-                <small class="text-muted">Caracteres max. 30</small>
+            <div class="col-sm-12 col-md-5 ">
+                <input type="text" name="txtCaratulado" placeholder="Caratulado" class="form-control txtCaratulado" size="50" maxlength="30">
+                <small class="text-muted">Caracteres max. 50</small>
             </div> 
-            <div class="col-sm-12 col-md-3">
-
+            
+                        
+        </div>
+        <div class="row">
+            
+            <div class="col-sm-12 col-md-5">
+                
+                <select name="corte" class="form-control corte">
+                    <option value=""> Seleccione Corte </option>
+                    
+                </select> 
+            </div>   
+            <div class="col-sm-12 col-md-6">
                 <select name="juzgado" class="form-control juzgado">
                     <option value=""> Seleccione Juzgado </option>
                     {% for juzgado in juzgados %}
-                    <option value="{{juzgado.id}}">{{juzgado.nombre}}</option>
+                        <option value="{{juzgado.id}}">{{juzgado.nombre}}</option>
                     {% endfor %}
                 </select> 
-            </div>   
+            </div>  
             <div class="col-sm-12 col-md-1">
                 <button type="button" class="btn btn-primary btn-agregar" onclick="javascript:agregarCausa()"><i class="fas fa-plus"></i></button>
-
             </div>  
         </div>
       
@@ -119,7 +144,7 @@
                         <tr>
                             <th>Id Servicio</th>
                             <th>Servicio</th>
-                            <th>Id Causa</th>
+                            <th>Causa/Rol</th>
                             <th>Caratulado</th>
                             <th>Juzgado</th>
                             <th></th>
@@ -139,7 +164,7 @@
                             <tr>
                                 <th>Id Servicio</th>
                                 <th>Servicio</th>
-                                <th>Id Causa</th>
+                                <th>Causa/Rol</th>
                                 <th>Caratulado</th>
                                 <th>Juzgado</th>
                                 <th></th>
@@ -320,6 +345,8 @@
             }
         }, function(start, end, label) {
         });
+
+        obtenerCortes({{contrato.agenda.cuenta.id}});
     });
 
     function listarCausasAnterior(){
@@ -389,7 +416,10 @@
             var fieldHTML = "<tr class='causa-"+item_id+"'>"+
                                 "<td>"+$('.cboSubMateria').val()+"</td>"+
                                 "<td><input type='hidden' value='"+$('.cboSubMateria').val()+"' name='hdSubMateria[]'  >"+$('.cboSubMateria option:selected').text()+"</td>"+
-                                "<td><input type='hidden' value='"+$('.txtNombreCausa').val()+"' name='hdNombreCausa[]'  >"+$('.txtNombreCausa').val()+"</td>"+
+                                "<td><input type='hidden' value='"+$('.txtLetra').val()+"' name='hdLetraCausa[]'  >"+
+                                "<input type='hidden' value='"+$('.txtRol').val()+"' name='hdRolCausa[]'  >"+
+                                "<input type='hidden' value='"+$('.txtAnio').val()+"' name='hdAnioCausa[]'  >"
+                                +$('.txtLetra').val()+"-"+$('.txtRol').val()+"-"+$('.txtAnio').val()+"</td>"+
                                 "<td><input type='hidden' value='"+$('.txtCaratulado').val()+"' name='hdCaratulado[]'  >"+$('.txtCaratulado').val()+"</td>"+
                                 "<td><input type='hidden' value='"+$('.juzgado').val()+"' name='hdJuzgado[]'  >"+$('.juzgado option:selected').text()+"</td>"+
                                 "<td><button type='button' class='btn btn-danger' onclick='javascript:eliminarCausa("+item_id+")' ><i class='fas fa-trash'></i></button></td>"+
@@ -503,5 +533,51 @@
         alert("Debe Ingresar al menos 1 causa");
         return false;
     }
+
+    function obtenerCortes(cuenta){
+       
+            $(".corte").show();
+            $.ajax({
+                url:"/materia/"+cuenta+"/corte_combo",
+                type: "post",
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                async: true,
+                beforeSend: function(){
+                    //$(".loading").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+                    
+                },
+                success:function(data){
+                    $(".corte").html(data);
+                    //$(".loading").html('');
+                    $(".juzgado").empty();
+                    $(".juzgado").append("<option>Seleccione Juzgado</option>"); 
+                }
+            });
+       
+    }
+
+    $(".corte").on("change",function(){
+        $.ajax({
+                url:"/juzgado_cuenta/"+$(this).val()+"/corte_combo",
+                type: "post",
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                async: true,
+                beforeSend: function(){
+                    //$(".loading").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+                    
+                },
+                success:function(data){
+                    $(".juzgado").html(data);
+                    
+                }
+
+            });
+    });
 
 </script>

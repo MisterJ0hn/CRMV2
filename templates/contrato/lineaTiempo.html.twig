@@ -149,8 +149,8 @@
                         <tr>
                             <th>Id</th>
                             <th>Servicio</th>
-                            <th>Causa/Rol</th>
-                            <th>Id Causa</th>
+                            <th>Rit/Rol</th>
+                            <th>IdCausa</th>
                             <th>Caratulado</th>
                             <th>Juzgado</th>
                             <th></th>
@@ -169,15 +169,13 @@
                             </td>
                              <td>
                                 {{causa.letra}}-{{causa.rol}}-{{causa.anio}}
-                            </td>
-                            <td>
-                                {{causa.idCausa}}
-                            </td>
+                            </td>   
+                            <td>{{ causa.IdCausa}} </td>
                             <td>
                                 {{causa.causaNombre}}
                             </td>
                             <td>
-                                {{causa.juzgadoCuenta is null?'':causa.juzgadoCuenta.juzgado}}
+                                {{causa.juzgado is null?'':causa.juzgado}}
                             </td>
                             <td>
                                 <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
@@ -194,14 +192,20 @@
                                         data-rol="{{causa.rol}}"
                                         data-anio="{{causa.anio}}"
                                         data-nombre="{{causa.causaNombre}}"
-                                        data-juzgado="{{causa.juzgadoCuenta is null?'':causa.juzgadoCuenta.id}}"
+                                        data-juzgado="{{causa.juzgado is null?'':causa.juzgado.id}}"
                                         data-causa="{{causa.id}}"
+                                        data-corteid="{{causa.corte is null?'':causa.corte.id}}"
+                                        data-cuenta="{{causa.agenda.cuenta.id}}"
                                         ><i class="fas fa-edit"></i></button>
                                         <a href="{{ path('contrato_linea_tiempo_detalle', {'id': causa.id}) }}" class="btn  btn-sm text-white bg-dark">LT</a>
                                         <a href="{{path('contrato_archivos_index',{'id':causa.id})}}" type="button" class="btn btn-success btn-sm" ><i class="fas fa-paperclip"></i></a>
                                         {% if causa.materiaEstrategia.estrategiaJuridica.id == 4 %}
                                           <a href="{{path('contrato_linea_tiempo_reporte',{'id':causa.id})}}" type="button" class="btn btn-warning btn-sm" ><i class="fas fa-clipboard-list"></i></a>                                          
                                         {% endif %}
+                                        <button class="btn btn-sm btn-info btn-ver-causa"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalDetalleCivil">👁</button>
+                                        <a href="" class="btn btn-sm btn-secondary"><i class="fas fa-gavel"></i></a>
                                 </div>                        
                             </td>
                         </tr>
@@ -228,7 +232,7 @@
             <div class="modal-body">
                 <form action="" method="post" id="frmEditar">
                 <div class="row">
-                    <div class="col-sm-12 col-md-6 submateria">
+                    <div class="col-sm-12 col-md-3 submateria pt-2">
                         
                     </div>
                     <div class="col-sm-12 col-md-3 "> 
@@ -251,17 +255,24 @@
                             </div>
 
                         </div>
-                        <small class="text-muted">Formato: Letra-N°-Año</small>
-                    </div>  
-                    <div class="col-sm-12 col-md-3 ">
-                        <p class="txtNombreCausa"></p>
-                        
                         
                     </div> 
+                    
                     <div class="col-sm-12 col-md-6 ">
                         <input type="text" name="txtCaratulado" placeholder="Caratulado" class="form-control txtCaratulado" size="50" maxlength="30">
                         <small class="text-muted">Caracteres max. 50</small>
-                    </div> 
+                    </div>  
+                    
+                    
+                     <div class="col-sm-12 col-md-6">
+                        
+                        <select name="corte" class="form-control corte">
+                            <option value=""> Seleccione Corte </option>
+                            {% for corte in cortes %}
+                                <option value="{{corte.corte.id}}">{{corte.corte.nombre}}</option>
+                            {% endfor %}
+                        </select> 
+                    </div>   
                     <div class="col-sm-12 col-md-6">
                         
                         <select name="juzgado" class="form-control juzgado">
@@ -283,6 +294,101 @@
     </div>
 </div>
 
+<!-- Modal Detalle Causa Civil -->
+<div class="modal fade" id="modalDetalleCivil" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Detalle Causa Civil</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- DATOS PRINCIPALES -->
+        <div class="row mb-3">
+          <div class="col-md-4"><strong>ROL:</strong> <span id="m_rol">-</span></div>
+          <div class="col-md-4"><strong>F. Ing.:</strong> <span id="m_fing">-</span></div>
+          <div class="col-md-4"><strong>Promotora:</strong> <span id="m_promotora">-</span></div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-4"><strong>Est. Adm.:</strong> <span id="m_estadm" class="text-danger">-</span></div>
+          <div class="col-md-4"><strong>Proc.:</strong> <span id="m_proc">-</span></div>
+          <div class="col-md-4"><strong>Ubicación:</strong> <span id="m_ubic">-</span></div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-4"><strong>Estado Proc.:</strong> <span id="m_estproc">-</span></div>
+          <div class="col-md-4"><strong>Etapa:</strong> <span id="m_etapa">-</span></div>
+          <div class="col-md-4"><strong>Tribunal:</strong> <span id="m_tribunal">-</span></div>
+        </div>
+
+        <hr>
+
+        <!-- CUADERNO -->
+        <h6><strong>Historia Causa Cuaderno</strong></h6>
+        <select id="m_cuaderno" class="form-select w-25 mb-3" onchange="filtrarPorCuaderno()">
+            <option value="">Todos los cuadernos</option>
+        </select>
+
+        <!-- TABS -->
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#tabHistoria">Historia</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tabLitigantes">Litigantes</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tabNotif">Notificaciones</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tabEscritos">Escritos por Resolver</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#tabExhortos">Exhortos</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+
+            <!-- TAB HISTORIA -->
+            <div class="tab-pane fade show active" id="tabHistoria">
+                <div class="table-responsive">
+                  <table id="tablaHistoria" class="table table-bordered table-striped">
+                    <thead class="table-primary">
+                      <tr>
+                        <th>Folio</th><th>Doc.</th><th>Anexo</th><th>Etapa</th><th>Trámite</th>
+                        <th>Desc. Trámite</th><th>Fec. Trámite</th><th>Foja</th><th>Georef.</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- filas dinamicas -->
+                    </tbody>
+                  </table>
+                </div>
+            </div>
+
+            <!-- LOS OTROS TABS -->
+            <div class="tab-pane fade" id="tabLitigantes">Contenido litigantes...</div>
+            <div class="tab-pane fade" id="tabNotif">Contenido notificaciones...</div>
+            <div class="tab-pane fade" id="tabEscritos">Contenido escritos...</div>
+            <div class="tab-pane fade" id="tabExhortos">Contenido exhortos...</div>
+
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <script>
     $('.btn-ocultar').hide();
     $('.btn-modificar').hide();
@@ -299,22 +405,75 @@
         var rol = button.data('rol')
         var letra = button.data('letra')
         var url=button.data('url') // Extract info from data-* attributes
+        var corteId= button.data('corteid')
+        var cuenta = button.data('cuenta')
         // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
         // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-        
+
         $(".submateria").html(servicio)
-        $(".txtNombreCausa").html(idCausa)
+        //$(".txtNombreCausa").html(idCausa)
         $(".txtLetra").val(letra)
         $(".txtRol").val(rol)
         $(".txtAnio").val(anio)
-        $(".txtCaratulado").val(nombre)
-        $(".juzgado").val(juzgado)
+        $(".txtCaratulado").val(nombre)        
         $(".hdCausa").val(causa)
+
         $("#frmEditar").attr("action","/contrato/"+causa+"/modificar_servicio")
+        obtenerCortes(cuenta,corteId,juzgado);
         
-
     })
+     $(".corte").on("change",function(){
+        obtenerJuzgados($(this).val(),null);
+    });
 
+    function obtenerJuzgados(corte,defecto){
+        $.ajax({
+                url:"/juzgado_cuenta/"+corte+"/corte_combo",
+                type: "post",
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                async: true,
+                beforeSend: function(){
+                    //$(".loading").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+                    
+                },
+                success:function(data){
+                    $(".juzgado").html(data);
+                    if(defecto!=null){
+                        $(".juzgado").val(defecto);
+                    }
+                }
+
+            });
+    }
+
+    function obtenerCortes(cuenta,corteDefecto,juzgadoDefecto){
+
+        $.ajax({
+                url:"/materia/"+cuenta+"/corte_combo",
+                type: "get",
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                async: true,
+                beforeSend: function(){
+                    
+                },
+                success:function(data){
+                    $(".corte").html(data);
+                    //$(".loading").html('');
+                   if(corteDefecto!=null){
+                        $(".corte").val(corteDefecto);
+                    }
+                    obtenerJuzgados(corteDefecto,juzgadoDefecto);
+                }
+
+
+            });
+    }
     $('.btn-ver').on('click', function () {
         $("#txtClaveUnica").attr('type', 'text'); 
         $(this).hide();

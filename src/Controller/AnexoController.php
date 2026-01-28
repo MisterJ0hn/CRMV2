@@ -110,7 +110,9 @@ class AnexoController extends AbstractController
             $entityManager->flush();
 
             $submaterias=$request->request->get('hdSubMateria');
-            $nombrecausas=$request->request->get('hdNombreCausa');
+            $letra = $request->request->get('hdLetraCausa');
+            $rol = $request->request->get('hdRolCausa');
+            $anio = $request->request->get('hdAnioCausa');
             $caratulados=$request->request->get('hdCaratulado');
             $hdjuzgados=$request->request->get('hdJuzgado');
 
@@ -126,8 +128,14 @@ class AnexoController extends AbstractController
                 $causa->setAgenda($contrato->getAgenda());
                // echo $contratoAnexo->getId();
                 $causa->setAnexo($contratoAnexoRepository->find($contratoAnexo->getId()));
-                if(null !== $nombrecausas[$i]){
-                    $causa->setIdCausa($nombrecausas[$i]);
+                if(null !== $letra[$i]){
+                    $causa->setLetra($letra[$i]);
+                }
+                if(null !== $rol[$i]){
+                    $causa->setRol($rol[$i]);
+                }
+                if(null !== $anio[$i]){
+                    $causa->setAnio($anio[$i]);
                 }
                 if(null !== $caratulados[$i]){
                     $causa->setCausaNombre($caratulados[$i]);
@@ -235,7 +243,9 @@ class AnexoController extends AbstractController
             }
 
             $submaterias=$request->request->get('hdSubMateria');
-            $nombrecausas=$request->request->get('hdNombreCausa');
+            $letra = $request->request->get('hdLetraCausa');
+            $rol = $request->request->get('hdRolCausa');
+            $anio = $request->request->get('hdAnioCausa');
             $caratulados=$request->request->get('hdCaratulado');
             $hdjuzgados=$request->request->get('hdJuzgado');
 
@@ -251,8 +261,14 @@ class AnexoController extends AbstractController
                 $causa->setAgenda($contrato->getAgenda());
                // echo $contratoAnexo->getId();
                 $causa->setAnexo($contratoAnexoRepository->find($contratoAnexo->getId()));
-                if(null !== $nombrecausas[$i]){
-                    $causa->setIdCausa($nombrecausas[$i]);
+                if(null !== $letra[$i]){
+                    $causa->setLetra($letra[$i]);
+                }
+                if(null !== $rol[$i]){
+                    $causa->setRol($rol[$i]);
+                }
+                if(null !== $anio[$i]){
+                    $causa->setAnio($anio[$i]);
                 }
                 if(null !== $caratulados[$i]){
                     $causa->setCausaNombre($caratulados[$i]);

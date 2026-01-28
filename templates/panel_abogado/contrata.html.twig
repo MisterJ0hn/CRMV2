@@ -205,16 +205,16 @@
 
 <div class="row">
     <div class="col-12">
-    
-    <h4 id="materia">Causa</h4>
-    </div>
-</div>
-        <select name="cboMateria" class="form-control cbomateria" placeholder="Materias" style="visibility:hidden" >
+     <select name="cboMateria" class="form-control cbomateria" placeholder="Materias" style="visibility:hidden" >
                             
             {% for cuenta_materia in cuenta_materias %}
             <option value="{{ cuenta_materia.materia.id }}" selected>{{ cuenta_materia.materia.nombre }}</option>
             {% endfor %}
         </select>
+    <h4 id="materia">Causa</h4>
+    </div>
+</div>
+       
         
         <div class="row">
             <div class="col-sm-12 col-md-3 submateria">
@@ -222,7 +222,7 @@
                     <option>Seleccione Servicio</option>
                 </select>
             </div>    
-            <div class="col-sm-12 col-md-3 ">
+            <div class="col-sm-12 col-md-4">
                 <div class="row">
                     <div class="col-sm-12 col-md-3 ml-0 mr-0 pl-0 pr-0">
                         <input type="text" name="txtLetra" placeholder="Letra" class="form-control txtLetra" size="3" maxlength="10"> 
@@ -242,18 +242,16 @@
                 </div>
                <small class="text-muted">Formato: Letra-Rol-Año</small>
             </div> 
-            <div class="col-sm-12 col-md-2 ">
+            <div class="col-sm-12 col-md-5 ">
                 <input type="text" name="txtCaratulado" placeholder="Caratulado" class="form-control txtCaratulado" size="50" maxlength="30">
                 <small class="text-muted">Caracteres max. 50</small>
             </div> 
             
-            <div class="col-sm-12 col-md-1">
-                <button type="button" class="btn btn-primary btn-agregar" onclick="javascript:agregarCausa()"><i class="fas fa-plus"></i></button>
-            </div>             
+                        
         </div>
         <div class="row">
             
-            <div class="col-sm-12 col-md-3">
+            <div class="col-sm-12 col-md-5">
                 
                 <select name="corte" class="form-control corte">
                     <option value=""> Seleccione Corte </option>
@@ -267,9 +265,13 @@
                         <option value="{{juzgado.id}}">{{juzgado.nombre}}</option>
                     {% endfor %}
                 </select> 
-            </div>   
+            </div>  
+            <div class="col-sm-12 col-md-1">
+                <button type="button" class="btn btn-primary btn-agregar" onclick="javascript:agregarCausa()"><i class="fas fa-plus"></i></button>
+            </div>  
         </div>
         <div class="card-body" >
+
              <div id="estrategiasJuridicas">
              
              </div>
@@ -307,11 +309,11 @@
         $('.select2').select2();
         
         cambiaAcreedores({{agenda.cuenta.id}});
-
+        obtenerCortes({{agenda.cuenta.id}});
         //$('.textTotal').hide();
         //$('.divTotal').hide();
         $('.fecha-incorporacion').hide();
-         $('.fecha-incorporacion').prop('required',false);
+        $('.fecha-incorporacion').prop('required',false);
         
     });
     $('.primera-cuota').css("visibility", "hidden");
@@ -909,32 +911,28 @@
         
     }
     function obtenerCortes(cuenta){
-        debugger;
-        if($(".cbomateria").val()=="1"){
-            $(".corte").show();
-            $.ajax({
-                url:"/materia/"+cuenta+"/corte_combo",
-                type: "post",
-                dataType: "html",
-                cache: false,
-                contentType: false,
-                processData: false,
-                async: true,
-                beforeSend: function(){
-                    //$(".loading").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+        
+        $(".corte").show();
+        $.ajax({
+            url:"/materia/"+cuenta+"/corte_combo",
+            type: "post",
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+                //$(".loading").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
                     
-                },
-                success:function(data){
-                    $(".corte").html(data);
-                    //$(".loading").html('');
-                    console.log(data);
-                }
-            });
-        }else{
-            $(".corte").hide();
-            $(".corte").val("");
-        }
-
+            },
+            success:function(data){
+                $(".corte").html(data);
+                //$(".loading").html('');
+                $(".juzgado").empty();
+                $(".juzgado").append("<option>Seleccione Juzgado</option>"); 
+            }
+        });
+        
     }
 
     $(".corte").on("change",function(){
@@ -959,33 +957,12 @@
     });
 
     function cambiaAcreedores(cuenta){
-        debugger;
+       
         if(cuenta == 7){
             $("#acreedorVacio").html('<input type="hidden" id="Institucion" value="1">');
         }else{
              $("#acreedorVacio").html('');
-        }
-        
-
-        $.ajax({
-                url:"/juzgado_cuenta/"+cuenta+"/combo",
-                type: "post",
-                dataType: "html",
-                cache: false,
-                contentType: false,
-                processData: false,
-                async: true,
-                beforeSend: function(){
-                    //$(".loading").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
-                    
-                },
-                success:function(data){
-                    $(".juzgado").html(data);
-                    //$(".loading").html('');
-                }
-
-            });
-        
+        }                
     }
     $('.emailCliente').inputmask({
         mask: "*{1,100}[.*{1,100}][.*{1,100}][.*{1,100}]@*{1,50}[.*{2,50}][.*{1,3}]",
