@@ -79,9 +79,15 @@ class PjudMovimiento
      */
     private $pjudPdfs;
 
+    /**
+     * @ORM\OneToMany(targetEntity=PjudAnexoMovimiento::class, mappedBy="pjudMovimiento")
+     */
+    private $pjudAnexoMovimientos;
+
     public function __construct()
     {
         $this->pjudPdfs = new ArrayCollection();
+        $this->pjudAnexoMovimientos = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -245,6 +251,36 @@ class PjudMovimiento
             // set the owning side to null (unless already changed)
             if ($pjudPdf->getPjudMovimiento() === $this) {
                 $pjudPdf->setPjudMovimiento(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PjudAnexoMovimiento>
+     */
+    public function getPjudAnexoMovimientos(): Collection
+    {
+        return $this->pjudAnexoMovimientos;
+    }
+
+    public function addPjudAnexoMovimiento(PjudAnexoMovimiento $pjudAnexoMovimiento): self
+    {
+        if (!$this->pjudAnexoMovimientos->contains($pjudAnexoMovimiento)) {
+            $this->pjudAnexoMovimientos[] = $pjudAnexoMovimiento;
+            $pjudAnexoMovimiento->setPjudMovimiento($this);
+        }
+
+        return $this;
+    }
+
+    public function removePjudAnexoMovimiento(PjudAnexoMovimiento $pjudAnexoMovimiento): self
+    {
+        if ($this->pjudAnexoMovimientos->removeElement($pjudAnexoMovimiento)) {
+            // set the owning side to null (unless already changed)
+            if ($pjudAnexoMovimiento->getPjudMovimiento() === $this) {
+                $pjudAnexoMovimiento->setPjudMovimiento(null);
             }
         }
 

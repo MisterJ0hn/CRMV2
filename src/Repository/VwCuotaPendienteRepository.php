@@ -38,7 +38,11 @@ class VwCuotaPendienteRepository extends ServiceEntityRepository
                      * JRM: 2025-12-20 - Se agrega filtro por segmento, para que muestre solo las cuotas mayores a la 3
                      */
                     if($segmento!=null && $segmento==1){
-                        $query->andWhere('c.numero <= 3');
+                       
+                        $query->andWhere('c.numero <= 3')
+                        ->andWhere('c.numero != 1');
+                    }else{
+                        $query->andWhere(' c.numero != 1');
                     }                     
                   
                 }
@@ -97,7 +101,7 @@ class VwCuotaPendienteRepository extends ServiceEntityRepository
          /**JRM: 2025-11-13 - Se agrega función de si la deuda es menor a la deuda minima, 
         *devuelva la fecha de la siguiente cuota
         */
-
+       
         $configuracion = $this->getEntityManager()->getRepository(Configuracion::class)->find(1);
         
         $query=$this->createQueryBuilder('c');
@@ -111,10 +115,12 @@ class VwCuotaPendienteRepository extends ServiceEntityRepository
                     /**
                      * JRM: 2025-12-20 - Se agrega filtro por segmento, para que muestre solo las cuotas mayores a la 3
                      */
-                    if($segmento!=null && $segmento==1){
+                     if($segmento!=null && $segmento==1){
                         $query->andWhere('c.numero > 3');
-                    }
                     
+                     }else{
+                        return [];
+                     }
                 }                                
                 $query->andWhere(' co.isFinalizado = false or co.isFinalizado is null'); 
 
@@ -335,7 +341,7 @@ class VwCuotaPendienteRepository extends ServiceEntityRepository
             ->getOneOrNullResult()
         ;
     }
-
+    
     public function deudaTotal($contrato,$otros=false)
     {
 

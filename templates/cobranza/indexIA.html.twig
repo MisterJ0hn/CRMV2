@@ -4,18 +4,58 @@
 
 {% block body %}
 
-    <section>
+   <section>
+    <div class="row">
+        {% set total = 0 %}
+     
+        {% for vencimiento in vencimientos  %}
+        {% if vencimiento.id ==1 %}
+            
+        
+        <div class="col-sm-6 col-md-3">
+            
+            <div class="info-box">
+                <span class="info-box-icon {{vencimiento.color}}"><i class="{{ vencimiento.icono }}"></i></span>
     
-    {% if queryTotales != "" %}
-        <div class="alert alert-success" role="alert">
-            <h4 class="alert-heading"> {{vencimientoSeleccionado.nombre}}</h4>
-            <p class="mb-0"><strong>Total</strong> {{queryTotales[0][1]|number_format(0,",",".")}}</p>
-             {% if sesion.getSesion.usuarioTipo.id == 1 %}
-            <p class="mb-0"><strong>Monto Total</strong> {{queryTotales[0][2]|number_format(0,",",".")}}</p>
-            {% endif %}
+                <div class="info-box-content">
+                <span class="info-box-text">{{vencimiento.nombre}}</span>
+                {% if sesion.getSesion.usuarioTipo.id == 1 %}
+                <span class="info-box-number">{{vencimiento.valMin}} -  {{vencimiento.valMax}} </span>
+                {% endif %}
+                <a href="#" class="small-box-footer" onclick="javascript:buscar({{vencimiento.id}})">
+                    Ver mas <i class="fas fa-arrow-circle-right"></i>
+                </a>
+          
+                </div>
+
+                
+                <!-- /.info-box-content -->
+            </div>
             
         </div>
+        {% endif %}
+
+       
+       {% endfor %}
         
+    </div>
+   
+    {% if vencimientoSeleccionado.nombre != "" %}
+        <div class="alert alert-success" role="alert">
+            <h4 class="alert-heading"> {{vencimientoSeleccionado.nombre}}</h4>
+        </div>
+        
+    {% endif %}
+
+    {% if mostrarMensaje=="SI" %}
+        
+
+        <div class="card bg-light">
+            <div class="card-body">
+                <small >Clientes morosos menor o igual a {{vencimientoSeleccionado.valMax}} dias con 3 o más cuotas pagadas ({{vencimientoSeleccionado.nombre}}) </small>
+            </div>
+
+        </div>
     {% endif %}
     </section>
     <div class="card">
@@ -54,7 +94,7 @@
                     <div class="col-sm-12 col-md-2 mt-3">
                        
                            
-                                <button type="button"  class="btn btn-secondary exportarxslx mt-3"><i class="fas fa-download"></i></button>
+                              <!--  <button type="button"  class="btn btn-secondary exportarxslx mt-3"><i class="fas fa-download"></i></button>-->
                       
                     </div>
                    
@@ -151,9 +191,12 @@
                         </td>
                         {% endif %}  
                         <td>
+                        <div class="btn-group btn-group-sm " role="group" aria-label="Basic example">
                             <a href="{{ path('cobranza_lote', {'id': contrato.id}) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
                             <a href="{{ path('vercobranza_view', {'id': contrato.id}) }}" class="btn btn-success btn-sm"><i class="far fa-eye"></i></a>
                             <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn  btn-sm text-white bg-dark">LT</a>
+                            <a href="{{path('anexo_ia_index',{'id':contrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos" ><i class="fas fa-file"></i></a>
+                        </div>
                         </td>
                     </tr>
                 {% else %}
@@ -215,5 +258,107 @@
         $("#bStatus").val(status);
         $(".frmBuscar").submit();
     }
+    $(".btn-suscripcion").on("click", function () {
+        var url = $(this).data("url");
+        if(confirm("Estas seguro de generar el link de suscripción?")){
+            $.ajax({
+                url: url,
+                type: "POST",
+                success: function (response) {
+                    if (response.estado == "ACTIVA") {
+                        $("#modal-suscripcion-body").html(
+                            '<div class="alert alert-success">La suscripción ya se encuentra <strong>Activa</strong>.</div>'
+                        );
+                    } else {
+                        $("#input-link-suscripcion").val(response.link);
+                        $("#modal-suscripcion-body").html(
+                            '<div class="form-group">' +
+                            '<label>Link para enviar al cliente:</label>' +
+                            '<div class="input-group">' +
+                            '<input type="text" id="input-link-suscripcion" class="form-control" readonly value="' + response.link + '">' +
+                            '<div class="input-group-append">' +
+                            '<button class="btn btn-outline-secondary btn-copiar-link" type="button"><i class="fas fa-copy"></i></button>' +
+                            '</div></div>' +
+                            '<a href="https://api.whatsapp.com/send?text=' + encodeURIComponent(response.link) + '" target="_blank" class="btn btn-success mt-2"><i class="fab fa-whatsapp"></i> Enviar por WhatsApp</a>' +
+                            '</div>'
+                        );
+                        $(".btn-copiar-link").off("click").on("click", function () {
+                            var linkVal = $("#input-link-suscripcion").val();
+                            navigator.clipboard.writeText(linkVal).then(function () {
+                                $(".btn-copiar-link").html('<i class="fas fa-check"></i>');
+                                setTimeout(function () { $(".btn-copiar-link").html('<i class="fas fa-copy"></i>'); }, 1500);
+                            });
+                        });
+                    }
+                    $("#modal-suscripcion").modal("show");
+                },
+                error: function (xhr, ajaxOptions, thrownError) {
+                    response = JSON.parse(xhr.responseText);
+                   $("#modal-suscripcion-body").html(
+                            '<div class="form-group">' +
+                            '<h1>Error</h1>' +
+                            '<label>'+response.mensaje+'</label>' +
+                            '</div>'
+                        );
+                        $("#modal-suscripcion").modal("show");
+                }
+            });
+        }
+    });
+    $(".btn-obtener-suscripcion").on("click", function () {
+        var url = $(this).data("url");
+       
+        $.ajax({
+            url: url,
+            type: "POST",
+            success: function (response) {
+                if (response.estado == "ACTIVA") {
+                    $("#modal-suscripcion-body").html(
+                        '<div class="alert alert-success">La suscripción ya se encuentra <strong>Activa</strong>.</div>'
+                    );
+                } else {
+                    $("#input-link-suscripcion").val(response.link);
+                    $("#modal-suscripcion-body").html(
+                        '<div class="form-group">' +
+                        '<label>Link para enviar al cliente:</label>' +
+                        '<div class="input-group">' +
+                        '<input type="text" id="input-link-suscripcion" class="form-control" readonly value="' + response.link + '">' +
+                        '<div class="input-group-append">' +
+                        '<button class="btn btn-outline-secondary btn-copiar-link" type="button"><i class="fas fa-copy"></i></button>' +
+                        '</div></div>' +
+                        '<a href="https://api.whatsapp.com/send?text=' + encodeURIComponent(response.link) + '" target="_blank" class="btn btn-success mt-2"><i class="fab fa-whatsapp"></i> Enviar por WhatsApp</a>' +
+                        '</div>'
+                    );
+                    $(".btn-copiar-link").off("click").on("click", function () {
+                        var linkVal = $("#input-link-suscripcion").val();
+                        navigator.clipboard.writeText(linkVal).then(function () {
+                            $(".btn-copiar-link").html('<i class="fas fa-check"></i>');
+                            setTimeout(function () { $(".btn-copiar-link").html('<i class="fas fa-copy"></i>'); }, 1500);
+                        });
+                    });
+                }
+                $("#modal-suscripcion").modal("show");
+            },
+            error: function () {
+                alert("Error al generar el link de suscripción.");
+            }
+        });
+    });
     </script>
+    
+    <div class="modal fade" id="modal-suscripcion" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="fas fa-link"></i> Suscripción Pago Automático</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body" id="modal-suscripcion-body">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}

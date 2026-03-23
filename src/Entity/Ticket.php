@@ -119,6 +119,12 @@ class Ticket
      */
     private $ticketTipo;
 
+
+    /**
+     * @ORM\ManyToOne(targetEntity=TicketTipoSolicitud::class, inversedBy="tickets")
+     */
+    private $ticketTipoSolicitud;
+
     public function __construct()
     {
         $this->ticketHistorials = new ArrayCollection();
@@ -371,6 +377,18 @@ class Ticket
     public function setTicketTipo(?TicketTipo $ticketTipo): self
     {
         $this->ticketTipo = $ticketTipo;
+
+        return $this;
+    }
+
+    public function getTicketTipoSolicitud(): ?TicketTipoSolicitud
+    {
+        return $this->ticketTipoSolicitud;
+    }
+
+    public function setTicketTipoSolicitud(?TicketTipoSolicitud $ticketTipoSolicitud): self
+    {
+        $this->ticketTipoSolicitud = $ticketTipoSolicitud;
 
         return $this;
     }

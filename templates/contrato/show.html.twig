@@ -96,7 +96,7 @@
                 </div>
                 <div class="col-sm-12 col-md-3">
                     <small class="text-muted">Canal</small>
-                    <p>{{agenda.agendaContacto.nombre}}</p>   
+                    <p>{{agenda.agendaContacto?agenda.agendaContacto.nombre:""}}</p>   
                 </div>
             </div>
     
@@ -187,6 +187,49 @@
                 <p>{{contrato.observacion|raw}}</p>   
                 
             </div>
+            <hr>
+            <h3>Suscripción pago automático</h3>
+            <div class="row">
+                {% if contrato.aceptaSuscripcion == 1 %}
+                <div class="col-12">
+                    <p>El cliente aceptó generar suscripción automática</p>
+                </div>
+                <div class="col-12">
+                    {% if contrato.sesionSuscripcionActiva==1 %}
+                        <label>Link para suscribir</label>
+                        <p>
+                            <a href="{{url_web}}/suscripcion/{{contrato.sesionSuscripcion}}" id="linkSuscripcion">{{url_web}}/suscripcion/{{contrato.sesionSuscripcion}}</a>
+                            <input type="hidden" value="{{url_web}}/suscripcion/{{contrato.sesionSuscripcion}}" class="url">
+                            <button type="button" class="btn btn-sm btn-primary btn-copiar"><i class="fas fa-copy btn-copy-img"></i></button>
+                        </p>
+                        <!--<button type="button" class="btn btn-primary re-validar">Re validar suscripción</button>-->
+                    {% else %}
+                        {% if contrato.estadoSuscripcion=="ACTIVA" %}
+                            <div class="alert alert-success" role="alert">
+                            Suscripción se encuentra Activa
+                            </div>
+                        {% else %}
+                            <div class="alert alert-danger" role="alert">
+                            Ha ocurrido un error al activar: {{contrato.estadoSuscripcion}}
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                    
+
+
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <p>El cliente acepta registro de suscripción automática?</p>
+                </div>
+                <div class="col-12">
+                    <form action="{{path("contrato_acepta_suscripcion",{"id":contrato.id})}}" method="post" class="frm-suscribir">
+                        <button type="button" class="btn btn-primary btn-acepta-suscripcion" >Aceptar</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>  
+            <hr >
             {% if metodo is defined %}
                 
                 {% if metodo == "T" %}
@@ -249,22 +292,135 @@
     </section>
     </div>
 </div>
+<<<<<<< Updated upstream
     <script>
+=======
+
+
+<!-- Modal -->
+ <div class="modal fade" id="mensaje-suscripcion" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-warning mensaje-suscripcion-header">
+            
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body mensaje-suscripcion-body">
+            
+        </div>
+       <div class="modal-body"><button type="button" class="btn btn-danger" data-dismiss="modal" aria-label="Close">Cerrar</button></div>
+      </div>
+    </div>
+  </div>
+
+
+<script>
+>>>>>>> Stashed changes
         
-        $.ajax({
-            url:"{{path('contrato_new_rol',{'id':contrato.id,'mode':'view'})}}",
-            type: "get",
-            dataType: "html",
-            cache: false,
-            contentType: false,
-            processData: false,
-            async: true,
-            success:function(data){
-                $("#contratoRoles").html(data);
-            }
+    $.ajax({
+        url:"{{path('contrato_new_rol',{'id':contrato.id,'mode':'view'})}}",
+        type: "get",
+        dataType: "html",
+        cache: false,
+        contentType: false,
+        processData: false,
+        async: true,
+        success:function(data){
+            $("#contratoRoles").html(data);
+        }
+
+    });
+
+    {% if suscripcionId is defined %}
+    $("#mensaje-url-suscripcion").modal("show");
+    {% endif %}
+
+    $(".btn-copiar").click(function(){
     
+        url = $(".url").val();
+        // Copiar al portapapeles
+        
+        navigator.clipboard.writeText(url).then(()=> {
+            $(".btn-copy-img").removeClass("fa-copy");
+            $(".btn-copy-img").addClass("fa-check");
+            $(".btn-copiar").removeClass("btn-primary");
+             $(".btn-copiar").addClass("btn-success");
+            setTimeout(() => {
+                $(".btn-copy-img").addClass("fa-copy");
+                $(".btn-copy-img").removeClass("fa-check");
+                 $(".btn-copiar").addClass("btn-primary");
+                 $(".btn-copiar").removeClass("btn-success");
+            }, 2000);
+            
+
+        }).catch(function(err) {
+            console.error('Error al copiar: ', err);
         });
+<<<<<<< Updated upstream
     </script>
+=======
+    });
+
+    $(".re-validar").click(function(){
+
+        $.ajax(
+            {
+               url:"{{path("suscripcion_re_validar",{"uuid":contrato.sesionSuscripcion?contrato.sesionSuscripcion:"_"})}}",
+                type: "get",
+                dataType: "json",
+                cache: false,
+                contentType: false,
+                processData: false,
+                async: true,
+                beforeSend: function(){
+                },
+                success:function(data){
+                   console.log("success");
+                    console.log(data);
+                    $response = data;
+                    if($response.exito==1){
+                        //$(".mensaje-suscripcion-header").html('<div class="info-box"><span class="info-box-icon bg-success"><i class="fas fa-check"></i></span><div class="info-box-content"><span class="info-box-text">Exito</span></div></div>');
+                        $(".mensaje-suscripcion-header").html("<h1>Exito</h1>");
+                        $(".mensaje-suscripcion-header").removeClass("bg-danger");
+                        
+                        $(".mensaje-suscripcion-header").addClass("bg-warning");
+                        $(".mensaje-suscripcion-body").html('<p>Suscripción creada correctamente</p>');
+                        $('#mensaje-suscripcion').modal('show');
+                    }else{
+                        //$(".mensaje-suscripcion-header").html('<div class="info-box"><span class="info-box-icon bg-danger"><i class="fas fa-times"></i></span><div class="info-box-content"><span class="info-box-text">Error</span></div></div>');
+                        $(".mensaje-suscripcion-header").html("<h1>Error</h1>");
+                        $(".mensaje-suscripcion-header").removeClass("bg-warning");
+                        
+                        $(".mensaje-suscripcion-header").addClass("bg-danger");
+                        $(".mensaje-suscripcion-body").html('<p>'+$response.mensaje+'</p>');
+                        $('#mensaje-suscripcion').modal('show');
+                    }
+
+                },error:function(error){
+                    console.log("error");
+                    console.log(error);
+                    $response=error;
+                    $(".mensaje-suscripcion-body").html("<p> error interno:"+$response+"</p>");
+                    $('#mensaje-suscripcion').modal('show');
+                    
+                } 
+            }
+        );
+        
+    });
+    $(".btn-acepta-suscripcion").click(function(){
+        if(confirm('Está a punto de activar la suscripción de este cliente. Esta acción puede generar cargos o compromisos contractuales. ¿Desea continuar?')){
+           $(".frm-suscribir").submit();
+        }else{
+            $(".btn-acepta-suscripcion").prop('disabled',false);
+            
+        }
+    });
+
+</script>
+>>>>>>> Stashed changes
     
 
 {% endblock %}

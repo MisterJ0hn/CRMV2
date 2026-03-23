@@ -603,18 +603,34 @@ class ContratoController extends AbstractController
         }
         if ($form->isSubmitted() && $form->isValid()) {
             $this->getDoctrine()->getManager()->flush();
-
+            $entityManager = $this->getDoctrine()->getManager();
             $compania=$_POST['cboCompanias'];
             $contrato->setSucursal($sucursalRepository->find($request->request->get('cboSucursal')));
             $contrato->setDiaPago($request->request->get('chkDiasPago'));
-         
+            
+            if($contrato->getSesionSuscripcion()==null){
+                $contrato->setAceptaSuscripcion($request->request->get('chkAceptaSuscripcion'));
+                
+                if($contrato->getAceptaSuscripcion()){
+                    $historicoSuscripcion = new ContratoHistoricoSuscripcion();
+                    $historicoSuscripcion->setContrato($contrato);
+                    $historicoSuscripcion->setExito(true);
+                    $historicoSuscripcion->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+                    $historicoSuscripcion->setObservacion("Usuario acepta suscripción de pago automático");
+                    $historicoSuscripcion->setSuscripcionId("");
+                    $entityManager->persist($historicoSuscripcion);
+                    $entityManager->flush();
+                    $this->crearSesionSuscripcion($contrato);
+                }
+            }
+
             $contrato->setFechaPrimerPago(new \DateTime(date($request->request->get('txtFechaPago')."-1 00:00:00")));
 
             $contrato->setCregion($regionRepository->find($request->request->get('cboRegion')));
             $contrato->setCciudad($ciudadRepository->find($request->request->get('cboCiudad')));
             $contrato->setCcomuna($comunaRepository->find($request->request->get('cboComuna')));
             $contrato->setSexo($request->request->get('cboSexo'));
-            $entityManager = $this->getDoctrine()->getManager();
+           
             $contrato->setPdf(null);
             $entityManager->persist($contrato);
             $entityManager->flush();
@@ -631,6 +647,7 @@ class ContratoController extends AbstractController
             $entityManager->persist($agenda);
             $entityManager->flush();
 
+            
 
             $contratoMees=$contrato->getContratoMees();
 
@@ -638,92 +655,94 @@ class ContratoController extends AbstractController
                 $entityManager->remove($contratoMee);
                 $entityManager->flush();
             }
-            if(!$tienePago){
-                $detalleCuotas=$contrato->getDetalleCuotas();
-                foreach($detalleCuotas as $detalleCuota){
-            
-                    $entityManager->remove($detalleCuota);
-                    $entityManager->flush();
-                }
+            if($contrato->getAceptaSuscripcion()==null){
+                if(!$tienePago){
+                    $detalleCuotas=$contrato->getDetalleCuotas();
+                    foreach($detalleCuotas as $detalleCuota){
                 
-
-                $countCuotas=$contrato->getCuotas();
-                $fechaPrimerPago=$contrato->getFechaPrimerPago();
-                $diaPago=$contrato->getDiaPago();
-                $sumames=0;
-                $numeroCuota=1;
-                $isAbono=$contrato->getIsAbono();
-                $isTotal=$contrato->getIsTotal();
-                $isIncorporacion=$contrato->getIsIncorporacion();
-                if($isAbono==true || $isTotal==true){
-                    $cuota=new Cuota();
-                    $cuota->setContrato($contrato);
-                    $cuota->setNumero($numeroCuota);
-                    $cuota->setFechaPago($contrato->getFechaPrimeraCuota());
-                    $cuota->setMonto($contrato->getPrimeraCuota());
-                    $entityManager->persist($cuota);
-                    $entityManager->flush();
-                    $numeroCuota++;
-
-                    $contrato->setProximoVencimiento($contrato->getFechaPrimeraCuota());
-                    $entityManager->persist($contrato);
-                    $entityManager->flush();
-                }
-                if($isIncorporacion==true){
-                    $contrato->setFechaPrimeraCuota(new \DateTime($request->request->get('txtFechaIncorporacion')));
-                    $cuota=new Cuota();
-                    $cuota->setContrato($contrato);
-                    $cuota->setNumero($numeroCuota);
-                    $cuota->setFechaPago($contrato->getFechaPrimeraCuota());
-                    $cuota->setMonto($contrato->getPrimeraCuota());
-                    $entityManager->persist($cuota);
-                    $entityManager->flush();
-                    $numeroCuota++;
-                    $contrato->setProximoVencimiento($contrato->getFechaPrimeraCuota());
-                    $entityManager->persist($contrato);
-                    $entityManager->flush();
-                }
-                $primerPago=date("Y-m-".$diaPago,strtotime($fechaPrimerPago->format('Y-m-d')));
-                if(date("n",strtotime($fechaPrimerPago->format('Y-m-d')))==2){
-                    if($diaPago==30)
-                        $primerPago=date("Y-m-28",strtotime($fechaPrimerPago->format('Y-m-d')));
-                }                
-                $timePrimerPago=strtotime($primerPago);   
-                $timeFechaActual=strtotime(date("Y-m-d"));  
-                if($timeFechaActual>=$timePrimerPago){
-
-                    $sumames=1;
-                }else{
-                    if($isIncorporacion==true){
-                        if(date("m",strtotime($fechaPrimerPago->format('Y-m-d')))==date("m")){
-                            $sumames=1;
-                        }
+                        $entityManager->remove($detalleCuota);
+                        $entityManager->flush();
                     }
-                }
-                if($contrato->getValorCuota()!=0){
-                    for($i=0;$i<$countCuotas;$i++){
+                
+                
+                    $countCuotas=$contrato->getCuotas();
+                    $fechaPrimerPago=$contrato->getFechaPrimerPago();
+                    $diaPago=$contrato->getDiaPago();
+                    $sumames=0;
+                    $numeroCuota=1;
+                    $isAbono=$contrato->getIsAbono();
+                    $isTotal=$contrato->getIsTotal();
+                    $isIncorporacion=$contrato->getIsIncorporacion();
+                    if($isAbono==true || $isTotal==true){
                         $cuota=new Cuota();
-                        $i_aux=$i;
                         $cuota->setContrato($contrato);
                         $cuota->setNumero($numeroCuota);
-                        $ts = mktime(0, 0, 0, date('m',$timePrimerPago) + $sumames+$i_aux, 1,date('Y',$timePrimerPago));
-                        $dia=$diaPago;
-                        if(date("n",$ts)==2){
-                            if($diaPago==30){
-                                $dia=date("d",mktime(0,0,0,date('m',$timePrimerPago)+ $sumames+$i_aux+1,1,date('Y',$timePrimerPago))-24);
-                            }
-                        }
-                        $fechaCuota=date("Y-m-d", mktime(0,0,0,date('m',$timePrimerPago) + $sumames+$i_aux,$dia,date('Y',$timePrimerPago)));
-                        $cuota->setFechaPago(new \DateTime($fechaCuota));
-                        $cuota->setMonto($contrato->getValorCuota());
-                        if($numeroCuota==1 && $isIncorporacion==false && $isAbono==false && $isTotal==false){
-                            $contrato->setProximoVencimiento(new \DateTime($fechaCuota));
-                            $entityManager->persist($contrato);
-                            $entityManager->flush();
-                        }
+                        $cuota->setFechaPago($contrato->getFechaPrimeraCuota());
+                        $cuota->setMonto($contrato->getPrimeraCuota());
                         $entityManager->persist($cuota);
                         $entityManager->flush();
                         $numeroCuota++;
+
+                        $contrato->setProximoVencimiento($contrato->getFechaPrimeraCuota());
+                        $entityManager->persist($contrato);
+                        $entityManager->flush();
+                    }
+                    if($isIncorporacion==true){
+                        $contrato->setFechaPrimeraCuota(new \DateTime($request->request->get('txtFechaIncorporacion')));
+                        $cuota=new Cuota();
+                        $cuota->setContrato($contrato);
+                        $cuota->setNumero($numeroCuota);
+                        $cuota->setFechaPago($contrato->getFechaPrimeraCuota());
+                        $cuota->setMonto($contrato->getPrimeraCuota());
+                        $entityManager->persist($cuota);
+                        $entityManager->flush();
+                        $numeroCuota++;
+                        $contrato->setProximoVencimiento($contrato->getFechaPrimeraCuota());
+                        $entityManager->persist($contrato);
+                        $entityManager->flush();
+                    }
+                    $primerPago=date("Y-m-".$diaPago,strtotime($fechaPrimerPago->format('Y-m-d')));
+                    if(date("n",strtotime($fechaPrimerPago->format('Y-m-d')))==2){
+                        if($diaPago==30)
+                            $primerPago=date("Y-m-28",strtotime($fechaPrimerPago->format('Y-m-d')));
+                    }                
+                    $timePrimerPago=strtotime($primerPago);   
+                    $timeFechaActual=strtotime(date("Y-m-d"));  
+                    if($timeFechaActual>=$timePrimerPago){
+
+                        $sumames=1;
+                    }else{
+                        if($isIncorporacion==true){
+                            if(date("m",strtotime($fechaPrimerPago->format('Y-m-d')))==date("m")){
+                                $sumames=1;
+                            }
+                        }
+                    }
+                    if($contrato->getValorCuota()!=0){
+                        for($i=0;$i<$countCuotas;$i++){
+                            $cuota=new Cuota();
+                            $i_aux=$i;
+                            $cuota->setContrato($contrato);
+                            $cuota->setNumero($numeroCuota);
+                            $ts = mktime(0, 0, 0, date('m',$timePrimerPago) + $sumames+$i_aux, 1,date('Y',$timePrimerPago));
+                            $dia=$diaPago;
+                            if(date("n",$ts)==2){
+                                if($diaPago==30){
+                                    $dia=date("d",mktime(0,0,0,date('m',$timePrimerPago)+ $sumames+$i_aux+1,1,date('Y',$timePrimerPago))-24);
+                                }
+                            }
+                            $fechaCuota=date("Y-m-d", mktime(0,0,0,date('m',$timePrimerPago) + $sumames+$i_aux,$dia,date('Y',$timePrimerPago)));
+                            $cuota->setFechaPago(new \DateTime($fechaCuota));
+                            $cuota->setMonto($contrato->getValorCuota());
+                            if($numeroCuota==1 && $isIncorporacion==false && $isAbono==false && $isTotal==false){
+                                $contrato->setProximoVencimiento(new \DateTime($fechaCuota));
+                                $entityManager->persist($contrato);
+                                $entityManager->flush();
+                            }
+                            $entityManager->persist($cuota);
+                            $entityManager->flush();
+                            $numeroCuota++;
+                        }
                     }
                 }
             }
@@ -2193,6 +2212,40 @@ class ContratoController extends AbstractController
         return $this->redirectToRoute('contrato_index',['error_toast'=>$message]);
     }
 
+    /**
+     * @Route("/{id}/acepta_suscripcion", name="contrato_acepta_suscripcion", methods={"GET","POST"})
+     */
+    public function aceptaSuscripcion(Contrato $contrato):Response
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+         if($contrato->getSesionSuscripcion()==null){
+            $contrato->setAceptaSuscripcion(1);
+            
+            if($contrato->getAceptaSuscripcion()){
+                $historicoSuscripcion = new ContratoHistoricoSuscripcion();
+                $historicoSuscripcion->setContrato($contrato);
+                $historicoSuscripcion->setExito(true);
+                $historicoSuscripcion->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+                $historicoSuscripcion->setObservacion("Usuario acepta suscripción de pago automático");
+                $historicoSuscripcion->setSuscripcionId("");
+                $entityManager->persist($historicoSuscripcion);
+                $entityManager->flush();
+                $this->crearSesionSuscripcion($contrato);
+            }
+        }
 
+        return $this->redirectToRoute('contrato_show',["id"=>$contrato->getId()]);
+        
+    }
+
+    public function crearSesionSuscripcion(Contrato $contrato)
+    {
+
+        $contrato->setSesionSuscripcion(uniqid());
+        $contrato->setSesionSuscripcionActiva(1);
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->persist($contrato);
+        $entityManager->flush();
+    }
 
 }

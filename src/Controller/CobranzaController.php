@@ -9,8 +9,11 @@ use App\Entity\Lotes;
 use App\Entity\Usuario;
 use App\Entity\Cuota;
 use App\Entity\Contrato;
+use App\Entity\ContratoHistoricoSuscripcion;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Entity\Importacion;
 use App\Entity\CobranzaRespuesta;
+use App\Entity\EquipoTrabajoVencimiento;
 use App\Form\CobranzaType;
 use App\Form\ImportacionType;
 use App\Repository\ImportacionRepository;
@@ -26,6 +29,9 @@ use App\Repository\VencimientoRepository;
 use App\Repository\UsuarioRepository;
 use App\Repository\ConfiguracionRepository;
 use App\Repository\DiasPagoRepository;
+use App\Repository\EquipoTrabajoRepository;
+use App\Repository\EquipoTrabajoUsuarioRepository;
+use App\Repository\EquipoTrabajoVencimientoRepository;
 use App\Repository\LotesRepository;
 use App\Repository\VwContratoRepository;
 use App\Repository\VwCuotaPendienteRepository;
@@ -37,6 +43,8 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 
 use App\Service\ContratoFunciones;
+use DateTime;
+use PhpOffice\PhpSpreadsheet\Calculation\Engineering\Erf;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -52,15 +60,15 @@ class CobranzaController extends AbstractController
     /**
      * @Route("/", name="cobranza_index", methods={"GET"})
      */
-    public function index(ContratoRepository $contratoRepository, 
-                        VwCuotaPendienteRepository $cuotaRepository,
+    public function index(VwCuotaPendienteRepository $cuotaRepository,
                         ConfiguracionRepository $configuracionRepository,
                         PaginatorInterface $paginator,
                         ModuloPerRepository $moduloPerRepository,
                         Request $request,
                         CuentaRepository $cuentaRepository,
-                        VwContratoRepository $vwContratoRepository,
-                        VencimientoRepository $vencimientoRepository): Response
+                        VencimientoRepository $vencimientoRepository,
+                        EquipoTrabajoUsuarioRepository $equipoTrabajoUsuarioRepository,
+                        EquipoTrabajoVencimientoRepository $equipoTrabajoVencimientoRepository): Response
     {
         $this->denyAccessUnlessGranted('view','cobranza');
         $user=$this->getUser();
@@ -70,18 +78,14 @@ class CobranzaController extends AbstractController
         $folio=null;
         $compania=null;
         $queryTotales="";
+        $mostrarVencimientoSeleccionado="";
         $segmento="";
-        
+        $equipoTrabajoUsuario=$equipoTrabajoUsuarioRepository->findOneBy(['usuario'=>$user->getId()]);
+
         $configuracion = $configuracionRepository->find(1);
         //   "maximo ".$vencimiento->getValMax();
         //$vencimiento=$vencimientoArray[0];
-        $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'soloPorAdmin'=>false],["valMin"=>'ASC']);
-        $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
-        $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
-        if($user->getUsuarioTipo()->getId() == 1 || $user->getUsuarioTipo()->getId()==3){
-            $otros=" 1=1 ";
-            $otrosVW=" 1=1 ";
-        }
+        
        
         $fecha=null;
         $fechaVW=null;
@@ -89,42 +93,62 @@ class CobranzaController extends AbstractController
         $status=1;
         $error_toast="";
         
+        if($equipoTrabajoUsuario){
+            $equipoTrabajovencimientos=$equipoTrabajoVencimientoRepository->findBy(['equipoTrabajo'=>$equipoTrabajoUsuario->getEquipoTrabajo()->getId()]);
+            $vencimientosMap = array_map(function(EquipoTrabajoVencimiento $etv) {
+                return $etv->getVencimiento()->getId();
+            }, $equipoTrabajovencimientos);
+            
+            $status=$vencimientosMap[0];
+            $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'id'=>$vencimientosMap,'soloPorAdmin'=>false],["valMin"=>'ASC']);
+        }else{
+            $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'soloPorAdmin'=>false],["valMin"=>'ASC']);
+        }
+        $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
+        $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
+        if($user->getUsuarioTipo()->getId() == 1 || $user->getUsuarioTipo()->getId()==3){
+            $otros=" 1=1 ";
+            $otrosVW=" 1=1 ";
+        }
        
         if(null !== $request->query->get('error_toast')){
             $error_toast=$request->query->get('error_toast');
         }
+       
+        
+        if(null != $request->query->get('bStatus')){
+            $status=$request->query->get('bStatus');
+        }
+        $vencimiento=$vencimientoRepository->find($status);
+
         if(null !== $request->query->get('bFolio') && $request->query->get('bFolio')!=''){
             $folio=$request->query->get('bFolio');
+            $status=null;
+            $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
+            $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
+
+
             $otros.=" and (co.folio= $folio or co.agenda= $folio)";
             $otrosVW.=" and (c.folio= $folio or c.agenda= $folio)";
             $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
             $dateFin=date('Y-m-d');
-            $status=2;
+           
            // $fecha=$otros;
 
         }else{
-           
-            if(null == $status){
-
-            }else{
             
-                if(null != $request->query->get('bStatus')){
-                    $status=$request->query->get('bStatus');
-                }
-                $vencimiento=$vencimientoRepository->find($status);
-                if($vencimiento->getValMax() !== null && $vencimiento->getValMin() > 0){
-                    $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
-                    $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),c.proximoVencimiento) <= '.$vencimiento->getValMax();
-                }else if($vencimiento->getValMin()==0){
-                    $otros=' DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
-                    $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) <= '.$vencimiento->getValMax();
-                }else{
-                    $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
-                    $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
-                }
-               // error_log("\n otros : ".$otros,3,"/home/micrm.cl/test/TokuWebhook_log");
-                
-            }
+            /*if($vencimiento->getValMax() !== null && $vencimiento->getValMin() > 0){
+                $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
+                $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),c.proximoVencimiento) <= '.$vencimiento->getValMax();
+            }else if($vencimiento->getValMin()==0){
+                $otros=' DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
+                $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) <= '.$vencimiento->getValMax();
+            }else{
+                $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
+                $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
+            }*/
+            
+            $otros=' c.vencimiento='.$status;
             //error_log("\n otros : ".$otros,3,"/home/micrm.cl/test/TokuWebhook_log");
             if(null !== $request->query->get('bFiltro') && $request->query->get('bFiltro')!=''){
                 $filtro=$request->query->get('bFiltro');
@@ -145,6 +169,7 @@ class CobranzaController extends AbstractController
             $fechaVW="c.fechaPago between '$dateInicio' and '$dateFin 23:59:59' ";
             */
         }
+        
         $fecha.=$otros." and a.status != 13";
         $fechaVW.=$otrosVW." and a.status != 13";
         
@@ -186,7 +211,7 @@ class CobranzaController extends AbstractController
                 }else{
                     $fecha.="$and co.idLote is null ";
                 }
-                
+                $mostrarVencimientoSeleccionado="SI";
                 $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha,true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
@@ -195,7 +220,7 @@ class CobranzaController extends AbstractController
             case 3:
                 $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual()],["valMin"=>'ASC']);
                 $query=$cuotaRepository->findVencimiento(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
-                $queryTotales=$cuotaRepository->findVencimientoGroup(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
+                //$queryTotales=$cuotaRepository->findVencimientoGroup(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
 
                 break;
@@ -231,22 +256,24 @@ class CobranzaController extends AbstractController
             'vencimientos'=>$vencimientos,
             'vencimientoSeleccionado'=>$vencimiento,
             'queryTotales'=>$queryTotales,
-            'status'=>$status
+            'status'=>$status,
+            'mostrarVencimientoSeleccionado'=>$mostrarVencimientoSeleccionado
         ]);
     }
 
     /**
      * @Route("/ia", name="cobranza_index_ia", methods={"GET"})
      */
-    public function indexIA(ContratoRepository $contratoRepository, 
-                        VwCuotaPendienteRepository $cuotaRepository,
+    public function indexIA(VwCuotaPendienteRepository $cuotaRepository,
                         ConfiguracionRepository $configuracionRepository,
                         PaginatorInterface $paginator,
                         ModuloPerRepository $moduloPerRepository,
                         Request $request,
                         CuentaRepository $cuentaRepository,
                         VwContratoRepository $vwContratoRepository,
-                        VencimientoRepository $vencimientoRepository): Response
+                        VencimientoRepository $vencimientoRepository,
+                        EquipoTrabajoUsuarioRepository $equipoTrabajoUsuarioRepository,
+                        EquipoTrabajoVencimientoRepository $equipoTrabajoVencimientoRepository): Response
     {
         $this->denyAccessUnlessGranted('view','cobranza_ia');
         $user=$this->getUser();
@@ -256,14 +283,15 @@ class CobranzaController extends AbstractController
         $folio=null;
         $compania=null;
         $queryTotales="";
+        $mostrarVencimientoSeleccionado="";
         $segmento="";
         
         $configuracion = $configuracionRepository->find(1);
         //   "maximo ".$vencimiento->getValMax();
         //$vencimiento=$vencimientoArray[0];
-        $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'soloPorAdmin'=>false],["valMin"=>'ASC']);
+        /*$vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'soloPorAdmin'=>false],["valMin"=>'ASC']);
         $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
-        $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
+        $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();*/
         if($user->getUsuarioTipo()->getId() == 1 || $user->getUsuarioTipo()->getId()==3){
             $otros=" 1=1 ";
             $otrosVW=" 1=1 ";
@@ -274,7 +302,10 @@ class CobranzaController extends AbstractController
         $error='';
         $status=1;
         $error_toast="";
-        
+        $mostrarMensaje="No";
+        if(null != $request->query->get('bStatus')){
+            $status=$request->query->get('bStatus');
+        }
        $vencimiento=$vencimientoRepository->find($status);
         if($vencimiento->getValMax() !== null && $vencimiento->getValMin() > 0){
             $otros='   DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
@@ -289,8 +320,23 @@ class CobranzaController extends AbstractController
         if(null !== $request->query->get('error_toast')){
             $error_toast=$request->query->get('error_toast');
         }
+
+        $equipoTrabajoUsuario=$equipoTrabajoUsuarioRepository->findOneBy(['usuario'=>$user->getId()]);
+
+        if($equipoTrabajoUsuario){
+            $equipoTrabajovencimientos=$equipoTrabajoVencimientoRepository->findBy(['equipoTrabajo'=>$equipoTrabajoUsuario->getEquipoTrabajo()->getId()]);
+            $vencimientosMap = array_map(function(EquipoTrabajoVencimiento $etv) {
+                return $etv->getVencimiento()->getId();
+            }, $equipoTrabajovencimientos);
+            
+            $status=$vencimientosMap[0];
+            $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'id'=>$vencimientosMap,'soloPorAdmin'=>false],["valMin"=>'ASC']);
+        }else{
+            $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'soloPorAdmin'=>false],["valMin"=>'ASC']);
+        }
         if(null !== $request->query->get('bFolio') && $request->query->get('bFolio')!=''){
             $folio=$request->query->get('bFolio');
+            
             $otros.=" and (co.folio= $folio or co.agenda= $folio)";
             $otrosVW.=" and (c.folio= $folio or c.agenda= $folio)";
             $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
@@ -331,7 +377,7 @@ class CobranzaController extends AbstractController
             case 4:
             case 8:
             case 13:
-            
+                
                 $query=$cuotaRepository->findVencimientoIA(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
@@ -368,11 +414,13 @@ class CobranzaController extends AbstractController
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             
-            case 1://administrador y jefes    
+            case 1://administrador y jefes  
+                $mostrarMensaje  = "SI";
             case 3:
+                
                 $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual()],["valMin"=>'ASC']);
                 $query=$cuotaRepository->findVencimientoIA(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
-                $queryTotales=$vwContratoRepository->findVencimientoGroupIA(null,null,$compania,$filtro,null,true,$fechaVW, true,true,$status);
+                //$queryTotales=$vwContratoRepository->findVencimientoGroupIA(null,null,$compania,$filtro,null,true,$fechaVW, true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
 
                 break;
@@ -394,6 +442,208 @@ class CobranzaController extends AbstractController
             array());
         
         return $this->render('cobranza/indexIA.html.twig', [
+            'cuotas' => $cuotas,
+            'bFiltro'=>$filtro,
+            'bFolio'=>$folio,
+            'companias'=>$companias,
+            'bCompania'=>$compania,
+            'dateInicio'=>$dateInicio,
+            'dateFin'=>$dateFin,
+            'pagina'=>$pagina->getNombre(),
+            'finalizado'=>false,
+            'error'=>$error,
+            'error_toast'=>$error_toast,
+            'vencimientos'=>$vencimientos,
+            'vencimientoSeleccionado'=>$vencimiento,
+            'queryTotales'=>$queryTotales,
+            'status'=>$status,
+            'mostrarMensaje'=>$mostrarMensaje
+        ]);
+    }
+
+    /**
+     * @Route("/incumplimiento", name="cobranza_index_incumplimiento", methods={"GET"})
+     */
+    public function indexIncumplimiento(ContratoRepository $contratoRepository, 
+                        VwCuotaPendienteRepository $cuotaRepository,
+                        ConfiguracionRepository $configuracionRepository,
+                        PaginatorInterface $paginator,
+                        ModuloPerRepository $moduloPerRepository,
+                        Request $request,
+                        CuentaRepository $cuentaRepository,
+                        VwContratoRepository $vwContratoRepository,
+                        VencimientoRepository $vencimientoRepository,
+                        EquipoTrabajoVencimientoRepository $equipoTrabajoVencimientoRepository,
+                        EquipoTrabajoUsuarioRepository $equipoTrabajoUsuarioRepository): Response
+    {
+        $this->denyAccessUnlessGranted('view','cobranza_incumplimiento');
+        $user=$this->getUser();
+        $pagina=$moduloPerRepository->findOneByName('cobranza_incumplimiento',$user->getEmpresaActual());
+        $vencimiento=$vencimientoRepository->findOneMaxNotNull($user->getEmpresaActual(),'v.valMax','ASC');
+        $filtro=null;
+        $folio=null;
+        $compania=null;
+        $queryTotales="";
+        $segmento="";
+        
+       
+        //   "maximo ".$vencimiento->getValMax();
+        //$vencimiento=$vencimientoArray[0];
+        $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'soloPorAdmin'=>false],["valMin"=>'ASC']);
+        $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
+        $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
+        if($user->getUsuarioTipo()->getId() == 1 || $user->getUsuarioTipo()->getId()==3){
+            $otros=" 1=1 ";
+            $otrosVW=" 1=1 ";
+        }
+       
+        $fecha=null;
+        $fechaVW=null;
+        $error='';
+        $status=1;
+        $error_toast="";
+        if(null != $request->query->get('bStatus')){
+            $status=$request->query->get('bStatus');
+        }
+        $equipoTrabajoUsuario=$equipoTrabajoUsuarioRepository->findOneBy(['usuario'=>$user->getId()]);
+
+        if($equipoTrabajoUsuario){
+            $equipoTrabajovencimientos=$equipoTrabajoVencimientoRepository->findBy(['equipoTrabajo'=>$equipoTrabajoUsuario->getEquipoTrabajo()->getId()]);
+            $vencimientosMap = array_map(function(EquipoTrabajoVencimiento $etv) {
+                return $etv->getVencimiento()->getId();
+            }, $equipoTrabajovencimientos);
+            
+            $status=$vencimientosMap[0];
+            $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'id'=>$vencimientosMap,'soloPorAdmin'=>false],["valMin"=>'ASC']);
+        }else{
+            $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'soloPorAdmin'=>false],["valMin"=>'ASC']);
+        }
+       $vencimiento=$vencimientoRepository->find($status);
+        
+        if(null !== $request->query->get('error_toast')){
+            $error_toast=$request->query->get('error_toast');
+        }
+
+        if(null !== $request->query->get('bFolio') && $request->query->get('bFolio')!=''){
+            $folio=$request->query->get('bFolio');
+            $otros=' DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
+            $otrosVW=' DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
+
+            $otros.=" and (co.folio= $folio or co.agenda= $folio)";
+            $otrosVW.=" and (c.folio= $folio or c.agenda= $folio)";
+            $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
+            $dateFin=date('Y-m-d');
+           // $fecha=$otros;
+
+        }else{
+            // error_log("\n otros : ".$otros,3,"/home/micrm.cl/test/TokuWebhook_log");
+            /*if($vencimiento->getValMax() !== null && $vencimiento->getValMin() > 0){
+            $otros='   DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
+            $otrosVW='  DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin().' and DATEDIFF(now(),c.proximoVencimiento) <= '.$vencimiento->getValMax();
+            }else if($vencimiento->getValMin()==0){
+                $otros='  DATEDIFF(now(),co.proximoVencimiento) <= '.$vencimiento->getValMax();
+                $otrosVW='  DATEDIFF(now(),c.proximoVencimiento) <= '.$vencimiento->getValMax();
+            }else{
+                $otros='  DATEDIFF(now(),co.proximoVencimiento) >= '.$vencimiento->getValMin();
+                $otrosVW='  DATEDIFF(now(),c.proximoVencimiento) >= '.$vencimiento->getValMin();
+            }*/
+
+            $otros=' c.vencimiento='.$status;
+            //error_log("\n otros : ".$otros,3,"/home/micrm.cl/test/TokuWebhook_log");
+            if(null !== $request->query->get('bFiltro') && $request->query->get('bFiltro')!=''){
+                $filtro=$request->query->get('bFiltro');
+            }
+            if(null !== $request->query->get('bCompania') && $request->query->get('bCompania')!=0){
+                $compania=$request->query->get('bCompania');
+            }
+            if(null !== $request->query->get('bFecha')){
+                $aux_fecha=explode(" - ",$request->query->get('bFecha'));
+                $dateInicio=$aux_fecha[0];
+                $dateFin=$aux_fecha[1];
+            }else{
+                $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
+                $dateFin=date('Y-m-d');
+
+            }
+            /*$fecha="c.fechaPago between '$dateInicio' and '$dateFin 23:59:59' ";
+            $fechaVW="c.fechaPago between '$dateInicio' and '$dateFin 23:59:59' ";
+            */
+        }
+        
+
+        $fecha.=$otros." and a.status != 13";
+        $fechaVW.=$otrosVW." and a.status != 13";
+        
+        switch($user->getUsuarioTipo()->getId()){
+            
+            
+            case 4:
+            case 8:
+            case 13:
+            
+                $query=$cuotaRepository->findVencimientoIncumplimiento(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+                break;
+            case 7://tramitador
+                $query=$cuotaRepository->findVencimientoIncumplimiento($user->getId(),null,$compania,$filtro,7,true,$fecha,true,true,$status);
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+                break;
+            case 6: //abogado
+                $query=$cuotaRepository->findVencimientoIncumplimiento($user->getId(),null,$compania,$filtro,6,true,$fecha, true,true,$status);
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+                break;
+            case 11://Administrativo
+
+                //$query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha,true);
+                $query=$cuotaRepository->findVencimientoIncumplimiento(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+            break;
+            case 12://Cobradores
+                $lotes=array();
+                foreach($user->getUsuarioLotes() as $usuarioLote){
+                    $lotes[]=$usuarioLote->getLote()->getId();
+                }
+               
+                    $and=" and ";
+                
+                if(count($lotes)>0){
+
+                    $fecha.="$and co.idLote in (".implode(",",$lotes).") ";
+                }else{
+                    $fecha.="$and co.idLote is null ";
+                }
+                
+                $query=$cuotaRepository->findVencimientoIncumplimiento(null,null,null,$filtro,null,true,$fecha,true,true,$status);
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+                break;
+            
+            case 1://administrador y jefes    
+            case 3:
+                $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual()],["valMin"=>'ASC']);
+                $query=$cuotaRepository->findVencimientoIncumplimiento(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
+                //$queryTotales=$vwContratoRepository->findVencimientoIncumplimientoGroup(null,null,$compania,$filtro,null,true,$fechaVW, true,true,$status);
+                $queryTotales=null;
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+
+                break;
+            default:
+                //$query=$contratoRepository->findByPers(null,null,$compania,$filtro,null,$fecha,true);
+                $query=$cuotaRepository->findVencimientoIncumplimiento(null,null,null,$filtro,null,true,$fecha,true,true,$status);
+                $companias=$cuentaRepository->findByPers(null);
+                
+            break;
+        }
+        //$companias=$cuentaRepository->findByPers($user->getId());
+        //$query=$contratoRepository->findAll();
+
+      
+        $cuotas=$paginator->paginate(
+            $query, /* query NOT result */
+            $request->query->getInt('page', 1), /*page number*/
+            100 /*limit per page*/,
+            array());
+        
+        return $this->render('cobranza/indexIncumplimiento.html.twig', [
             'cuotas' => $cuotas,
             'bFiltro'=>$filtro,
             'bFolio'=>$folio,
@@ -1279,7 +1529,94 @@ class CobranzaController extends AbstractController
             $respuesta="false";
         }
         return $this->render('cobranza/respuesta.html.twig', [
-            'respuesta' => $respuesta,           
+            'respuesta' => $respuesta,
+        ]);
+    }
+
+    /**
+     * @Route("/{id}/suscripcion", name="cobranza_suscripcion", methods={"POST"})
+     */
+    public function suscripcion(Contrato $contrato, VwCuotaPendienteRepository $cuotaPendienteRepository): JsonResponse
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+
+        if ($contrato->getAceptaSuscripcion() != 1) {
+
+            $cuotas = $cuotaPendienteRepository->findVencimiento(null,null,null,null,null,true,"c.contrato = ".$contrato->getId()." and c.fechaPago < now()");
+
+            if(count($cuotas) > 0){
+            
+                return $this->json([
+                    'mensaje'   => "Este contrato contiene cuotas vencidas que no han sido pagadas, favor regularizar antes de suscribir",
+                 
+                ],500);
+            }
+
+
+            $contrato->setAceptaSuscripcion(1);
+            $historico = new ContratoHistoricoSuscripcion();
+            $historico->setContrato($contrato);
+            $historico->setExito(true);
+            $historico->setFechaRegistro(new \DateTime(date('Y-m-d H:i:s')));
+            $historico->setObservacion('Cliente acepta suscripción de pago');
+            $historico->setSuscripcionId('');
+            $entityManager->persist($historico);
+            $entityManager->flush();
+        }
+
+        if ($contrato->getSesionSuscripcion() == null || $contrato->getSesionSuscripcionActiva() != 1) {
+            $contrato->setSesionSuscripcion(uniqid());
+            $contrato->setSesionSuscripcionActiva(1);
+            $entityManager->persist($contrato);
+            
+            $historico = new ContratoHistoricoSuscripcion();
+            $historico->setContrato($contrato);
+            $historico->setExito(true);
+            $historico->setFechaRegistro(new \DateTime(date('Y-m-d H:i:s')));
+            $historico->setObservacion('Agente de cobranza genera suscripción de pago automático');
+            $historico->setSuscripcionId('');
+            $entityManager->persist($historico);
+            $entityManager->flush();
+        }
+
+        $urlWeb = $this->getParameter('url_web');
+        $link = $urlWeb . '/suscripcion/' . $contrato->getSesionSuscripcion();
+
+        return $this->json([
+            'link'   => $link,
+            'estado' => $contrato->getEstadoSuscripcion(),
+        ]);
+    }
+
+    /**
+     * @Route("/{id}/obtener_suscripcion", name="cobranza_obtener_suscripcion", methods={"POST"})
+     */
+    public function obtenerSuscripcion(Contrato $contrato): JsonResponse
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $urlWeb = $this->getParameter('url_web');
+        $link="";
+
+        if ($contrato->getSesionSuscripcion() == null || $contrato->getSesionSuscripcionActiva() != 1) {
+            
+            $historico = new ContratoHistoricoSuscripcion();
+            $historico->setContrato($contrato);
+            $historico->setExito(true);
+            $historico->setFechaRegistro(new \DateTime(date('Y-m-d H:i:s')));
+            $historico->setObservacion('Agente obtiene suscripción de pago automático');
+            $historico->setSuscripcionId('');
+            $entityManager->persist($historico);
+            $entityManager->flush();
+            
+            $link = $urlWeb . '/suscripcion/' . $contrato->getSesionSuscripcion();
+        }
+       
+
+        
+
+        return $this->json([
+            'link'   => $link,
+            'estado' => $contrato->getEstadoSuscripcion(),
         ]);
     }
 }

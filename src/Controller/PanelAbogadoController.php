@@ -85,6 +85,8 @@ class PanelAbogadoController extends AbstractController
         $tipo_fecha=1;
         $abogado=null;
         $folio=null;
+        $error = $request->query->get('error');
+
         if(null !== $request->query->get('bFolio') && trim($request->query->get('bFolio'))!=''){
             $folio=$request->query->get('bFolio');
             $fecha=" a.id=$folio ";
@@ -189,7 +191,8 @@ class PanelAbogadoController extends AbstractController
             'tipoFecha'=>$tipo_fecha,
             'abogados'=>$abogados,
             'bAbogado'=>$abogado,
-            'TipoFiltro'=>'Panel_abogado'
+            'TipoFiltro'=>'Panel_abogado',
+            'error'=>$error
         ]);
     }
     /**
@@ -230,13 +233,25 @@ class PanelAbogadoController extends AbstractController
      */
     public function reasignar(Request $request,UsuarioRepository $usuarioRepository,AgendaRepository $agendaRepository):Response
     {
+        
         $user=$this->getUser();
         $agenda_id=$request->query->get('agenda');
         $agenda=$agendaRepository->find($agenda_id);
+        $error ="";
+         if($agenda->getContrato()!==null){
+            $error='<div class="alert alert-danger alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                <h5><i class="icon fas fa-ban"></i> Error!!</h5>
+                Este lead ya se encuentra en contrato, favor verifique la información
+                </div>';
+            //return $this->redirectToRoute('panel_abogado_index',["error"=>$error]);
+        }
+
         $empresa=$this->getDoctrine()->getRepository(Empresa::class)->find($user->getEmpresaActual());
         return $this->render('panel_abogado/reasignar.html.twig', [
             'cuentas'=>$empresa->getCuentas(),
-            'agenda'=> $agenda,     
+            'agenda'=> $agenda, 
+            'error'=>$error    
         ]);
     } 
 
@@ -275,45 +290,55 @@ class PanelAbogadoController extends AbstractController
     {
         $this->denyAccessUnlessGranted('create','panel_abogado');
 
+        
         $user=$this->getUser();
         $pagina=$moduloPerRepository->findOneByName('panel_abogado',$user->getEmpresaActual());
         $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
 
         if(null != $request->request->get('chkStatus')){
-            $agenda->setStatus($agendaStatusRepository->find($request->request->get('chkStatus')));
-            if(null !== $request->request->get('cboAbogado')){
-                $agenda->setAbogado($usuarioRepository->find($request->request->get('cboAbogado')));
-            }
-            if(null !== $request->request->get('txtCiudad')){
-                $agenda->setCiudadCliente($request->request->get('txtCiudad'));
-            }
-            if(null !== $request->request->get('txtFechaAgendamiento')){
-                $agenda->setFechaAsignado(new \DateTime($request->request->get('txtFechaAgendamiento')." ".$request->request->get('cboHoras').":00"));
-            }
-            if(null !== $request->request->get('txtMonto')){
-                $agenda->setMonto($request->request->get('txtMonto'));
-            }
-            if(null !== $request->request->get('txtPagoActual')){
-                $agenda->setPagoActual($request->request->get('txtPagoActual'));
-            }
-            if(null !== $request->request->get('cboReunion')){
-                $agenda->setReunion($reunionRepository->find($request->request->get('cboReunion')));
-            }
-            $entityManager = $this->getDoctrine()->getManager();
+            if($agenda->getStatus()->getId()!=5){
+                $error='<div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-ban"></i> Error!!</h5>
+                    Este lead ya se encuentra en contrato, favor verifique la información
+                    </div>';
+                return $this->redirectToRoute('panel_abogado_index',["error"=>$error]);
+            }else{
+                $agenda->setStatus($agendaStatusRepository->find($request->request->get('chkStatus')));
+                if(null !== $request->request->get('cboAbogado')){
+                    $agenda->setAbogado($usuarioRepository->find($request->request->get('cboAbogado')));
+                }
+                if(null !== $request->request->get('txtCiudad')){
+                    $agenda->setCiudadCliente($request->request->get('txtCiudad'));
+                }
+                if(null !== $request->request->get('txtFechaAgendamiento')){
+                    $agenda->setFechaAsignado(new \DateTime($request->request->get('txtFechaAgendamiento')." ".$request->request->get('cboHoras').":00"));
+                }
+                if(null !== $request->request->get('txtMonto')){
+                    $agenda->setMonto($request->request->get('txtMonto'));
+                }
+                if(null !== $request->request->get('txtPagoActual')){
+                    $agenda->setPagoActual($request->request->get('txtPagoActual'));
+                }
+                if(null !== $request->request->get('cboReunion')){
+                    $agenda->setReunion($reunionRepository->find($request->request->get('cboReunion')));
+                }
+                $entityManager = $this->getDoctrine()->getManager();
 
+                
+
+                $observacion=new AgendaObservacion();
+                $observacion->setAgenda($agenda);
+                $observacion->setUsuarioRegistro($usuarioRepository->find($user->getId()));
+                $observacion->setStatus($agendaStatusRepository->find($request->request->get('chkStatus')));
+                $observacion->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+                $observacion->setObservacion($request->request->get('txtObservacion'));
             
-
-            $observacion=new AgendaObservacion();
-            $observacion->setAgenda($agenda);
-            $observacion->setUsuarioRegistro($usuarioRepository->find($user->getId()));
-            $observacion->setStatus($agendaStatusRepository->find($request->request->get('chkStatus')));
-            $observacion->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
-            $observacion->setObservacion($request->request->get('txtObservacion'));
-           
-            $entityManager->persist($observacion);
-            $entityManager->flush();
-            $entityManager->persist($agenda);
-            $entityManager->flush();
+                $entityManager->persist($observacion);
+                $entityManager->flush();
+                $entityManager->persist($agenda);
+                $entityManager->flush();
+            }
             return $this->redirectToRoute('panel_abogado_index');
         }
 
@@ -390,10 +415,20 @@ class PanelAbogadoController extends AbstractController
                             ):Response
     {
         $this->denyAccessUnlessGranted('create','panel_abogado');
+        
 
+        
         $user=$this->getUser();
         $juzgados=$juzgadoRepository->findAll();
         if(null != $request->request->get('chkStatus')){
+            if($agenda->getStatus()->getId()!=5){
+                $error='<div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-ban"></i> Error!!</h5>
+                    Este lead ya se encuentra en contrato, favor verifique la información
+                    </div>';
+                return $this->redirectToRoute('panel_abogado_index',["error"=>$error]);
+            }
             $agenda->setStatus($agendaStatusRepository->find($request->request->get('chkStatus')));
             if(null !== $request->request->get('cboAbogado')){
                 $agenda->setAbogado($usuarioRepository->find($request->request->get('cboAbogado')));
@@ -490,7 +525,12 @@ class PanelAbogadoController extends AbstractController
             $agenda->setStatus($agendaStatusRepository->find('7'));
             $contrato->setDiaPago($request->request->get('chkDiasPago'));
             $contrato->setFechaCreacion(new \DateTime(date("Y-m-d H:i:s")));
-            $contrato->setSucursal($sucursalRepository->find($request->request->get('cboSucursal')));
+            $sucursal= $sucursalRepository->findOneBy(['nombre'=>'Santiago','cuenta'=>$agenda->getCuenta()->getId()]);
+            if($sucursal){
+                $contrato->setSucursal($sucursal);
+            }else{
+                $contrato->setSucursal($sucursalRepository->find(1));
+            }
             //$contrato->setTramitador($usuarioRepository->find($request->request->get('cboTramitador')));
             
             //se agrega el canal de contacto
@@ -763,10 +803,27 @@ class PanelAbogadoController extends AbstractController
         $user=$this->getUser();
         
         if(null !== $request->request->get('status')){
+            if($agenda->getContrato()!==null){
+                $error='<div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-ban"></i> Error!!</h5>
+                    Este lead ya se encuentra en contrato, favor verifique la información
+                    </div>';
+                return $this->redirectToRoute('panel_abogado_index',["error"=>$error]);
+            }
+            
             $agenda->setStatus($agendaStatusRepository->find($request->request->get('status')));
            
         }
         if(null !==$request->request->get('hdNoContrata')){
+            if($agenda->getContrato()!==null){
+                $error='<div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-ban"></i> Error!!</h5>
+                    Este lead ya se encuentra en contrato, favor verifique la información
+                    </div>';
+                return $this->redirectToRoute('panel_abogado_index',["error"=>$error]);
+            }
             $agenda->setStatus($agendaStatusRepository->find($request->request->get('hdNoContrata')));
            // $agenda->setObservacion($agenda->getObservacion()."<hr>".$request->request->get('txtObservacion'));
             $entityManager = $this->getDoctrine()->getManager();
@@ -810,6 +867,7 @@ class PanelAbogadoController extends AbstractController
              'sub_statues'=>$agendaSubStatues
         ]);
     }
+    
     /**
      * @Route("/{id}/postergado", name="panel_abogado_postergado", methods={"GET","POST"})
      */
@@ -824,10 +882,28 @@ class PanelAbogadoController extends AbstractController
         $user=$this->getUser();
         
         if(null !== $request->request->get('status')){
+             
+            if($agenda->getContrato()!==null){
+                $error='<div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-ban"></i> Error!!</h5>
+                    Este lead ya se encuentra en contrato, favor verifique la información
+                    </div>';
+                return $this->redirectToRoute('panel_abogado_index',["error"=>$error]);
+            }
+                    
             $agenda->setStatus($agendaStatusRepository->find($request->request->get('status')));
            
         }
         if(null !==$request->request->get('hdNoContrata')){
+            if($agenda->getContrato()!==null){
+                $error='<div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-ban"></i> Error!!</h5>
+                    Este lead ya se encuentra en contrato, favor verifique la información
+                    </div>';
+                return $this->redirectToRoute('panel_abogado_index',["error"=>$error]);
+            }
             $agenda->setStatus($agendaStatusRepository->find($request->request->get('hdNoContrata')));
            // $agenda->setObservacion($agenda->getObservacion()."<hr>".$request->request->get('txtObservacion'));
             $entityManager = $this->getDoctrine()->getManager();

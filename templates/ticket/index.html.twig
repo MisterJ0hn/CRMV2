@@ -55,7 +55,7 @@
 
 
     
-    {{ include('/cuadrosBusquedas/busquedaTicketsEncuestas.html.twig', {'TipoFiltro':TipoFiltro}) }}
+    {{ include('/cuadrosBusquedas/busquedaSoloTickets.html.twig', {'TipoFiltro':TipoFiltro}) }}
 </section>
 </form>
 <section>
@@ -72,6 +72,8 @@
                 <thead>
                     <tr><th>{{ knp_pagination_sortable(tickets, 'Tipo', 'ticketTipo.orden') }} {% if tickets.isSorted('tipoTicket.orden') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>{{ knp_pagination_sortable(tickets, 'SacFolio', 'folioSac') }} {% if tickets.isSorted('folioSac') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(tickets, 'T.Solicitud', 'ticketTipoSolicitud.nombre') }} {% if tickets.isSorted('ticketTipoSolicitud.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        
                         <th>{{ knp_pagination_sortable(tickets, 'Estado', 'estado.nombre') }} {% if tickets.isSorted('estado.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>Gestionar</th>
                         <th>{{ knp_pagination_sortable(tickets, 'Folio', 'contrato.folio') }} {% if tickets.isSorted('contrato.folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
@@ -85,6 +87,7 @@
                         <th>{{ knp_pagination_sortable(tickets, 'F. Pendiente', 'fechaAsignado') }} {% if tickets.isSorted('fechaAsignado') %} <i class="fas fa-sort"></i>{% endif %}</th>
                          <th>{{ knp_pagination_sortable(tickets, 'U. Gestión', 'fechaUltimaGestion') }} {% if tickets.isSorted('fechaUltimaGestion') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>{{ knp_pagination_sortable(tickets, 'F. Resuelto', 'fechaRespuesta') }} {% if tickets.isSorted('fechaRespuesta') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                       <th>{{ knp_pagination_sortable(tickets, 'F. Cerrado', 'fechaCierre') }} {% if tickets.isSorted('fechaCierre') %} <i class="fas fa-sort"></i>{% endif %}</th>
                        
                         
                     </tr>
@@ -94,6 +97,7 @@
                     <tr>
                         <td><span class="badge badge-{{ticket.ticketTipo.colorBadge}}">{{ticket.ticketTipo.nombre}}</span></td>
                         <td>{{ ticket.folioSac }}</td>
+                        <td>{{ ticket.ticketTipoSolicitud ? ticket.ticketTipoSolicitud.nombre:'' }}</td>
                         <td>{{ ticket.estado ? ticket.estado:'' }}</td>
                         <td align="center"><a href="{{path('app_ticket_gestionar',{'id':ticket.id})}}" class="btn"><i class="far fa-paper-plane"></i></a></td>
                         <td>{{ ticket.contrato.folio }}</td>
@@ -106,7 +110,7 @@
                         <td>{{ ticket.fechaAsignado ? ticket.fechaAsignado|date('Y-m-d H:i') : '' }}</td>
                         <td>{{ ticket.fechaUltimaGestion ? ticket.fechaUltimaGestion|date('Y-m-d H:i') : '' }}</td>
                         <td>{{ ticket.fechaRespuesta ? ticket.fechaRespuesta|date('Y-m-d H:i') : '' }}</td>
-                       
+                       <td>{{ ticket.fechaCierre ? ticket.fechaCierre|date('Y-m-d H:i') : '' }}</td>
                     
                     </tr>
                 {% else %}

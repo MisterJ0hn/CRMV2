@@ -120,6 +120,16 @@ class ContratoAnexo
      */
     private $usuarioRegistro;
 
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $aceptaSuscripcion;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $cancelaSuscripcion;
+
     public function __construct()
     {
         $this->cuotas = new ArrayCollection();
@@ -408,6 +418,30 @@ class ContratoAnexo
     public function setUsuarioRegistro(?Usuario $usuarioRegistro): self
     {
         $this->usuarioRegistro = $usuarioRegistro;
+
+        return $this;
+    }
+
+    public function getAceptaSuscripcion(): ?bool
+    {
+        return $this->aceptaSuscripcion;
+    }
+
+    public function setAceptaSuscripcion(?bool $aceptaSuscripcion): self
+    {
+        $this->aceptaSuscripcion = $aceptaSuscripcion;
+
+        return $this;
+    }
+
+    public function getCancelaSuscripcion(): ?bool
+    {
+        return $this->cancelaSuscripcion;
+    }
+
+    public function setCancelaSuscripcion(?bool $cancelaSuscripcion): self
+    {
+        $this->cancelaSuscripcion = $cancelaSuscripcion;
 
         return $this;
     }

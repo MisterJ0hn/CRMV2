@@ -503,6 +503,43 @@ class VwContrato
      * @ORM\Column(type="integer", nullable=true)
      */
     private $vip;
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+	private $estadoSuscripcion;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $aceptaSuscripcion;
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $vencimientoId;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $fechaUltObservacion;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $diasUltObservacion;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $vigenciaContrato;
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $vigenciaAnexo;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $ultObservacion;
 
     public function __construct()
     {
@@ -1941,4 +1978,96 @@ class VwContrato
 
         return $this;
     }
+    public function getEstadoSuscripcion(): ?string
+    {
+        return $this->estadoSuscripcion;
+    }
+
+    public function setEstadoSuscripcion(string $estadoSuscripcion): self
+    {
+        $this->estadoSuscripcion = $estadoSuscripcion;
+
+        return $this;
+    }
+    public function getAceptaSuscripcion(): ?bool
+    {
+        return $this->aceptaSuscripcion;
+    }
+
+    public function setAceptaSuscripcion(bool $aceptaSuscripcion): self
+    {
+        $this->aceptaSuscripcion = $aceptaSuscripcion;
+
+        return $this;
+    }
+    public function getVencimientoId(): ?int
+    {
+        return $this->vencimientoId;
+    }
+    public function setVencimiento(?int $vencimientoId): self
+    {
+        $this->vencimientoId= $vencimientoId;
+        return $this;
+    }
+
+    public function getFechaUltObservacion(): ?\DateTimeInterface
+    {
+        return $this->fechaUltObservacion;
+    }
+
+    public function setFechaUltObservacion(?\DateTimeInterface $fechaUltObservacion): self
+    {
+        $this->fechaUltObservacion = $fechaUltObservacion;
+
+        return $this;
+    }
+
+    public function getDiasUltObservacion(): ?int
+    {
+        return $this->diasUltObservacion;
+    }
+
+    public function setDiasUltObservacion(?int $diasUltObservacion): self
+    {
+        $this->diasUltObservacion = $diasUltObservacion;
+
+        return $this;
+    }
+
+    public function getVigenciaContrato(): ?int
+    {
+        return $this->vigenciaContrato;
+    }
+
+    public function setVigenciaContrato(?int $vigenciaContrato): self
+    {
+        $this->vigenciaContrato = $vigenciaContrato;
+
+        return $this;
+    }
+    public function getVigenciaAnexo(): ?int
+    {
+        return $this->vigenciaAnexo;
+    }
+
+    public function setVigenciaAnexo(?int $vigenciaAnexo): self
+    {
+        $this->vigenciaAnexo = $vigenciaAnexo;
+
+        return $this;
+    }
+
+    public function getUltObservacion(): ?string
+    {
+        return $this->ultObservacion;
+    }
+
+    public function setUltObservacion(?string $ultObservacion): self
+    {
+        $this->ultObservacion = $ultObservacion;
+
+        return $this;
+    }
+
+    
 }

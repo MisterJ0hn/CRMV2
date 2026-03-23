@@ -102,13 +102,9 @@
 <h4>Contrato</h4>
 <div class="row">
     <div class="col-sm-12 col-md-3">
-        <small class="text-muted">Sucursal *</small>
-        <select name="cboSucursal" id="sucursal" required class="form-control cboSucursal" required>
-            <option value=""></option>
-            {% for sucursal in sucursales %}
-                <option value="{{sucursal.id}}">{{sucursal.nombre}}</option>
-            {% endfor %}
-        </select>
+        <small class="text-muted">Sucursal</small>
+        <p>Santiago</p>
+       
     </div>
     <!--<div class="col-sm-12 col-md-3">
         <small class="text-muted">Tramitador *</small>
@@ -375,7 +371,12 @@
                 diasPago=this.value;
             });
 
+             if(diasPago == 0 && !$('.chk-total').is(':checked')){
+                alert("Debe ingresar un dia de pago");
+                return;
+            }
             
+
             fechaPrimerPago=$('.primer-pago').val()+'-'+a.getDate();
             if(moment($('.primer-pago').val(), "YYYY-MM").daysInMonth()<30){
                 if(diasPago==30){
@@ -402,14 +403,31 @@
             }
         
             
-            a.setMonth(datePrimerPago.getMonth());
+            // Construir fecha base usando año y mes del primer pago, sin mutar con setMonth/setDate
+            // para evitar desbordamientos de mes cuando el día del pago es mayor que los días del mes destino
+            var baseYear  = datePrimerPago.getFullYear();
+            var baseMonth = datePrimerPago.getMonth(); // 0-based
 
-            a.setYear(datePrimerPago.getFullYear());
+            // Si sumames=1 significa que el primer pago ya pasó, arrancamos un mes antes
+            // para que el primer ciclo del loop quede en el mes correcto
+            var startMonth = baseMonth + sumames; // puede ser 0-based o adelantado 1 mes
+
             for (let i = indiceStart; i < cuotas + indiceStart; i++) {
-            
-                a.setMonth(a.getMonth()+1);
-               
-                $("#trCuotas").append('<tr><td>'+i+'</td><td>'+a.getFullYear()+'-'+((a.getMonth()+sumames)).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})+'-'+(diasPago).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping:false})+'</td><td>$'+$.number( $('.valor-cuota').val(), 0, ',', '.' )+'</td></tr>');   
+
+                // Calcular el mes absoluto (0-based) para esta cuota
+                var cuotaMonthOffset = startMonth + (i - indiceStart); // 0-based running month
+                var cuotaYear  = baseYear + Math.floor(cuotaMonthOffset / 12);
+                var cuotaMonth = cuotaMonthOffset % 12; // 0-based, siempre 0-11
+
+                // Ajustar día de pago si el mes tiene menos días
+                var maxDay = new Date(cuotaYear, cuotaMonth + 1, 0).getDate();
+                var cuotaDay = Math.min(parseInt(diasPago), maxDay);
+
+                var strYear  = cuotaYear.toString();
+                var strMonth = (cuotaMonth + 1).toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping: false}); // 1-based
+                var strDay   = cuotaDay.toLocaleString('en-US', {minimumIntegerDigits: 2, useGrouping: false});
+
+                $("#trCuotas").append('<tr><td>'+i+'</td><td>'+strYear+'-'+strMonth+'-'+strDay+'</td><td>$'+$.number( $('.valor-cuota').val(), 0, ',', '.' )+'</td></tr>');
             }
             $("#contrata").modal("show");
         }
@@ -778,8 +796,7 @@
             $('#m-valor-cuota').show();
             //$('.chk-bono').show();
             //$('.isAbono').show();
-            $('.primera-cuota').css("visibility", "visible");
-            $('.fecha-incorporacion').show();
+
             $(".chk-bono").show();
             $('.isAbono').show();
             $('.t-cuotas').show();

@@ -3,6 +3,27 @@
 {% block title %}Contrato index{% endblock %}
 
 {% block body %}
+<style>
+
+.contenedor-boton{
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* menu oculto */
+.menu-botones{
+    display: none;
+    margin-right: 10px;
+    white-space: nowrap;
+}
+
+/* botones horizontales */
+.menu-botones button{
+    margin-right: 5px;
+}
+
+</style>
     <form action="" method="get" class="form-envio">               
 
         {{ include('/cuadrosBusquedas/busquedaContrato.html.twig', {'TipoFiltro':TipoFiltro}) }}
@@ -27,9 +48,17 @@
                         <th>{{ knp_pagination_sortable(contratos, 'Tramitador', 'tramitador') }} {% if contratos.isSorted('tramitador') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>{{ knp_pagination_sortable(contratos, 'Sucursal', 'sucursal') }} {% if contratos.isSorted('sucursal') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>{{ knp_pagination_sortable(contratos, 'Contrato/Anexo', 'fechaCreacion') }} {% if contratos.isSorted('fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        
+                        <th class="pl-1"><img src="{{url_web}}/build/img/ultObs2_transparente.png" width="25px"></th>
+                        <!--<th><i class="fas fa-search text-info"></i></th>-->
                         <th><i class="fas fa-traffic-light"></i></th>
                         <th><i class="fas fa-star text-secondary"></i></th>
+<<<<<<< Updated upstream
                         <th>Acciones</th>
+=======
+                        <th><i class="far fa-credit-card text-success"></i></th>
+                        <th><i class="fas fa-ellipsis-h ml-1"></i></th>
+>>>>>>> Stashed changes
                         
                     </tr>
                 </thead>
@@ -44,7 +73,17 @@
                         <td>{{ contrato.agenda.abogado.nombre }}</td>
                         <td>{{ contrato.tramitador ? contrato.tramitador.nombre : '' }}</td>
                         <td>{{ contrato.sucursal}}</td>
-                        <td>{{ contrato.fechaCreacion|date('d-m-Y H:i') }}</td>
+                        <td {% if contrato.vigenciaAnexo is null %}
+                                {% if contrato.vigenciaContrato == 0 %}
+                                    style="color:red;font-weight: bold;"
+                                {% endif %}
+                            {% else %}
+                                {% if contrato.vigenciaAnexo == 0 %}
+                                    style="color:red;font-weight: bold;"
+                                {% endif %}
+                            {% endif %}
+                        >{{ contrato.fechaCreacion|date('d-m-Y H:i') }}</td>
+                        <td>{{ contrato.diasUltObservacion?contrato.diasUltObservacion:0}}</td>
                         <td>
                             {% set pago = proximoPago(contrato.id) %}
                             {% if pago %}
@@ -52,10 +91,43 @@
                                 {{semaforoContrato(pago|date('Y-m-d'))|raw}}
                             {% endif %}
                         </td>
+<<<<<<< Updated upstream
                         <td>{{ getVip(contrato.vip)|raw }}</td>
                         {% if sesion.getSesion.usuarioTipo.id in [1,3,4,6,8,7] %}
+=======
                         <td>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
+                        {% if contrato.vip == 1 %}
+                     
+                            {{contrato.vencimientoId?getVip(0)|raw:getVip(1)|raw}}
+                            
+                        {% endif %}
+                        </td>
+                        <td>
+                        {% if contrato.aceptaSuscripcion==1 %}
+                            
+                        
+                            {% if contrato.estadoSuscripcion != null %}
+                                {% if contrato.estadoSuscripcion == "ACTIVA" %}
+                                    <i class="far fa-credit-card text-success" title='Suscripción Activa'></i>
+                                {% else %}
+                                    <i class="far fa-credit-card text-danger" title='Suscripción Fallida'></i>
+                                {% endif %}
+                            {% else %}
+                                <i class="far fa-credit-card text-warning" title='Suscripción en proceso'></i>
+                            {% endif %}
+                        {% endif %}
+                        </td>
+>>>>>>> Stashed changes
+                        <td>
+                        <div class="contenedor-boton">
+
+                        <!-- botones que aparecen -->
+                        <div class="menu-botones{{contrato.id}} menu-botones bg-white shadow rounded">
+                        <div class="btn-group btn-group-sm " role="group" aria-label="Basic example">
+                        {% if sesion.getSesion.usuarioTipo.id in [1,3,4,6,8,7] %}
+                        
+
+                        
                         {% if sesion.getSesion.usuarioTipo.id in [1,8,3,11] %}
                             {% for audio in contrato.contratoAudios %}
                             {% set numero=random() %}
@@ -118,7 +190,6 @@
                                 <a href="{{url_web}}{{pdf_contrato}}{{contrato.pdf}}" class="btn btn-success btn-sm"><i class="fas fa-file-pdf"></i></a>
                         {% endif %}
                             <a href="{{ path('contrato_show', {'id': contrato.id}) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>
-                            
                             <a href="{{ path('contrato_edit', {'id': contrato.id}) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
                         
                             {% if contrato.agenda.status.id == 14 %}
@@ -134,8 +205,7 @@
                                 <a href="#" class="btn btn-secondary btn-sm" onclick="javascript:reasignarCerrador({{contrato.id}})"><i class="fas fa-retweet"></i></a>
                         {% else %}
                                
-                        </div>
-                        <td>
+                       
 
                             {% if sesion.getSesion.usuarioTipo.id == 13 %}
                                 {% for audio in contrato.contratoAudios %}
@@ -211,9 +281,40 @@
                                 
                             <a href="{{path('anexo_index',{'id':contrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos" ><i class="fas fa-file"></i></a>
                             <a href="#" class="btn btn-secondary btn-sm" onclick="javascript:reasignarCerrador({{contrato.id}})"><i class="fas fa-retweet"></i></a>
-                        </td>
+                        
                         {% endif %}
-
+                        </div>
+                        </div>
+       
+                            
+                            <button type="button" class="text-primary btnPrincipal{{contrato.id}}" onClick="javascript:expandir{{contrato.id}}()"><i class="fas fa-eject icono-botones-{{contrato.id}}" ></i></button>
+                        <script>
+                            abierto{{contrato.id}}=0;
+                            function expandir{{contrato.id}}(){
+                                $(".menu-botones{{contrato.id}}").animate({
+                                        width:"toggle",
+                                        opacity:"toggle"
+                                    },200);
+                                if(abierto{{contrato.id}} == 0){
+                                    abierto{{contrato.id}}=1;
+                                    $(".icono-botones-{{contrato.id}}").removeClass("fa-reject");
+                                    $(".icono-botones-{{contrato.id}}").addClass("fa-window-close");   
+                                    $(".btnPrincipal{{contrato.id}}").removeClass("text-primary");
+                                    $(".btnPrincipal{{contrato.id}}").addClass("text-danger");
+                                    console.log("paso cerrar");                                 
+                                }else{
+                                    abierto{{contrato.id}}=0;
+                                    $(".icono-botones-{{contrato.id}}").addClass("fa-reject");
+                                    $(".icono-botones-{{contrato.id}}").removeClass("fa-window-close");  
+                                    $(".btnPrincipal{{contrato.id}}").addClass("text-primary");
+                                    $(".btnPrincipal{{contrato.id}}").removeClass("text-danger");
+                                    console.log("paso abrir");                                  
+                                }
+                                console.log(abierto{{contrato.id}});
+                            }
+                        </script>
+                        </div>
+                    </td>
                         
                                     
                     </tr>
@@ -345,10 +446,7 @@
             modal.find('#hdContrato').val(contrato)
         })
 
-        $(document).ready(function(){
-            
-
-        });
+        
         const cargarSonido = function (fuente) {
             const sonido = document.createElement("audio");
             sonido.src = fuente;

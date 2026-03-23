@@ -3,11 +3,16 @@
 namespace App\Controller;
 
 use App\Entity\Causa;
+use App\Entity\Configuracion;
 use App\Entity\Contrato;
 use App\Entity\ContratoAnexo;
+use App\Entity\ContratoHistoricoSuscripcion;
 use App\Entity\Cuota;
+use App\Entity\Usuario;
+use App\Entity\VirtualPosLog;
 use App\Form\ContratoAnexoType;
 use App\Repository\CausaRepository;
+use App\Repository\ConfiguracionRepository;
 use App\Repository\ContratoAnexoRepository;
 use App\Repository\CuentaMateriaRepository;
 use App\Repository\CuotaRepository;
@@ -15,6 +20,7 @@ use App\Repository\DiasPagoRepository;
 use App\Repository\JuzgadoCuentaRepository;
 use App\Repository\JuzgadoRepository;
 use App\Repository\MateriaEstrategiaRepository;
+use App\Service\VirtualPos;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,15 +36,21 @@ class AnexoController extends AbstractController
     /**
      * @Route("/{id}", name="anexo_index", methods={"GET","POST"})
      */
-    public function index(Contrato $contrato,ContratoAnexoRepository $contratoAnexoRepository ): Response
+    public function index(Contrato $contrato,ContratoAnexoRepository $contratoAnexoRepository, Request $request ): Response
     {
         $this->denyAccessUnlessGranted('view','anexo');
-
+        $inicioSuscripcion=$request->query->get('inicio_suscripcion');
+        $url="";
+        if($inicioSuscripcion){
+            $url= $this->getParameter("url_web")."/suscripcion/". $contrato->getSesionSuscripcion();
+        }
         return $this->render('anexo/index.html.twig', [
-            'pagina' => 'Anexos',
-            'contrato'=>$contrato,
-            'contratoAnexos'=>$contratoAnexoRepository->findBy(['contrato'=>$contrato, 'estado'=>null]),
-            'contratoAnexosNulo'=>$contratoAnexoRepository->findBy(['contrato'=>$contrato, 'estado'=>0])
+            'pagina'            => 'Anexos',
+            'contrato'          =>$contrato,
+            'contratoAnexos'    =>$contratoAnexoRepository->findBy(['contrato'=>$contrato, 'estado'=>null]),
+            'contratoAnexosNulo'=>$contratoAnexoRepository->findBy(['contrato'=>$contrato, 'estado'=>0]),
+            'urlSuscripcion'    =>$url,
+            'inicioSuscripcion' => $inicioSuscripcion
         ]);
     }
 
@@ -66,6 +78,7 @@ class AnexoController extends AbstractController
                             MateriaEstrategiaRepository $materiaEstrategiaRepository,
                             JuzgadoCuentaRepository $juzgadoCuentaRepository,
                             CausaRepository $causaRepository,
+                            ConfiguracionRepository $configuracionRepository,
                             Request $request): Response
     {
         $this->denyAccessUnlessGranted('create','anexo');
@@ -106,8 +119,7 @@ class AnexoController extends AbstractController
             
             $entityManager = $this->getDoctrine()->getManager();
 
-            $entityManager->persist($contratoAnexo);
-            $entityManager->flush();
+            
 
             $submaterias=$request->request->get('hdSubMateria');
             $letra = $request->request->get('hdLetraCausa');
@@ -116,9 +128,30 @@ class AnexoController extends AbstractController
             $caratulados=$request->request->get('hdCaratulado');
             $hdjuzgados=$request->request->get('hdJuzgado');
 
-            
+            //Suscripción crear o cancelar
+            $cancelarSuscripcion = $request->request->get('chkCancelarSuscripcion');
+            //cancelar suscripción
+            if($cancelarSuscripcion==1){
+                $this->cancelarSuscripcion($contrato,$configuracionRepository->find(1),$user);
+                $contratoAnexo->setCancelaSuscripcion(1);
+            }
+
+            //suscribir
+            $aceptarSuscripcion = $request->request->get('chkAceptaSuscripcion');
+            if($aceptarSuscripcion==1){
+                $this->crearSuscripcion($contrato);   
+                $contratoAnexo->setAceptaSuscripcion(1);
+            }
+            $entityManager->persist($contratoAnexo);
+            $entityManager->flush();
 
             $this->calularCuotas($contratoAnexo);
+
+            //recalamos las cuotas en virtual pos
+            if($contrato->getEstadoSuscripcion()=="ACTIVA"){
+                $configuracion = $configuracionRepository->find(1);
+                $this->regenerarCuotasVirtualPos($contrato,$configuracion);
+            }
 
             $countCausa=count($submaterias);
             for ($i=0; $i < $countCausa ; $i++) { 
@@ -134,7 +167,7 @@ class AnexoController extends AbstractController
                 if(null !== $rol[$i]){
                     $causa->setRol($rol[$i]);
                 }
-                if(null !== $anio[$i]){
+                if(null !== $anio[$i] && $anio[$i]!=="" ){
                     $causa->setAnio($anio[$i]);
                 }
                 if(null !== $caratulados[$i]){
@@ -144,14 +177,17 @@ class AnexoController extends AbstractController
                     $causa->setMateriaEstrategia($materiaEstrategiaRepository->find($submaterias[$i]));
                 }
                 if(null !== $hdjuzgados[$i]){
-                    $causa->setJuzgadoCuenta($juzgadoCuentaRepository->find($hdjuzgados[$i]));
+                    $juzgado=$juzgadoRepository->find($hdjuzgados[$i]);
+                    $causa->setJuzgado($juzgado);
+                    if($juzgado){                
+                        if($juzgado->getCorte()!=null){
+                            $causa->setCorte($juzgado->getCorte());
+                        }
+                    }
                 }
-                
                 $entityManager->persist($causa);
                 $entityManager->flush();
-
             }
-
             $primeraCuotaVigente=$cuotaRepository->findOneByPrimeraVigente($contratoAnexo->getContrato()->getId());
 
             if($primeraCuotaVigente != null ){
@@ -159,10 +195,7 @@ class AnexoController extends AbstractController
                 $entityManager->persist($contrato);
                 $entityManager->flush();
             }
-
             return $this->redirectToRoute('anexo_pdf',['id'=>$contratoAnexo->getId()]);
-
-            
         }
 
         return $this->render('anexo/_anexoCausas.html.twig', [
@@ -192,7 +225,8 @@ class AnexoController extends AbstractController
                             DiasPagoRepository $diasPagoRepository,
                             ContratoAnexoRepository $contratoAnexoRepository,
                             MateriaEstrategiaRepository $materiaEstrategiaRepository,
-                            JuzgadoCuentaRepository $juzgadoCuentaRepository
+                            JuzgadoCuentaRepository $juzgadoCuentaRepository,
+                            ConfiguracionRepository $configuracionRepository
                             ): Response
     {  
         $this->denyAccessUnlessGranted('create','anexo');
@@ -229,9 +263,7 @@ class AnexoController extends AbstractController
             $vigencia = $request->request->get('vigencia');
             $contratoAnexo->setVigencia($vigencia);
             $entityManager = $this->getDoctrine()->getManager();
-            $entityManager->persist($contratoAnexo);
-            $entityManager->flush();
-
+           
             
 
             //Anulando cuotas anteriores
@@ -249,9 +281,39 @@ class AnexoController extends AbstractController
             $caratulados=$request->request->get('hdCaratulado');
             $hdjuzgados=$request->request->get('hdJuzgado');
 
+            //Suscripción crear o cancelar
+            $cancelarSuscripcion = $request->request->get('chkCancelarSuscripcion');
+            //cancelar suscripción
+            if($cancelarSuscripcion==1){
+                $this->cancelarSuscripcion($contrato,$configuracionRepository->find(1),$user);
+                $contratoAnexo->setCancelaSuscripcion(1);
+            }
+
+            //suscribir
+            $aceptarSuscripcion = $request->request->get('chkAceptaSuscripcion');
+            if($aceptarSuscripcion==1){
+                $this->crearSuscripcion($contrato);   
+                $contratoAnexo->setAceptaSuscripcion(1);
+            }
+            $entityManager->persist($contratoAnexo);
+            $entityManager->flush();
+
             
+            $this->calularCuotas($contratoAnexo);
+
+            //recalamos las cuotas en virtual pos
+            if($contrato->getEstadoSuscripcion()=="ACTIVA"){
+                $configuracion = $configuracionRepository->find(1);
+                $this->regenerarCuotasVirtualPos($contrato,$configuracion);
+            }
 
             $this->calularCuotas($contratoAnexo);
+            
+            //Recalculamos las cuotas en virtual pos
+            if($contrato->getEstadoSuscripcion()=="ACTIVA"){
+                $configuracion = $configuracionRepository->find(1);
+                $this->regenerarCuotasVirtualPos($contrato,$configuracion);
+            }
 
             $countCausa=count($submaterias);
             for ($i=0; $i < $countCausa ; $i++) { 
@@ -318,7 +380,8 @@ class AnexoController extends AbstractController
                                 CuotaRepository $cuotaRepository, 
                                 Request $request,
                                 DiasPagoRepository $diasPagoRepository,
-                                ContratoAnexoRepository $contratoAnexoRepository): Response
+                                ContratoAnexoRepository $contratoAnexoRepository,
+                                ConfiguracionRepository $configuracionRepository): Response
                                 {
 
         $this->denyAccessUnlessGranted('create','anexo');
@@ -342,31 +405,49 @@ class AnexoController extends AbstractController
         if($ultAnexo){
             $folio=$ultAnexo->getFolio()+1;
             $ultFolio=$ultAnexo->getFolio();
-
         }
         $contratoAnexo->setFolio($folio);
-
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
 
             $entityManager = $this->getDoctrine()->getManager();
-            
             $contratoAnexo->setDiasPago($request->request->get('chkDiasPago'));
             $vigencia = $request->request->get('vigencia');
             $contratoAnexo->setVigencia($vigencia);
-            $entityManager->persist($contratoAnexo);
-            $entityManager->flush();
 
+            
             //Anulando cuotas anteriores
-            $detalleCuotas=$contrato->getDetalleCuotas();
+            /*$detalleCuotas=$contrato->getDetalleCuotas();
             foreach($detalleCuotas as $detalleCuota){
                 $detalleCuota->setAnular(1);
                 $entityManager->persist($detalleCuota);
                 $entityManager->flush();
+            }*/
+                //Suscripción crear o cancelar
+            $cancelarSuscripcion = $request->request->get('chkCancelarSuscripcion');
+            //cancelar suscripción
+            if($cancelarSuscripcion==1){
+                $this->cancelarSuscripcion($contrato,$configuracionRepository->find(1),$user);
+                $contratoAnexo->setCancelaSuscripcion(1);
             }
+
+            //suscribir
+            $aceptarSuscripcion = $request->request->get('chkAceptaSuscripcion');
+            if($aceptarSuscripcion==1){
+                $this->crearSuscripcion($contrato);   
+                $contratoAnexo->setAceptaSuscripcion(1);
+            }
+            $entityManager->persist($contratoAnexo);
+            $entityManager->flush();
+
             $this->calularCuotas($contratoAnexo);
 
+            //Regeneramos las cuotas en virtual pos
+            if($contrato->getEstadoSuscripcion()=="ACTIVA"){
+                $configuracion = $configuracionRepository->find(1);
+                $this->regenerarCuotasVirtualPos($contrato,$configuracion);
+            }
             
             $primeraCuotaVigente=$cuotaRepository->findOneByPrimeraVigente($contratoAnexo->getContrato()->getId());
 
@@ -555,7 +636,11 @@ class AnexoController extends AbstractController
             "Attachment" => true
         ]);*/
 
-        return $this->redirectToRoute('anexo_index',['id'=>$contratoAnexo->getContrato()->getId()]);
+        if($contratoAnexo->getAceptaSuscripcion() and $contratoAnexo->getCancelaSuscripcion()==null){
+            return $this->redirectToRoute('anexo_index',['id'=>$contratoAnexo->getContrato()->getId(),'inicio_suscripcion'=>true]);
+        }else{
+            return $this->redirectToRoute('anexo_index',['id'=>$contratoAnexo->getContrato()->getId()]);
+        }
     }
 
 
@@ -652,6 +737,163 @@ class AnexoController extends AbstractController
             }
         }
 
+
+
+
+    }
+
+    public function regenerarCuotasVirtualPos(Contrato $contrato,Configuracion $configuracion){
+        $virtualPosLog = new VirtualPosLog();
+        $entityManager = $this->getDoctrine()->getManager();
+        $virtualPos =new VirtualPos($configuracion->getVirtualPosApiKey(),
+                                    $configuracion->getVirtualPosSecretKey(),
+                                    $configuracion->getVirtualPosPlan(),
+                                    $configuracion->getVirtualPosUrl());
+
+        // lo primero será anular los cargos que aun no se han cobrado.
+        try{
+            $response= $virtualPos->cancelarCargosFuturos($contrato->getSuscripcionId());
+            $virtualPosLog->setExito(1);
+            $virtualPosLog->setContrato($contrato);
+            $virtualPosLog->setResponse(json_encode($response));
+            $virtualPosLog->setRequest("");
+            $virtualPosLog->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+            $entityManager->persist($virtualPosLog);
+            $entityManager->flush();
+        }catch(\Exception $e){
+            $virtualPosLog->setExito(0);
+            $virtualPosLog->setContrato($contrato);
+            $virtualPosLog->setResponse($e->getMessage());
+            $virtualPosLog->setRequest("");
+            $virtualPosLog->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+            $entityManager->persist($virtualPosLog);
+            $entityManager->flush();
+        }
+
+        //Seguno paso es crear las nuevas cuotas
+
+        try{
+            $detalleCuotas = $this->getDoctrine()->getRepository(Cuota::class)->findBy(["contrato"=>$contrato,"anular"=>null]);
+            foreach ($detalleCuotas as $cuota) {
+                $response = $virtualPos->crearCuota($cuota,$contrato->getSuscripcionId());
+                $cuota->setInvoiceId($response["response"]["charge"]["id"]);
+                $entityManager->persist($cuota);
+
+                $virtualPosLogCuota = new VirtualPosLog();
+                $virtualPosLogCuota->setExito(1);
+                $virtualPosLogCuota->setContrato($contrato);
+                $virtualPosLogCuota->setFechaRegistro(new \DateTime(date("Y-m-d")));
+                $virtualPosLogCuota->setResponse(json_encode($response["response"]));
+                $virtualPosLogCuota->setRequest($response["request"]);
+                $entityManager->persist($virtualPosLogCuota);
+                $entityManager->flush();
+            }
+
+        }catch(\Exception $e){
+            $virtualPosLogCuota = new VirtualPosLog();
+            $virtualPosLogCuota->setExito(0);
+            $virtualPosLogCuota->setContrato($contrato);
+            $virtualPosLogCuota->setFechaRegistro(new \DateTime(date("Y-m-d")));
+            $virtualPosLogCuota->setResponse(json_encode($e->getMessage()));
+            $virtualPosLogCuota->setRequest($response["request"]);
+            $entityManager->persist($virtualPosLogCuota);
+            $entityManager->flush();
+        }
+
+
+
+    }
+
+    public function cancelarSuscripcion(Contrato $contrato,Configuracion $configuracion,Usuario $usuario)
+    {
+        $entityManager = $this->getDoctrine()->getManager();    
+        if($contrato->getAceptaSuscripcion())
+        {
+            $suscripcionId=$contrato->getSuscripcionId();
+            try{
+                $virtualPosLog = new VirtualPosLog();
+                $virtualPos =new VirtualPos($configuracion->getVirtualPosApiKey(),$configuracion->getVirtualPosSecretKey(),$configuracion->getVirtualPosPlan(),$configuracion->getVirtualPosUrl());
+                if($suscripcionId!=""){
+                    $response= $virtualPos->cancelarSuscripcion($suscripcionId);
+                     $virtualPosLog->setExito(1);
+                }else{
+                    $response=["error"=>"no existe suscripcion activa"];
+                     $virtualPosLog->setExito(0);
+                }
+               
+                $virtualPosLog->setContrato($contrato);
+                $virtualPosLog->setResponse(json_encode($response));
+                $virtualPosLog->setRequest("");
+                $virtualPosLog->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+                $entityManager->persist($virtualPosLog);
+                $entityManager->flush();
+
+                $contrato->setCancelaSuscripcion(1);
+                $contrato->setUsuarioCancelaSuscripcion($usuario);
+                $contrato->setEstadoSuscripcion("CANCELADA");
+                $contrato->setSesionSuscripcionActiva(0);
+                $contrato->setAceptaSuscripcion(0);
+
+                $contrato->setSuscripcionId("");
+                $entityManager->persist($contrato);
+                $entityManager->flush();
+
+                $historicoSuscripcion = new ContratoHistoricoSuscripcion();
+                $historicoSuscripcion->setContrato($contrato);
+                $historicoSuscripcion->setExito(true);
+                $historicoSuscripcion->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+                $historicoSuscripcion->setObservacion("Usuario cancela suscripción de pago automático y se crea nuevo anexo");
+                $historicoSuscripcion->setSuscripcionId("");
+                $entityManager->persist($historicoSuscripcion);
+                $entityManager->flush();
+
+
+            }catch(\Exception $e)
+            {
+                $virtualPosLog->setExito(0);
+                $virtualPosLog->setContrato($contrato);
+                $virtualPosLog->setResponse($e->getMessage());
+                $virtualPosLog->setRequest("");
+                $virtualPosLog->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+                $entityManager->persist($virtualPosLog);
+                $entityManager->flush();
+            }
+        }
+    }
+
+    public function crearSuscripcion(Contrato $contrato)
+    {
+        $entityManager = $this->getDoctrine()->getManager();    
+        if($contrato->getAceptaSuscripcion()==null or ($contrato->getAceptaSuscripcion()==1 and $contrato->getCancelaSuscripcion()==1))
+        {
+            $historicoSuscripcion = new ContratoHistoricoSuscripcion();
+            $historicoSuscripcion->setContrato($contrato);
+            try{
+        
+                $contrato->setAceptaSuscripcion(1);
+                $contrato->setCancelaSuscripcion(null);
+                $contrato->setSesionSuscripcion(uniqid());
+                $contrato->setEstadoSuscripcion(null);
+                $contrato->setSesionSuscripcionActiva(1);
+                $entityManager->persist($contrato);
+                $entityManager->flush();
+
+                
+                $historicoSuscripcion->setExito(true);
+                $historicoSuscripcion->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+                $historicoSuscripcion->setObservacion("Usuario acepta suscripción de pago automático y se crea nuevo anexo");
+                $historicoSuscripcion->setSuscripcionId("");
+                
+            }catch(\Exception $e)
+            {
+                $historicoSuscripcion->setExito(false);
+                $historicoSuscripcion->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+                $historicoSuscripcion->setObservacion("Ha ocurrido un error: ".$e->getMessage());
+                $historicoSuscripcion->setSuscripcionId("");
+            }
+            $entityManager->persist($historicoSuscripcion);
+            $entityManager->flush();
+        }
 
     }
 }

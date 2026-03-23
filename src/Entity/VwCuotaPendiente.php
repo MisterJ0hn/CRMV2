@@ -80,6 +80,10 @@ class VwCuotaPendiente
      */
     private $invoiceId;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Vencimiento::class)
+     */
+    private $vencimientoId;
 
     public function __construct()
     {
@@ -250,6 +254,17 @@ class VwCuotaPendiente
     public function setInvoiceId(?string $invoiceId): self
     {
         $this->invoiceId = $invoiceId;
+
+        return $this;
+    }
+    public function getVencimientoId(): ?string
+    {
+        return $this->vencimientoId;
+    }
+
+    public function setVencimientoId(?string $vencimientoId): self
+    {
+        $this->vencimientoId = $vencimientoId;
 
         return $this;
     }

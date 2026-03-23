@@ -447,6 +447,22 @@ class ContratoRepository extends ServiceEntityRepository
                 ['usuarioReasignadorId' => $usuarioReasignadorId, 'tramitadorNuevoId' => $tramitadorNuevoId, 'tramitadorId' => $tramitadorId]);
         $conn->commit();
     }   
+
+
+    public function obtenerContratosPendientesSuscripcion(){
+        $query=$this->createQueryBuilder('c')
+        ->andWhere('c.estadoSuscripcion is null')
+        ->andWhere('c.suscripcionId is not null or c.suscripcionId = "" ')
+        ->andWhere('c.aceptaSuscripcion = 1')
+        ->andWhere('c.sesionSuscripcionActiva = 1')
+        ->andWhere('c.cancelaSuscripcion is null')
+        ;
+        
+         return $query
+            ->getQuery()
+            ->getResult()
+        ;
+    }
     // /**
     //  * @return Contrato[] Returns an array of Contrato objects
     //  */

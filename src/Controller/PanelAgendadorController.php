@@ -437,7 +437,13 @@ class PanelAgendadorController extends AbstractController
         }
 
         if(trim($telefonoRecado)!=""){
-            $sql1=" and (a.telefonoCliente='$telefonoRecado' or a.telefonoRecadoCliente='$telefonoRecado' ) ";
+            if(trim($telefono)!=""){
+              
+                $sql1=" and (a.telefonoCliente='$telefonoRecado' or a.telefonoRecadoCliente='$telefonoRecado' ) ";
+            }else{
+                $sql1="  (a.telefonoCliente='$telefonoRecado' or a.telefonoRecadoCliente='$telefonoRecado' ) ";
+            }
+            
         }
         if(trim($correo)!=""){
             $sql1.=" or a.emailCliente='$correo' ";
@@ -446,6 +452,9 @@ class PanelAgendadorController extends AbstractController
             $sql1.=" or a.rutCliente='$rut' ";
         }
 
+        if($sql=="" && $sql1==""){
+            $sql=" 1=2";
+        }
         $registrar=true;
         //$agenda_existe=$contratoRepository->findByPersSinContr(null,null,null,null,null,3,$sql.$sql1);
         //$contrato_existe=$contratoRepository->findByPers(null,null,null,null,null, $sql.$sql1);

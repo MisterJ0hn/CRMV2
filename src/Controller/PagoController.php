@@ -3,30 +3,24 @@
 namespace App\Controller;
 
 use App\Entity\Pago;
-use App\Entity\Usuario;
 use App\Entity\Cuota;
-use App\Entity\PagoCuotas;
 use App\Entity\Contrato;
 use App\Entity\Importacion;
 use App\Entity\PagoTipo;
 use App\Form\PagoType;
 use App\Form\ImportacionType;
-use App\Repository\CausaObservacionRepository;
-use App\Repository\ImportacionRepository;
 use App\Repository\ContratoRepository;
-use App\Repository\ContratoRolRepository;
 use App\Repository\PagoRepository;
 use App\Repository\ModuloPerRepository;
 use App\Repository\CuotaRepository;
 use App\Repository\CuentaRepository;
-use App\Repository\PagoCuentasRepository;
 use App\Repository\PagoCanalRepository;
 use App\Repository\PagoTipoRepository;
 use App\Repository\CuentaCorrienteRepository;
-use App\Repository\DiasPagoRepository;
 use App\Repository\PagoCuotasRepository;
 use App\Repository\UsuarioRepository;
 use App\Repository\VencimientoRepository;
+use App\Repository\VwCuotaConEquipoRepository;
 use App\Service\Toku;
 use Knp\Component\Pager\PaginatorInterface;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -38,7 +32,6 @@ use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpKernel\KernelInterface;
 
@@ -50,7 +43,7 @@ class PagoController extends AbstractController
     /**
      * @Route("/", name="pago_index", methods={"GET"})
      */
-    public function index( CuotaRepository $cuotaRepository,PaginatorInterface $paginator,ModuloPerRepository $moduloPerRepository,Request $request,CuentaRepository $cuentaRepository): Response
+    public function index( VwCuotaConEquipoRepository $cuotaRepository,PaginatorInterface $paginator,ModuloPerRepository $moduloPerRepository,Request $request,CuentaRepository $cuentaRepository): Response
     {
         $this->denyAccessUnlessGranted('view','pago');
         $user=$this->getUser();
@@ -785,7 +778,7 @@ class PagoController extends AbstractController
     /**
      * @Route("/finalizado", name="pago_finalizado", methods={"GET"})
      */
-    public function finalizado(ContratoRepository $contratoRepository, CuotaRepository $cuotaRepository,PagoRepository $pagoRepository,PaginatorInterface $paginator,ModuloPerRepository $moduloPerRepository,Request $request,CuentaRepository $cuentaRepository): Response
+    public function finalizado(ContratoRepository $contratoRepository, VwCuotaConEquipoRepository $cuotaRepository,PagoRepository $pagoRepository,PaginatorInterface $paginator,ModuloPerRepository $moduloPerRepository,Request $request,CuentaRepository $cuentaRepository): Response
     {
         $this->denyAccessUnlessGranted('view','pago_finalizado');
         $user=$this->getUser();

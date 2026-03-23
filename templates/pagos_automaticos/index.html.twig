@@ -1,0 +1,318 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ pagina }}{% endblock %}
+
+{% block body %}
+<section>
+    <div class="alert alert-success">
+        <h1>Total Pagos: <strong>${{ total|number_format(0, ',', '.') }}</strong></h1>
+    </div>
+</section>
+<section>
+    <div class="row">
+       
+        {% set totalPorEstados = 0%}
+        {% for totalEstado in totalEstados  %}
+        
+        <div class="col-sm-6 col-md-3">
+            
+            <div class="info-box">
+                {% if totalEstado[0].estadoSuscripcion == 'Pendiente'%}
+                <span class="info-box-icon bg-warning"><i class="far fa-credit-card"></i></span>
+                {% endif %}
+                {% if totalEstado[0].estadoSuscripcion == 'Suscrito'%}
+                <span class="info-box-icon bg-success"><i class="far fa-credit-card"></i></span>
+                {% endif %}
+                {% if totalEstado[0].estadoSuscripcion == 'Rechazado'%}
+                <span class="info-box-icon bg-danger"><i class="far fa-credit-card"></i></span>
+                {% endif %}
+                <div class="info-box-content">
+                <span class="info-box-text">{{totalEstado[0].estadoSuscripcion}}</span>
+             
+                <span class="info-box-number">{{totalEstado['total']}}</span>
+                {% set totalPorEstados = totalPorEstados + totalEstado['total']%}
+                
+          
+                </div>
+
+                
+                <!-- /.info-box-content -->
+            </div>
+            
+        </div>
+
+       
+       {% endfor %}
+        
+    </div>
+ <div class="card card-outline card-info">
+    <div class="card-header">
+      <h3 class="card-title">Resumen por cerrador</h3>
+
+      <div class="card-tools">
+        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
+        </button>
+        <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+    <div class="card-body">
+    
+{% for totalAbogado in totalAbogados %}
+    
+<div class="row">
+    <div class="col-2">
+
+    <p>{{totalAbogado[0].contrato.agenda.abogado.nombre}}</p>
+    </div>
+    <div class="col-9">
+        <div class="progress mb-3">
+            <div class="progress-bar bg-success" role="progressbar" aria-valuenow="{{totalAbogado['total']/totalPorEstados}}" aria-valuemin="0"
+            aria-valuemax="100" style="width: {{totalAbogado['total']/totalPorEstados*100}}%">
+                <span class="sr-only">40% Complete (success)</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-1">
+        <p>{{totalAbogado['total']}}</p>
+    </div>
+</div>
+{% endfor %}
+</div>
+</div>
+
+
+<form action="" class="form-envio" method="get">
+    <div class="card">
+        <div class="card-header">
+            Filtro
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-sm-12 col-md-2">
+                    <label>Estado</label>
+                    <select name="bEstado" class="form-control">
+                        <option value="">Todos</option>
+                        <option value="pendiente" {% if bEstado == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                        <option value="ACTIVA" {% if bEstado == 'ACTIVA' %}selected{% endif %}>Suscrito</option>
+                        <option value="Error" {% if bEstado == 'Error' %}selected{% endif %}>Rechazado</option>
+                    </select>
+                </div>
+                <div class="col-sm-12 col-md-2">
+                    <label>Cerradores</label>
+                    <select name="bCerrador" class="form-control">
+                        <option value="">Todos</option>
+                        {% for cerrador in cerradores %}
+                            <option value="{{ cerrador.id }}" {% if bCerrador == cerrador.id %}selected{% endif %}>{{ cerrador.nombre }}</option>
+                        {% endfor %}
+
+                    </select>   
+                </div>
+                <div class="col-sm-12 col-md-2">
+                    <label>AgendaId/Folio</label>
+                    <input type="text" class="form-control" name="bFolio" placeholder="" value="{{ bFolio }}">
+                </div>
+
+                <div class="col-sm-12 col-md-3">
+                    <label>Nombre/Teléfono</label>
+                    <input type="text" class="form-control" name="bFiltro" placeholder="" value="{{ bFiltro }}">
+                </div>
+
+                <div class="col-sm-12 col-md-2">
+                    <label>FechaContrato</label>
+                    <input type="text" class="form-control" name="bFecha" id="bFecha" value="{{ dateInicio }} - {{ dateFin }}">
+                </div>
+
+                <div class="col-sm-12 col-md-1">
+                    <button type="submit" class="btn btn-primary btn-buscar" style="margin-top: 30px;">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="card mt-2">
+    <div class="card-body table-responsive p-0" style="height: 500px;">
+        <table class="table table-head-fixed text-nowrap table-striped table-sm">
+            <thead>
+                <tr>
+                    <th>{{ knp_pagination_sortable(contratos, 'Folio', 'folio') }} {% if contratos.isSorted('folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'AgendaId', 'contrato.agenda') }} {% if contratos.isSorted('contrato.agenda') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Cliente', 'contrato.nombre') }} {% if contratos.isSorted('contrato.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Abogado', 'contrato.agenda.abogado') }} {% if contratos.isSorted('contrato.agenda.abogado') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Cto/Anexo', 'fechaCreacion') }} {% if contratos.isSorted('fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Estado', 'EstadoSuscripcion') }} {% if contratos.isSorted('EstadoSuscripcion') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th style="text-align: center !important;">{{ knp_pagination_sortable(contratos, 'Cuota', 'numeroCuota') }} {% if contratos.isSorted('numeroCuota') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th style="text-align: center !important;">ValorCuota</th>
+                    <th style="text-align: center !important;">VctoCuota</th>
+                    <th>PagoCuota</th>
+                    <th style="text-align: center !important;">MontoPagado</th>
+                    
+                    <th><i class="fas fa-traffic-light"></i></th>
+                    <th><i class="far fa-credit-card text-success"></i></th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for vwContrato in contratos %}
+                {% set contrato = vwContrato.contrato %}
+               
+                <tr>
+                    <td align="left">{{ vwContrato.folio }}</td>
+                    <td align="left">{{ contrato.agenda.id }}</td>
+                    <td align="left">{{ contrato.nombre }}</td>
+                    <td align="left">
+                        {% if contrato.agenda.abogado is not null %}
+                            {{ contrato.agenda.abogado.nombre }}
+                        {% endif %}
+                    </td>
+                    <td align="left">{{ vwContrato.fechaCreacion|date('Y-m-d H:i') }}</td>
+                    <td align="left">{{ vwContrato.estadoSuscripcion }}</td>
+                    <td align="center">{{ vwContrato.numeroCuota }}</td>
+                    <td  align="center">${{ vwContrato.montoCuota|number_format(0, ',', '.') }}</td>
+                    
+                    <td align="center">{{ vwContrato.fechaVencimiento|date('Y-m-d') }}</td>
+                    <td align="left">
+                        {% if vwContrato.fechaPagado is not null %}
+                            {{ vwContrato.fechaPagado|date( 'Y-m-d H:i:s') }}
+                        {% endif %}
+                    </td>
+                    <td align="center">
+                        {% if vwContrato.montoPagado is not null %}
+                            ${{ vwContrato.montoPagado|number_format(0, ',', '.') }}
+                        {% endif %}
+                    </td>
+                    
+                    <td align="center">{% set pago = proximoPago(contrato.id) %}
+                            {% if pago %}
+                              
+                                {{semaforoContrato(pago|date('Y-m-d'))|raw}}
+                            {% endif %}</td>
+                    <td align="center">
+                    {% if contrato.aceptaSuscripcion==1 %}
+                            
+                        
+                            {% if contrato.estadoSuscripcion != null %}
+                                {% if contrato.estadoSuscripcion == "ACTIVA" %}
+                                    <i class="far fa-credit-card text-success" title='Suscripción Activa'></i>
+                                {% else %}
+                                    <i class="far fa-credit-card text-danger" title='Suscripción Fallida'></i>
+                                {% endif %}
+                            {% else %}
+                                <i class="far fa-credit-card text-warning" title='Suscripción en proceso'></i>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                      
+                        <button type="button" class="btn btn-sm btn-info btn-historico" data-contrato-id="{{ contrato.id }}" title="Ver Histórico Suscripción">
+                            <i class="fas fa-history"></i>
+                        </button>
+                    </td>
+                    
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="16">No hay registros</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer clearfix">
+        <div class="navigation">
+            {{ knp_pagination_render(contratos, '@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig', {}, {
+                'position': 'centered',
+                'rounded': true,
+            }) }}
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalHistorico" tabindex="-1" role="dialog" aria-labelledby="modalHistoricoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalHistoricoLabel">Histórico de Suscripción</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="historico-content">
+            <p>Cargando...</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+    $(function () {
+        $('[data-toggle="popover"]').popover()
+        $('.popover-dismiss').popover({
+            trigger: 'focus'
+            });
+        
+            $('[data-toggle="popover"]').popover({
+                html: true,
+                template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-header"></h3><div class="popover-body"></div></div>',
+            });
+    });
+    
+    $('#bFecha').daterangepicker({
+        "drops": "down",
+        "startDate": "{{ dateInicio }}",
+        "endDate": "{{ dateFin }}",
+        "locale": {
+            "format": "YYYY-MM-DD",
+            "applyLabel": "Apply",
+            "cancelLabel": "Cancel"
+        }
+    }, function(start, end, label) {
+        console.log('New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+    });
+
+    $(".btn-buscar").on("click", function () {
+        $(".form-envio").attr("action", "/pagos_automaticos/");
+        $(".form-envio").submit();
+    });
+
+    // Handle historico button click
+    $(document).on('click', '.btn-historico', function() {
+        var contratoId = $(this).data('contrato-id');
+        var modal = $('#modalHistorico');
+        var historicoContent = $('#historico-content');
+
+        // Set loading state
+        historicoContent.html('<div class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>');
+        
+        // Show the modal
+        modal.modal('show');
+
+        var url = '/pagos_automaticos/historico_suscripcion/' + contratoId;
+
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(response) {
+                historicoContent.html(response);
+            },
+            error: function(xhr) {
+                var errorMessage = '<div class="alert alert-danger" role="alert">Error al cargar el histórico.';
+                if (xhr.status) {
+                    errorMessage += '<br>Status: ' + xhr.status + ' ' + xhr.statusText;
+                }
+                errorMessage += '<br>Por favor, asegúrese de que la ruta <strong>' + url + '</strong> esté configurada correctamente.</div>';
+                historicoContent.html(errorMessage);
+            }
+        });
+    });
+</script>
+{% endblock %}

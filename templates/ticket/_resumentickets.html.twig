@@ -38,3 +38,14 @@
 </div>
 <!-- /.card-body -->
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Colapsar el card automáticamente al cargar la página
+    const card = document.querySelector('.card.card-outline.card-info');
+    const collapseButton = card.querySelector('[data-card-widget="collapse"]');
+    if (collapseButton) {
+        collapseButton.click();
+    }
+});
+</script>

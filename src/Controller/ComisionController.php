@@ -108,6 +108,7 @@ class ComisionController extends AbstractController
 
         switch($user->getUsuarioTipo()->getId()){
             case 1:
+            case 3:
                 $agendadores=$usuarioRepository->findBy(['usuarioTipo'=>$usuarioTipoRepository->find(5),'estado'=>1]);
 
                 $query=$agendaRepository->findByPers($agendador,$user->getEmpresaActual(),$compania,$statuesgroup,$filtro,null,$fecha);

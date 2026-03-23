@@ -1,0 +1,39 @@
+{{ form_start(form,{'attr':{'id':'frmConfirmacion'}}) }}
+{{form_row(form.motivo,{'label':false,'attr':{'class':'form-control cuotas number','required':true,'style':'visibility:hidden'}})}}
+            
+            <input type="hidden" id="hdSoloObservacion" name="hdSoloObservacion" value="0">
+            <input type="hidden" id="hdConfirma" name="hdConfirma" value="0">
+        <div class="row">
+             <div class="col-sm-12 col-md-12">
+                <h4>Comentario</h4>
+                
+                <input type="text" class="form-control txtObservacion" name="txtObservacion" size=500 required>
+                 <small class="text-muted">max 500 caract.</small><br><br>
+            </div>
+
+            <div class="col-sm-12 col-md-12">
+                <button type="button" class="btn btn-primary btn-confirmar">Conforme</button> 
+                <button type="button" class="btn btn-danger btn-noConfirmar">No Conforme</button>
+            </div>
+        </div>
+{{ form_end(form) }}
+
+<script>
+    $(".btn-confirmar").click(function(){
+        if($(".txtObservacion").val().length < 1){
+            alert("Ingrese un comentario para continuar.");
+        }else{
+            $("#hdConfirma").val(1);
+            $("#frmConfirmacion").submit();
+        }
+    });
+    $(".btn-noConfirmar").click(function(){
+        if($(".txtObservacion").val().length < 1){
+            alert("Ingrese un comentario para continuar.");
+        }else{
+            $("#hdConfirma").val(0);
+            $("#frmConfirmacion").submit();
+        }
+    });
+
+</script>

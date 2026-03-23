@@ -52,6 +52,11 @@ class PjudPdf
      */
     private $CreatedAt;
 
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $archivoDescargado;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -137,6 +142,18 @@ class PjudPdf
     public function setCreatedAt(?\DateTimeInterface $CreatedAt): self
     {
         $this->CreatedAt = $CreatedAt;
+
+        return $this;
+    }
+
+    public function getArchivoDescargado(): ?bool
+    {
+        return $this->archivoDescargado;
+    }
+
+    public function setArchivoDescargado(?bool $archivoDescargado): self
+    {
+        $this->archivoDescargado = $archivoDescargado;
 
         return $this;
     }

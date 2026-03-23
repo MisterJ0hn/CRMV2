@@ -14,13 +14,17 @@ use App\Form\TicketType;
 use App\Repository\ContratoRepository;
 use App\Repository\CuentaRepository;
 use App\Repository\EmpresaRepository;
+use App\Repository\GrupoRepository;
 use App\Repository\TicketEstadoRepository;
 use App\Repository\TicketHistorialRepository;
 use App\Repository\TicketRepository;
 use App\Repository\TicketTipoRepository;
+use App\Repository\TicketTipoSolicitudRepository;
 use App\Repository\UsuarioCuentaRepository;
+use App\Repository\UsuarioGrupoRepository;
 use App\Repository\UsuarioRepository;
 use App\Repository\UsuarioTipoRepository;
+use App\Repository\VwCuotaPendienteRepository;
 use Doctrine\ORM\EntityRepository;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -71,6 +75,7 @@ class TicketController extends AbstractController
         $tipo_fecha=1;
         $origen=0;
         $perfil=0;
+        $encargado=0;
         if(null !== $request->query->get('bFolio') && trim($request->query->get('bFolio'))!=''){
             $folio=$request->query->get('bFolio');
             $otros=" (c.folio= $folio or c.agenda=$folio)";
@@ -126,13 +131,20 @@ class TicketController extends AbstractController
                 $perfil=$request->query->get('bPerfil');
                 $otros.=" and t.destino = $perfil ";
             }
+            if(null != $request->query->get('bEncargado') && trim($request->query->get('bEncargado')!=0))
+            {
+                $encargado = $request->query->get('bEncargado');
+                $otros.=" and t.encargado = $encargado ";
+            }
         }
 
         switch($user->getUsuarioTipo()->getId()){
             case 3:
+                
                 $query=$ticketRepository->findByPers($user->getId(),$user->getEmpresaActual(),$statuesgroup,3,$otros);
                 $queryresumen=$ticketRepository->findByPersGroup($user->getId(),$user->getEmpresaActual(),$statuesgroup,null,3,$otros);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+              
                 break;                
             case 1:
             case 8:
@@ -174,6 +186,7 @@ class TicketController extends AbstractController
             'origen'=>$origen,
             'perfiles'=>$perfiles,
             'bPerfil'=>$perfil,
+            'bEncargado'=>$encargado,
             'TipoFiltro'=>'Tickets',
         ]);
     }
@@ -181,7 +194,11 @@ class TicketController extends AbstractController
     /**
      * @Route("/search", name="app_ticket_search", methods={"GET", "POST"})
      */
-    public function search(Request $request, ContratoRepository $contratoRepository, TicketRepository $ticketRepository): Response
+    public function search(Request $request, 
+                            ContratoRepository $contratoRepository, 
+                            TicketRepository $ticketRepository, 
+                            UsuarioGrupoRepository $usuarioGrupoRepository,
+                            TicketTipoSolicitudRepository $ticketTipoSolicitudRepository): Response
     {
 
         $this->denyAccessUnlessGranted('create','ticket');
@@ -189,16 +206,33 @@ class TicketController extends AbstractController
         $ticket=null;
         $contratos=null;
         $contrato=null;
+        $tipoSolicitud=null;
+        $error="";
         $pagina=$this->getDoctrine()->getRepository(ModuloPer::class)->findOneByName('ticket_new',$user->getEmpresaActual());
         
-
+        $tipoSolicitudes = $ticketTipoSolicitudRepository->findAll();   
         $folio = $request->request->get('txtFolio');
         $nombrerut = $request->request->get('txtNombreRut');
         
+        $tipoSolicitud=$request->request->get("hdTipoSolicitud",null);
+        
+        $usuarioReporte="";
         if($folio!=''){
+            
             $contrato=$contratoRepository->findOneBy(['folio'=>$folio]);
             $ticket=$ticketRepository->findAbierto($folio);
-
+            $usuarioGrupo = $usuarioGrupoRepository->findOneBy(['grupo'=>$contrato->getGrupo()]);
+            if($usuarioGrupo->getUsuario() != null){
+                $usuarioReporte=$usuarioGrupo->getUsuario()->getNombre();
+            }else{
+                $error='<div class="alert alert-danger alert-dismissible">
+                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                <h5><i class="icon fas fa-ban"></i> Error!!</h5>
+                   No hay usuario asignado al grupo ('.$contrato->getGrupo().')de este contrato
+                 </div>';
+                 $contrato = null;
+            }
+      
             if($ticket){
                 
             }else{
@@ -216,13 +250,16 @@ class TicketController extends AbstractController
             }
         }
         
-
+        
         return $this->render('ticket/search.html.twig', [
             'pagina'=>$pagina->getNombre(),
             'tickets'=>$ticket,
             'contratos'=>$contratos,
-            'contrato'=>$contrato
-           
+            'contrato'=>$contrato,
+            'usuarioReporte'=>$usuarioReporte,
+            'tipoSolicitudes'=>$tipoSolicitudes,
+            'tipoSolicitud_default'=>$tipoSolicitud,
+            'error'=>$error
         ]);
     }
 
@@ -314,15 +351,23 @@ class TicketController extends AbstractController
                             EmpresaRepository $empresaRepository,
                             UsuarioTipoRepository $usuarioTipoRepository,
                             UsuarioRepository $usuarioRepository,
-                            TicketHistorialRepository $ticketHistorialRepository): Response
+                            TicketHistorialRepository $ticketHistorialRepository,
+                            UsuarioGrupoRepository $usuarioGrupoRepository): Response
     {
         $user=$this->getUser();
         $rechazado = false;
+        $usuarioGrupo = $usuarioGrupoRepository->findOneBy(['grupo'=>$ticket->getContrato()->getGrupo()]);
+        $usuarioReporte=$usuarioGrupo->getUsuario()->getNombre();
         $pagina="Folio SAC ".$ticket->getFolioSac();
         $usuarioTipos=$usuarioTipoRepository->findBy([],['nombre'=>'Asc']);
         $form = $this->createForm(TicketType::class, $ticket);
         $form->handleRequest($request);
-
+        $habilitarConfirmar=0;
+        if($ticket->getEstado()->getId()==3){
+            if($ticket->getOrigen()->getId()==$user->getId()){
+                $habilitarConfirmar=1;
+            }
+        }
         if ($form->isSubmitted() && $form->isValid()) {
             if($ticket->getEstado()->getId()==1){
                 $destino= $usuarioTipoRepository->find($request->request->get('cboDestino'));
@@ -332,6 +377,7 @@ class TicketController extends AbstractController
                 $ticket->setEncargado($encargado);
                 $ticket->setEstado($estado);
                 $ticket->setFechaAsignado(new \DateTime(date('Y-m-d H:i:s')));
+                $ticket->setFechaUltimaGestion(new \DateTime(date('Y-m-d H:i:s')));
                 $ticketRepository->add($ticket);
 
                 $ticketHistoria = new TicketHistorial();
@@ -356,19 +402,20 @@ class TicketController extends AbstractController
                 $ticket->setRespuesta($observacion);
                 if($rechazada){
                     $estado=$ticketEstadoRepository->find(2);
-                    $ticket->setFechaUltimaGestion(new \DateTime(date('Y-m-d H:i:s')));
+                    
                     $ticket->setDestino($ticket->getOrigen()->getUsuarioTipo());
                     $ticket->setEncargado($ticket->getOrigen());
                     $observacion="Rechazado. ".$observacion;
                 }else{                
                     if($soloObservacion){
                         $estado=$ticketEstadoRepository->find(2);
-                        $ticket->setFechaUltimaGestion(new \DateTime(date('Y-m-d H:i:s')));
+                       
                     }else{
                         $estado=$ticketEstadoRepository->find(3);
                         $ticket->setFechaRespuesta(new \DateTime(date('Y-m-d H:i:s')));
                     }
                 }
+                $ticket->setFechaUltimaGestion(new \DateTime(date('Y-m-d H:i:s')));
                 $ticket->setEstado($estado);
                 
                 $ticketRepository->add($ticket);
@@ -389,12 +436,25 @@ class TicketController extends AbstractController
                 return $this->redirectToRoute('app_ticket_index', ['error_toast'=>$error_toast], Response::HTTP_SEE_OTHER);
             }
             if($ticket->getEstado()->getId()==3){
+                
 
+                
                 $observacion=$request->request->get('txtObservacion');
-                $estado=$ticketEstadoRepository->find(4);
+                if($request->request->get('hdConfirma')==1){
+                    $estado=$ticketEstadoRepository->find(4);
+                    $ticket->setFechaCierre(new \DateTime(date('Y-m-d H:i:s')));
+                    $ticket->setFechaUltimaGestion(new \DateTime(date('Y-m-d H:i:s')));
+                }
+                if($request->request->get('hdConfirma')==0){
+                    $estado=$ticketEstadoRepository->find(2);
+                    
+                    $ticket->setFechaRespuesta(null);
+
+                }
+                $ticket->setFechaUltimaGestion(new \DateTime(date('Y-m-d H:i:s')));
                 $ticket->setRespuesta($observacion);
                 $ticket->setEstado($estado);
-                $ticket->setFechaCierre(new \DateTime(date('Y-m-d H:i:s')));
+                
                 $ticketRepository->add($ticket);
 
                 $ticketHistoria = new TicketHistorial();
@@ -429,7 +489,12 @@ class TicketController extends AbstractController
             'usuarioTipos'=>$usuarioTipos,
             'pagina'=>$pagina,
             'form' => $form->createView(),
-            'rechazado'=>$rechazado
+            'rechazado'=>$rechazado,
+            'usuarioReporte'=>$usuarioReporte,
+            'habilitarConfirmar'=>$habilitarConfirmar,
+            'usuarioIdActual'=>$user->getId(),
+            'usuarioIdOrigenTicket'=>$ticket->getOrigen()->getId(),
+            'usuarioIdEncargadoTicket'=>$ticket->getEncargado()->getId()
             
         ]);
     }
@@ -515,18 +580,27 @@ class TicketController extends AbstractController
                         TicketEstadoRepository $ticketEstadoRepository,
                         UsuarioTipoRepository $usuarioTipoRepository,
                         UsuarioRepository $usuarioRepository,
-                        TicketHistorialRepository $ticketHistorialRepository): Response
+                        TicketHistorialRepository $ticketHistorialRepository,
+                        UsuarioGrupoRepository $usuarioGrupoRepository,
+                        VwCuotaPendienteRepository $vwCuotaPendienteRepository,
+                        TicketTipoSolicitudRepository $ticketTipoSolicitudRepository): Response
     {
         $this->denyAccessUnlessGranted('create','ticket');
         $usuarioTipos=$usuarioTipoRepository->findBy([],['nombre'=>'Asc']);
 
         $user=$this->getUser();
-
+        $usuarioGrupo = $usuarioGrupoRepository->findOneBy(['grupo'=>$contrato->getGrupo()]);
+        $usuarioReporte=$usuarioGrupo->getUsuario()->getNombre();
         $pagina=$this->getDoctrine()->getRepository(ModuloPer::class)->findOneByName('ticket_new',$user->getEmpresaActual());
         if($request->query->get('tipo')==null){
             return $this->redirectToRoute('app_ticket_search', [], Response::HTTP_SEE_OTHER);
         }
+        if($request->query->get('tipo_solicitud')==null){
+            return $this->redirectToRoute('app_ticket_search', [], Response::HTTP_SEE_OTHER);
+        }
         $ticketTipo=$this->getDoctrine()->getRepository(TicketTipo::class)->find($request->query->get('tipo'));
+        $ticketTipoSolicitud = $ticketTipoSolicitudRepository->find($request->query->get('tipo_solicitud'));
+
         $ticket = new Ticket();
         $ticket->setEmpresa($empresaRepository->find($user->getEmpresaActual()));
         $ticket->setContrato($contrato);
@@ -535,6 +609,9 @@ class TicketController extends AbstractController
         $ticket->setOrigen($user);
         $ticket->setTicketTipo($ticketTipo);
         $ticket->setFechaNuevo(new \DateTime(date('Y-m-d H:i:s')));
+        $ticket->setTicketTipoSolicitud($ticketTipoSolicitud);
+
+        $tipoSolicitudes = $ticketTipoSolicitudRepository->findAll();   
         $form = $this->createForm(TicketType::class, $ticket);
         $form->add("importancia",EntityType::class,[
             'class' => Importancia::class,
@@ -581,13 +658,20 @@ class TicketController extends AbstractController
             'form' => $form->createView(),
             'usuarioTipos'=>$usuarioTipos,
             'contrato'=>$contrato,
+            'usuarioReporte'=>$usuarioReporte,
+            'tipoSolicitudes'=>$tipoSolicitudes,
+            'tipoSolicitud_default'=>$ticketTipoSolicitud
         ]);
     }
 
      /**
      * @Route("/{id}/usuarios", name="app_ticket_show", methods={"GET"})
      */
-    public function usuarios(Request $request, Contrato $contrato, UsuarioRepository $usuarioRepository, UsuarioTipoRepository $usuarioTipoRepository ): Response
+    public function usuarios(Request $request, 
+                            Contrato $contrato, 
+                            UsuarioRepository $usuarioRepository, 
+                            UsuarioTipoRepository $usuarioTipoRepository,
+                            VwCuotaPendienteRepository $vwCuotaPendienteRepository ): Response
     {
         $usuario_id=0;
 
@@ -606,10 +690,18 @@ class TicketController extends AbstractController
                     $usuario_id=$contrato->getAgenda()->getAbogado()->getId();
                     break;
                 case 12://cobrador
-                    foreach ($contrato->getIdLote()->getUsuarioLotes() as $usuario) {
-                        $usuario_id = $usuario->getUsuario()->getId();
-                     
+
+                    $cuotaPendiente = $vwCuotaPendienteRepository->find($contrato->getId());
+
+                    if($cuotaPendiente){
+                        $usuario_id = $cuotaPendiente->getCobrador()->getId();
+                    }else{
+                        foreach ($contrato->getIdLote()->getUsuarioLotes() as $usuario) {
+                            $usuario_id = $usuario->getUsuario()->getId();
+                        }
                     }
+                   
+                    
                     break;
                 case 7:
                     $usuario_id=$contrato->getTramitador()->getId();

@@ -4,9 +4,35 @@
 
 
 {% block body %}
+<form method="POST">
 <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-3 tipo-solicitud-contenedor">
+                    <select name="cboTipoSolicitud" class="form-control tipo-solicitud">
+                    <option value="">seleccione un tipo</option>
+                    {% for tipoSolicitud in tipoSolicitudes %}
+                        <option value="{{tipoSolicitud.id}}" 
+                        {% if tipoSolicitud_default is defined %}
+                            {% if tipoSolicitud_default == tipoSolicitud.id %}
+                                selected
+                            {% endif %}
+                        {% endif %}
+                        > {{tipoSolicitud.nombre}} </option>
+                    {% endfor %}
+                    </select>
+                    
+                </div>
+                <div class="col-3">
+                <input type="hidden" name="hdTipoSolicitud" class="hdTipoSolicitud" value="">
+                    <button type="button" class="btn btn-primary btn-ingresar">ingresar</button>
+                </div>
+            </div>
+        </div>
+</div>
+<div class="card busqueda">
     <div class="card-body">
-        <form method="POST">
+        
             <div class="row">
                 <div class="col-sm-6 col-md-3">
                     <input type="text" placeholder="Folio" name="txtFolio" class="form-control">
@@ -19,9 +45,10 @@
                 </div>
 
             </div>
-        </form>
+        
     </div>
 </div>
+</form>
 {% if contrato is not empty %}
 {{ include("ticket/_cabezera.html.twig") }}
 {% endif %}
@@ -63,9 +90,17 @@
     </div>
     <div class="card-footer">
     {% if contrato is not empty %}
+<<<<<<< Updated upstream
         <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':4})}}" class="btn btn-success" >Ingresar Felicitación</a>
         <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':3})}}" class="btn btn-primary" >Ingresar Requerimiento</a>  
         <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':2})}}" class="btn btn-danger" >Ingresar Reclamo</a>
+=======
+        <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':4,'tipo_solicitud':tipoSolicitud_default})}}" class="btn btn-success" >Felicitación</a>
+        <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':3,'tipo_solicitud':tipoSolicitud_default})}}" class="btn btn-primary" >Requerimiento</a>  
+        <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':2,'tipo_solicitud':tipoSolicitud_default})}}" class="btn btn-danger" >Reclamo</a>
+        <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':5,'tipo_solicitud':tipoSolicitud_default})}}" class="btn btn-warning" >Retención</a>
+        <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':6,'tipo_solicitud':tipoSolicitud_default})}}" class="btn btn-info" >Devolución cuota</a>
+>>>>>>> Stashed changes
     {% endif %}
     </div>
 </div>
@@ -121,4 +156,32 @@
 </div>
 
 {% endif %}
+
+<script>
+
+{% if tipoSolicitud_default is null %}
+    $(".busqueda").hide();
+   
+    $(".btn-ingresar").click(function(){
+        if($(".tipo-solicitud").val()==""){
+            alert("debe seleccionar un valor");
+        }else{
+            $(".busqueda").show();
+            $(".btn-ingresar").hide();
+            $(".hdTipoSolicitud").val($(".tipo-solicitud").val());
+            $(".tipo-solicitud-contenedor").html("<p>"+$(".tipo-solicitud option:selected").text()+"</p>");
+            $(".tipo-solucitud").hide();
+
+        }
+    })
+{% endif %}
+{% if tipoSolicitud_default is not null %}
+    $(".btn-ingresar").hide();
+    $(".hdTipoSolicitud").val($(".tipo-solicitud").val());
+    $(".tipo-solicitud-contenedor").html("<p>"+$(".tipo-solicitud option:selected").text()+"</p>");
+    $(".tipo-solucitud").hide();
+
+{% endif %}
+
+</script>
 {% endblock %}

@@ -56,9 +56,12 @@
                         {% endif %}
                         {% if ticket.estado.id == 3 %}
                     
-                        {{ include('ticket/_cerrar.html.twig') }}
-                        
+                            {{ include('ticket/_cerrar.html.twig') }}
+                            {% if habilitarConfirmar == 1 %}
+                                 {{ include('ticket/_confirmacion.html.twig') }}
+                            {% endif %}
                         {% endif %}
+                        
                     {% else %}
                         {% if ticket.estado.id == 2 %}
                             {% if  sesion.getSesion.id == ticket.encargado.id %}

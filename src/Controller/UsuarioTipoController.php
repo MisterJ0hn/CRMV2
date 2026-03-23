@@ -4,11 +4,14 @@ namespace App\Controller;
 
 use App\Entity\UsuarioTipo;
 use App\Entity\ModuloPer;
+use App\Entity\Usuario;
 use App\Form\UsuarioTipoType;
 use App\Repository\UsuarioTipoRepository;
 use App\Repository\AgendaStatusRepository;
 use App\Repository\EmpresaRepository;
+use App\Repository\UsuarioRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -108,7 +111,18 @@ class UsuarioTipoController extends AbstractController
             'statues'=>$agendaStatusRepository->findAll(),
         ]);
     }
-
+    /**
+     * @Route("/{id}/usuarios",name="usuario_tipo_usuarios", methods="GET")
+     */
+    public function usuarios(UsuarioTipo $usuarioTipo, UsuarioRepository $usuarioRepository):JsonResponse
+    {
+        $usuarios = $usuarioRepository->findBy(["usuarioTipo"=>$usuarioTipo,"estado"=>1]);
+    
+        $usuarios_map = array_map(function(Usuario $usr){
+            return ["id"=>$usr->getId(),"nombre"=>$usr->getNombre()];
+        },$usuarios);
+        return $this->json($usuarios_map,200);
+    }
     
     /**
      * @Route("/{id}", name="usuario_tipo_delete", methods={"DELETE"})

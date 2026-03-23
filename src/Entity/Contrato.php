@@ -419,6 +419,51 @@ class Contrato
      */
     private $contratoCasetrackings;
 
+    /**
+     * @ORM\Column(type="string", length=50, nullable=true)
+     */
+    private $EstadoSuscripcion;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $suscripcionId;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $sesionSuscripcion;
+
+    /**
+     * @ORM\OneToMany(targetEntity=ContratoHistoricoSuscripcion::class, mappedBy="contrato")
+     */
+    private $contratoHistoricoSuscripcions;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $sesionSuscripcionActiva;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $aceptaSuscripcion;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $suscripcionUrl;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $cancelaSuscripcion;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Usuario::class)
+     */
+    private $usuarioCancelaSuscripcion;
+
 
     public function __construct()
     {
@@ -1656,6 +1701,132 @@ class Contrato
                 $contratoCasetracking->setContrato(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getEstadoSuscripcion(): ?string
+    {
+        return $this->EstadoSuscripcion;
+    }
+
+    public function setEstadoSuscripcion(?string $EstadoSuscripcion): self
+    {
+        $this->EstadoSuscripcion = $EstadoSuscripcion;
+
+        return $this;
+    }
+
+    public function getSuscripcionId(): ?string
+    {
+        return $this->suscripcionId;
+    }
+
+    public function setSuscripcionId(?string $suscripcionId): self
+    {
+        $this->suscripcionId = $suscripcionId;
+
+        return $this;
+    }
+
+    public function getSesionSuscripcion(): ?string
+    {
+        return $this->sesionSuscripcion;
+    }
+
+    public function setSesionSuscripcion(?string $sesionSuscripcion): self
+    {
+        $this->sesionSuscripcion = $sesionSuscripcion;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ContratoHistoricoSuscripcion>
+     */
+    public function getContratoHistoricoSuscripcions(): Collection
+    {
+        return $this->contratoHistoricoSuscripcions;
+    }
+
+    public function addContratoHistoricoSuscripcion(ContratoHistoricoSuscripcion $contratoHistoricoSuscripcion): self
+    {
+        if (!$this->contratoHistoricoSuscripcions->contains($contratoHistoricoSuscripcion)) {
+            $this->contratoHistoricoSuscripcions[] = $contratoHistoricoSuscripcion;
+            $contratoHistoricoSuscripcion->setContrato($this);
+        }
+
+        return $this;
+    }
+
+    public function removeContratoHistoricoSuscripcion(ContratoHistoricoSuscripcion $contratoHistoricoSuscripcion): self
+    {
+        if ($this->contratoHistoricoSuscripcions->removeElement($contratoHistoricoSuscripcion)) {
+            // set the owning side to null (unless already changed)
+            if ($contratoHistoricoSuscripcion->getContrato() === $this) {
+                $contratoHistoricoSuscripcion->setContrato(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getSesionSuscripcionActiva(): ?bool
+    {
+        return $this->sesionSuscripcionActiva;
+    }
+
+    public function setSesionSuscripcionActiva(?bool $sesionSuscripcionActiva): self
+    {
+        $this->sesionSuscripcionActiva = $sesionSuscripcionActiva;
+
+        return $this;
+    }
+
+    public function getAceptaSuscripcion(): ?bool
+    {
+        return $this->aceptaSuscripcion;
+    }
+
+    public function setAceptaSuscripcion(?bool $aceptaSuscripcion): self
+    {
+        $this->aceptaSuscripcion = $aceptaSuscripcion;
+
+        return $this;
+    }
+
+    public function getSuscripcionUrl(): ?string
+    {
+        return $this->suscripcionUrl;
+    }
+
+    public function setSuscripcionUrl(?string $suscripcionUrl): self
+    {
+        $this->suscripcionUrl = $suscripcionUrl;
+
+        return $this;
+    }
+
+    public function getCancelaSuscripcion(): ?bool
+    {
+        return $this->cancelaSuscripcion;
+    }
+
+    public function setCancelaSuscripcion(?bool $cancelaSuscripcion): self
+    {
+        $this->cancelaSuscripcion = $cancelaSuscripcion;
+
+        return $this;
+    }
+
+    public function getUsuarioCancelaSuscripcion(): ?Usuario
+    {
+        return $this->usuarioCancelaSuscripcion;
+    }
+
+    public function setUsuarioCancelaSuscripcion(?Usuario $usuarioCancelaSuscripcion): self
+    {
+        $this->usuarioCancelaSuscripcion = $usuarioCancelaSuscripcion;
 
         return $this;
     }

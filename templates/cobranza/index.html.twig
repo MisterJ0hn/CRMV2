@@ -65,6 +65,12 @@
         </div>
         
     {% endif %}
+    {% if mostrarVencimientoSeleccionado != "" %}
+        <div class="alert alert-success" role="alert">
+            <h4 class="alert-heading"> {{vencimientoSeleccionado.nombre}}</h4>
+        </div>
+        
+    {% endif %}
     </section>
     <div class="card">
         <div class="card-header">
@@ -209,7 +215,8 @@
                         <td>
                             <a href="{{ path('cobranza_lote', {'id': contrato.id}) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
                             <a href="{{ path('vercobranza_view', {'id': contrato.id}) }}" class="btn btn-success btn-sm"><i class="far fa-eye"></i></a>
-                            <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn  btn-sm text-white bg-dark">LT</a>
+                            <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn btn-sm text-white bg-dark">LT</a>
+                            
                         </td>
                     </tr>
                 {% else %}
@@ -271,5 +278,8 @@
         $("#bStatus").val(status);
         $(".frmBuscar").submit();
     }
+
+    
     </script>
+
 {% endblock %}

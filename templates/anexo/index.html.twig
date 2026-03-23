@@ -63,6 +63,7 @@
                                 {% if loop.last %}
                                 <!--<a href="{{path('anexo_eliminar',{'id':anexo.id})}}" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>-->
                                 {% endif %}
+                                
                             </div>
 
                         </td>
@@ -88,5 +89,54 @@
                 
         </div>
 </div>
-        
+
+{% if inicioSuscripcion==1 %}
+<!-- Modal Suscripción -->
+<div class="modal fade" id="modal-suscripcion" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-link"></i> Suscripción Pago Automático</h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="modal-suscripcion-body">
+                <div class="form-group">
+                    <label>Link para enviar al cliente:</label>
+                    <div class="input-group">
+                        <input type="text" id="input-link-suscripcion" class="form-control" readonly value="">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary btn-copiar-link" type="button"><i class="fas fa-copy"></i></button>
+                        </div>
+                    </div>
+                    <a href="" id="whatsapp-link" target="_blank" class="btn btn-success mt-2"><i class="fab fa-whatsapp"></i> Enviar por WhatsApp</a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $(document).on("click", ".btn-copiar-link", function () {
+        var linkVal = $("#input-link-suscripcion").val();
+        navigator.clipboard.writeText(linkVal).then(function () {
+            var btn = $(".btn-copiar-link");
+            btn.html('<i class="fas fa-check"></i>');
+            setTimeout(function () {
+                btn.html('<i class="fas fa-copy"></i>');
+            }, 1500);
+        });
+    });
+
+    $("#input-link-suscripcion").val('{{urlSuscripcion}}');
+    $("#whatsapp-link").attr("href", "https://api.whatsapp.com/send?text=" + encodeURIComponent('{{urlSuscripcion}}'));
+    $("#modal-suscripcion").modal("show");
+
+
+</script>
+{% endif %}
+
 {% endblock %}

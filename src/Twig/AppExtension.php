@@ -10,6 +10,7 @@ use App\Entity\Cuota;
 use App\Entity\PagoCuotas;
 use App\Entity\Usuario;
 use App\Entity\VwCausasActivasFinal;
+use App\Repository\VwCausasActivasFinalRepository;
 use DateTime;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFilter;
@@ -51,6 +52,7 @@ class AppExtension extends AbstractExtension
             new TwigFunction('isAnexo',[$this,'isAnexo']),
             new TwigFunction('getVip',[$this,'getVip']),
             new TwigFunction('fechaPagoPorCuota',[$this,'fechaPagoPorCuota']),
+            new TwigFunction('contratoVigente',[$this,'contratoVigente']),
         ];
     }
 
@@ -312,9 +314,9 @@ class AppExtension extends AbstractExtension
         return false;
     }
 
-    public function getVip($esVip){
+    public function getVip($esVigente){
         
-        if($esVip==1){
+        if($esVigente==1){
             return "<i class='fas fa-star text-warning' title='Cliente VIP'></i>";
         }
         return "<i class='fas fa-star text-secondary' title='Cliente VIP'></i>";
@@ -333,5 +335,16 @@ class AppExtension extends AbstractExtension
            
         }
         return "";
+    }
+
+    public function contratoVigente($contratoId){
+        $em=$this->container->get('doctrine');
+        $contrato=$em->getRepository(VwCausasActivasFinal::class)->find($contratoId);
+
+        if($contrato){
+            return 1;
+        }else{
+            return 0;
+        }
     }
 }

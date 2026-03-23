@@ -45,11 +45,8 @@
                         <td>{{ contrato.sucursal}}</td>
                         <td>{{ contrato.agenda.abogado.nombre }}</td>
                         <td>{{ contrato.tramitador.nombre|default('') }}</td>
-                        <td>{% if contrato.idLote.usuarioLotes is defined %}
-                                {% for usuarioLote in contrato.idLote.usuarioLotes %}
-                                {{ usuarioLote.usuario }}
-                                {% endfor %}
-                            {% endif %}
+                        <td>
+                            {{ cuota.cobrador?cuota.cobrador.nombre:"No Aplica" }}
                         </td>
                         <td>{{ contrato.nombre }}</td>
                         <td align="center">{{ contrato.rut }}</td>

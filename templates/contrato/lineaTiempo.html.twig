@@ -152,7 +152,8 @@
                             <th>Rit/Rol</th>
                             <th>IdCausa</th>
                             <th>Caratulado</th>
-                            <th>Juzgado</th>
+                            <th>Corte</th>
+                            <th>Tribunal</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -173,6 +174,9 @@
                             <td>{{ causa.IdCausa}} </td>
                             <td>
                                 {{causa.causaNombre}}
+                            </td>
+                            <td>
+                                {{causa.corte?causa.corte.nombre:''}}
                             </td>
                             <td>
                                 {{causa.juzgado is null?'':causa.juzgado}}
@@ -389,6 +393,111 @@
   </div>
 </div>
 
+<<<<<<< Updated upstream
+=======
+            <div class="modal-header">
+                <h5 class="modal-title">Información de Receptor</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="table-responsive">
+                    <table id="tablaInformacionReceptor" class="table table-bordered table-striped">
+                        <thead class="table-primary">
+                        <tr>
+                            <th>Cuadernon</th>
+                            <th>Datos del Retiro</th>
+                            <th>Fecha Retiro</th>
+                            <th>Estado</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- filas dinamicas -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal anexo causa -->
+<div class="modal fade" id="modalAnexosCausa" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Anexos de Causa</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="table-responsive">
+                    <table id="tablaAnexosCausa" class="table table-bordered table-striped">
+                        <thead class="table-primary">
+                        <tr>
+                            <th>Doc</th>
+                            <th>Fecha</th>
+                            <th>Referencia</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- filas dinamicas -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal anexos movimiento -->
+<div class="modal fade" id="modalAnexosMovimiento" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Anexos de Movimiento</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="table-responsive">
+                    <table id="tablaAnexosMovimiento" class="table table-bordered table-striped">
+                        <thead class="table-primary">
+                        <tr>
+                            <th>Doc</th>
+                            <th>Fecha</th>
+                            <th>Referencia</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- filas dinamicas -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+>>>>>>> Stashed changes
 <script>
     $('.btn-ocultar').hide();
     $('.btn-modificar').hide();
@@ -510,5 +619,543 @@
         });
     });
     
+<<<<<<< Updated upstream
+=======
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Asociar eventos a los botones de ver causa ya renderizados desde PHP/SQL
+    document.querySelectorAll('.btn-ver-causa').forEach(btn => {
+        btn.addEventListener('click', function() {
+         
+            const tr = this.closest('tr');
+            const id = tr.dataset.id;
+            if (id) {
+                buscarCausa(id);
+            }
+        });
+    });
+});
+
+// Variables globales para filtrado
+let todosLosMovimientos = [];
+let movimientosActuales = [];
+let cuadernosDisponibles = [];
+let ritActual = '';
+let exhortos = [];
+
+async function buscarCausa(causaId) {
+
+    ritActual = causaId;
+    const res = await fetch("/pjud_movimientos/"+encodeURIComponent(causaId)+"/obtener");
+    const respuesta = await res.json();
+    const tbody = document.querySelector('#tablaHistoria tbody');
+    tbody.innerHTML = '';
+    console.log('respuesta:', respuesta);
+    if(respuesta.error){
+        $("#modalDetalleCivil").modal('hide');
+        alert(respuesta.error);
+        return;
+    }
+    // Usar formato nuevo con movimientos estructurados
+    if (respuesta.movimientos && Array.isArray(respuesta.movimientos)) {
+        todosLosMovimientos = respuesta.movimientos;
+        movimientosActuales = [...todosLosMovimientos];
+       
+        // Cargar cuadernos en el select
+        cuadernosDisponibles = respuesta.cuadernos || [{id: '1', nombre: 'Principal', total_movimientos: todosLosMovimientos.length}];
+        const selectCuaderno = document.getElementById('m_cuaderno');
+        selectCuaderno.innerHTML = '';
+        cuadernosDisponibles.forEach(cuad => {
+            selectCuaderno.innerHTML += `<option value="${cuad.id}">${cuad.nombre}</option>`;
+        });
+
+        //console.log('respuesta:', respuesta);
+        // Mostrar info de cabecera
+        if (respuesta.causa) {
+            document.getElementById('m_rol').textContent = respuesta.causa.rit || '-';
+            document.getElementById('m_fing').textContent = respuesta.causa.fechaIngreso || '-';
+            document.getElementById('m_promotora').textContent = respuesta.causa.caratulado || '-';
+            document.getElementById('m_tribunal').textContent = respuesta.causa.tribunal || '-';
+            document.getElementById('m_estadm').textContent = respuesta.causa.estado || 'SIN_INFORMACION';
+            document.getElementById('m_proc').textContent = respuesta.causa.proceso || '-';
+            document.getElementById('m_ubic').textContent = respuesta.causa.ubicacion || '-';
+            document.getElementById('m_estproc').textContent = respuesta.causa.estado_proc || 'Concluido';
+            document.getElementById('m_etapa').textContent = respuesta.causa.etapa || 'Terminada';
+            if(respuesta.causa.doc_demanda){
+                if(respuesta.causa.doc_demanda_descargado==1){
+                    $('.btn-demanda').html(`<a href="{{url_web}}{{causa_pjud}}${causaId}/${respuesta.causa.doc_demanda}" target="_blank" class="btn btn-danger"  title="Ver Demanda" onclick="event.preventDefault(); abrirPDF('{{url_web}}{{causa_pjud}}${causaId}/${respuesta.causa.doc_demanda}'); return false;"><i class="far fa-file-pdf" ></i></a>`);
+                }else{
+                   $('.btn-demanda').html("<button type='button' class='btn btn-sm btn-primary' disabled ><i class='far fa-clock'></i></button>");
+                }
+            }else{
+                $('.btn-demanda').html('<a href="#" class="btn btn-secondary"><i class="fas fa-ban"></i></a>');
+            }
+            
+            $('.btn-anexo').html('<a href="#" class="btn btn-secondary"><i class="fas fa-ban"></i></a>');
+    
+            if(respuesta.causa.doc_certificado_envio){
+                if(respuesta.causa.doc_certificado_envio_descargado){
+                    $('.btn-certificado').html(`<a href="{{url_web}}{{causa_pjud}}${causaId}/${respuesta.causa.doc_certificado_envio}" target="_blank" class="btn btn-danger"  title="Ver Certificado" onclick="event.preventDefault(); abrirPDF('{{url_web}}{{causa_pjud}}${causaId}/${respuesta.causa.doc_certificado_envio}'); return false;"><i class="far fa-file-pdf" ></i></a>`);
+                }else{
+                   $('.btn-certificado').html("<button type='button' class='btn btn-sm btn-primary' disabled ><i class='far fa-clock'></i></button>");
+                }
+            }else{
+                $('.btn-certificado').html('<a href="#" class="btn btn-secondary"><i class="fas fa-ban"></i></a>');
+            }
+             if(respuesta.causa.doc_ebook){
+                if(respuesta.causa.doc_ebook_descargado){
+                    $('.btn-ebook').html(`<a href="{{url_web}}{{causa_pjud}}${causaId}/${respuesta.causa.doc_ebook}" target="_blank" class="btn btn-danger"  title="Ver Ebook" onclick="event.preventDefault(); abrirPDF('{{url_web}}{{causa_pjud}}${causaId}/${respuesta.causa.doc_ebook}'); return false;"><i class="far fa-file-pdf" ></i></a>`);  
+                }else{
+                   $('.btn-ebook').html("<button type='button' class='btn btn-sm btn-primary' disabled ><i class='far fa-clock'></i></button>");
+                }
+            }else{
+                $('.btn-ebook').html('<a href="#" class="btn btn-secondary"><i class="fas fa-ban"></i></a>');
+            }
+
+
+        }
+
+        filtrarPorCuaderno(causaId);
+    
+
+        const tbodyInformacionReceptor = document.querySelector('#tablaInformacionReceptor tbody');
+        tbodyInformacionReceptor.innerHTML = '';
+
+        if(respuesta.informacion_receptor && Array.isArray(respuesta.informacion_receptor)){
+            respuesta.informacion_receptor.forEach(info => {
+                tbodyInformacionReceptor.innerHTML += `
+                    <tr>
+                        <td>${info.cuaderno}</td>
+                        <td>${info.datos_retiro}</td>
+                        <td>${info.fecha_retiro}</td>
+                        <td>${info.estado}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        const tbodyAnexosCausa = document.querySelector('#tablaAnexosCausa tbody');
+        tbodyAnexosCausa.innerHTML = '';    
+        console.log('Anexos causa:', respuesta.anexos_causa.length);
+        if(respuesta.anexos_causa && Array.isArray(respuesta.anexos_causa) && respuesta.anexos_causa.length > 0){
+            $('.btn-anexo').html(`<button type="button" target="_blank" class="btn btn-warning"  title="Ver Anexos" data-toggle="modal" data-target="#modalAnexosCausa"  ><i class="far fa-folder" ></i></button>`);
+            respuesta.anexos_causa.forEach(anexo => {
+                if(anexo.doc){
+                    if(anexo.doc_descargado==1){
+                        doc = `<a href="{{url_web}}{{causa_pjud}}${causaId}/${anexo.doc}" target="_blank" class="btn btn-sm btn-primary"  title="Ver Anexo" onclick="event.preventDefault(); abrirPDF('{{url_web}}{{causa_pjud}}${causaId}/${anexo.doc}'); return false;"><i class="far fa-file-pdf" ></i></a>`;
+                    }else{
+                        doc = "<button type='button' class='btn btn-sm btn-primary' disabled ><i class='far fa-clock'></i></button>";
+                    }
+                }else{
+                    doc= '<a href="#" class="btn btn-secondary"><i class="fas fa-ban"></i></a>';
+                }
+                tbodyAnexosCausa.innerHTML += `
+                    <tr>
+                        <td>${doc}</td>
+                        <td>${anexo.fecha || ''}</td>
+                        <td>${anexo.referencia || ''}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        
+    } else {
+        // Fallback a formato legacy
+        const data = respuesta.legacy || respuesta;
+        if (!Array.isArray(data)) {
+            alert('Formato de datos inválido');
+            return;
+        }
+        renderizarFormatoLegacy(data, rit);
+    }
+}
+
+function filtrarPorCuaderno(causaId=0) {
+   if(causaId===0){
+       causaId=ritActual;
+   }
+    const cuadernoSeleccionado = document.getElementById('m_cuaderno').value;
+    if (!cuadernoSeleccionado) {
+        movimientosActuales = [];
+    } else {
+        
+        $.ajax({
+            url:"/pjud_movimientos/"+causaId+"/obtener/"+encodeURIComponent(cuadernoSeleccionado),
+            type: "get",
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+                
+            },
+            success:function(data){
+                // Aquí puedes manejar la respuesta si es necesario
+    
+                movimientosActuales = JSON.parse(data);
+              
+                renderizarMovimientos();
+                renderizarExhortos();
+                renderizarNotificaciones();
+                renderizarLitigantes();
+                renderizarEscritos();
+
+            }
+
+        });
+    }
+
+}
+
+function renderizarMovimientos() {
+
+    const tbody = document.querySelector('#tablaHistoria tbody');
+    tbody.innerHTML = '';
+
+    const ritParts = ritActual.split('-');
+    const rolNum = ritParts[1];
+    const anio = ritParts[2];
+
+    movimientosActuales.historial.forEach(mov => {
+        
+        const folio = mov.folio || mov.indice || '-';
+        const etapa = mov.etapa || '-';
+        if (mov.tramite == "NULL" || mov.tramite=="null"){ 
+            tramite="";
+        }else{
+            tramite=mov.tramite;
+        }
+      
+        const desc = mov.descripcion || '-';
+        const fecha = mov.fecha || '-';
+        if(mov.foja=="NULL"){
+            foja="";
+        }else{
+            foja=mov.foja;
+        }
+       
+       
+        let docCol = '<div style="display:flex;gap:4px;align-items:center;">';
+        if (mov.pdfPrincipalNombre) {
+            if(mov.pdfPrincipalDescargado==1){
+
+            docCol += '<a href="{{url_web}}{{causa_pjud}}'+mov.causa_id+'/'+mov.pdfPrincipalNombre+'" target="_blank" class="btn btn-sm btn-danger"  title="Ver PDF Principal (Azul)" onclick="event.preventDefault(); abrirPDF("{{url_web}}{{causa_pjud}}'+mov.pdfPrincipalNombre+'"); return false;"><i class="far fa-file-pdf" ></i></a>';
+            }else{
+                docCol += "<button type='button' class='btn btn-sm btn-primary' disabled ><i class='far fa-clock'></i></button>";
+            
+            }
+        }
+        if (mov.pdfAnexoNombre) {
+            if(mov.pdfPrincipalDescargado==1){
+                docCol += '<a href="{{url_web}}{{causa_pjud}}'+mov.causa_id+'/'+mov.pdfAnexoNombre+'" target="_blank" class="btn btn-sm btn-primary" title="Ver PDF Anexo (Rojo)" onclick="event.preventDefault(); abrirPDF("{{url_web}}{{causa_pjud}}'+mov.pdfAnexoNombre+'"); return false;"><i class="far fa-file-pdf" ></i></a>';
+            }else{
+                docCol += "<button type='button' class='btn btn-sm btn-primary' disabled ><i class='far fa-clock'></i></button>";
+            
+            }
+        }
+        if (!mov.pdfPrincipalNombre && !mov.pdfAnexoNombre) {
+                docCol = '<span style="color:#999;font-size:12px;">Sin documentos</span>';
+            
+        }
+        docCol += '</div>';
+        anexosCol = '';
+        if(mov.cantidadAnexos>0){
+            anexosCol='<button type="button" class="btn btn-sm btn-warning" click="renderizarAnexosMovimiento('+mov.id+')"><i class="far fa-folder"></i></button>';
+            anexosCol='<a href="#" class="btn btn-sm btn-warning" onclick="event.preventDefault(); renderizarAnexosMovimiento('+mov.id+');"><i class="far fa-folder"></i></a>';
+        }
+        tbody.innerHTML += `
+            <tr data-cuaderno="${mov.cuaderno_id || '1'}">
+                <td>${folio}</td>
+                <td>${docCol}</td>
+                <td>${anexosCol}</td>
+                <td>${etapa}</td>
+                <td>${tramite}</td>
+                <td>${desc}</td>
+                <td>${fecha}</td>
+                <td>${foja}</td>
+                <td></td>
+            </tr>
+        `;
+    });
+}
+
+        
+            
+         
+function renderizarExhortos() {
+
+    const tbodyExhortos = document.querySelector('#tablaExhortos tbody');
+        tbodyExhortos.innerHTML = '';
+
+    if(movimientosActuales.exhortos && Array.isArray(movimientosActuales.exhortos)){
+        exhortos = movimientosActuales.exhortos;
+        exhortos.forEach(exh => {
+            tbodyExhortos.innerHTML += `
+                <tr>
+                    <td>${exh.rol_origen}</td>
+                    <td>${exh.tipo_exhorto}</td>
+                    <td>${exh.rol_destino}</td>
+                    <td>${exh.fecha_orden}</td>
+                    <td>${exh.fecha_ingreso}</td>
+                    <td>${exh.tribunal_destino}</td>
+                    <td>${exh.estado_exhorto}</td>
+                </tr>
+            `;
+        });
+    }
+
+}
+function renderizarNotificaciones(){
+    const tbodyNotificaciones = document.querySelector('#tablaNotificaciones tbody');
+    tbodyNotificaciones.innerHTML = '';
+    if(movimientosActuales.notificaciones && Array.isArray(movimientosActuales.notificaciones)){
+        movimientosActuales.notificaciones.forEach(not => {
+            tbodyNotificaciones.innerHTML += `
+                <tr>
+                    <td>${not.rol}</td>
+                    <td>${not.estado_notificacion}</td>
+                    <td>${not.tipo_notificacion}</td>
+                    <td>${not.fecha_tramite}</td>
+                    <td>${not.tipo_part}</td>
+                    <td>${not.nombre}</td>
+                    <td>${not.tramite}</td>
+                    <td>${not.obsservacion || ''}</td>
+                </tr>
+            `;
+        });
+    }
+}
+function renderizarLitigantes(){
+    const tbodyLitigantes = document.querySelector('#tablaLitigantes tbody');
+    tbodyLitigantes.innerHTML = '';
+    if(movimientosActuales.litigantes && Array.isArray(movimientosActuales.litigantes)){
+        movimientosActuales.litigantes.forEach(lit => {
+            tbodyLitigantes.innerHTML += `
+                <tr>
+                    <td>${lit.participante}</td>
+                    <td>${lit.rut}</td>
+                    <td>${lit.persona}</td>
+                    <td>${lit.razon_social}</td>
+                </tr>
+            `;
+        });
+    }
+}
+
+function renderizarEscritos(){
+    const tbodyEscritos = document.querySelector('#tablaEscritos tbody');
+    tbodyEscritos.innerHTML = '';
+    if(movimientosActuales.escritos && Array.isArray(movimientosActuales.escritos)){
+        movimientosActuales.escritos.forEach(esc => {
+            let docCol = '<div style="display:flex;gap:4px;align-items:center;">';
+            if (esc.doc) {
+                docCol += `<a href="{{url_web}}{{causa_pjud}}${causaId}/${esc.doc}" target="_blank" class="btn btn-sm btn-danger"  title="Ver PDF Principal (Azul)" onclick="event.preventDefault(); abrirPDF('{{url_web}}{{causa_pjud}}${causaId}/${esc.doc}'); return false;"><i class="far fa-file-pdf" ></i></a>`;
+            }else{
+                docCol += '<span style="color:#999;font-size:12px;">Sin documentos</span>';
+            }
+            docCol += '</div>';
+            tbodyEscritos.innerHTML += `
+                <tr>
+                    <td>${docCol}</td>
+                    <td>${esc.anexo || ''}</td>
+                    <td>${esc.fecha_ingreso || ''}</td>
+                    <td>${esc.tipo_escrito || ''}</td>
+                    <td>${esc.solicitante || ''}</td>
+                </tr>
+            `;
+        });
+    }  
+}
+function renderizarFormatoLegacy(data, rit) {
+    const tbody = document.querySelector('#tablaHistoria tbody');
+    let cab = null;
+    let startIndex = 0;
+
+    for (let i = 0; i < Math.min(data.length, 5); i++) {
+        const row = data[i];
+        if (row && row[1] && typeof row[1] === 'string' && row[1].match(/^C?-?\d+-\d{4}$/)) {
+            cab = row;
+            startIndex = i + 1;
+            break;
+        }
+    }
+
+    if (!cab) {
+        cab = data[1] || data[0] || [];
+        startIndex = 2;
+    }
+
+    document.getElementById('m_rol').textContent = cab?.[1] || '-';
+    document.getElementById('m_fing').textContent = cab?.[2] || '-';
+    document.getElementById('m_promotora').textContent = cab?.[3] || '-';
+    document.getElementById('m_tribunal').textContent = cab?.[4] || '-';
+
+    const ritParts = rit.split('-');
+    const rolNum = ritParts[1];
+    const anio = ritParts[2];
+
+    const movimientos = data.slice(startIndex).filter(row => {
+        if (row[0] && ['AB.DTE', 'DDO.', 'DTE.'].includes(row[0])) return false;
+        if (row[0] && row[0].includes('Total de registros')) return false;
+        return true;
+    });
+
+    movimientos.slice(0, 15).forEach(row => {
+        const folio = row[0];
+        const tienePdf = row[1] === 'Descargar Documento';
+        const etapa = row[3];
+        const tramite = row[4];
+        const desc = row[5];
+        const fecha = row[6];
+        const foja = row[7];
+
+        tbody.innerHTML += `
+            <tr>
+                <td>${folio || '-'}</td>
+                <td>${tienePdf ? '<button class="btn btn-sm btn-primary">📄</button>' : '-'}</td>
+                <td>${folio || '-'}</td>
+                <td>${etapa || '-'}</td>
+                <td>${tramite || '-'}</td>
+                <td>${desc || '-'}</td>
+                <td>${fecha || '-'}</td>
+                <td>${foja || '-'}</td>
+                <td></td>
+            </tr>
+        `;
+    });
+}
+
+// Función para abrir PDF en nueva ventana/modal
+function abrirPDF(url) {
+    // Abrir en nueva ventana
+    const ventana = window.open(url, '_blank', 'width=800,height=600,scrollbars=yes');
+    if (!ventana) {
+        // Si el popup está bloqueado, abrir en la misma ventana
+        window.location.href = url;
+    }
+}
+
+// Función alternativa para mostrar PDF en modal (similar al poder judicial)
+function verPDFEnModal(url, nombreArchivo) {
+    // Crear modal si no existe
+    let modal = document.getElementById('modalPDF');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modalPDF';
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Visualizador de PDF</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" style="padding:0;">
+                        <iframe id="pdfFrame" src="" style="width:100%;height:80vh;border:none;"></iframe>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    // Cargar PDF en el iframe
+    const iframe = document.getElementById('pdfFrame');
+    iframe.src = url;
+    
+    // Mostrar modal
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+function generar_scrapping($causa_id){
+  
+    $.ajax({
+            url:"/pjud_movimientos/"+$causa_id+"/actualizar_causa",
+            type: "get",
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+                
+            },
+            success:function(data){
+                // Aquí puedes manejar la respuesta si es necesario
+                
+                response = JSON.parse(data);
+                if(response.exito){
+                    alert("Actualización de información ha sido solicitada con exito. En unos minutos, la informacion será acutalizada.");
+                }else{
+                    alert(response.mensaje);
+                }
+
+                window.location.reload();
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError);
+            }
+
+        });
+}
+
+function renderizarAnexosMovimiento(movId)
+{
+    $.ajax({
+        url:"/pjud_movimientos/"+movId+"/anexos_movimiento",
+            type: "get",
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+                
+            },
+            success:function(data){
+                // Aquí puedes manejar la respuesta si es necesario
+                
+                response = JSON.parse(data);
+                const tbodyAnexosMovimiento = document.querySelector('#tablaAnexosMovimiento tbody');
+                tbodyAnexosMovimiento.innerHTML = '';    
+                console.log('Anexos movimiento:', response.length);
+                if( Array.isArray(response) && response.length > 0){
+                 
+                     response.forEach(anexo => {
+                        
+                        botonDescarga = "";
+                        if(anexo.nombre_archivo==""){
+                            botonDescarga='<span style="color:#999;font-size:12px;">Sin documento</span>';
+                        }else{
+                            if(anexo.archivo_descargado==1){
+                                botonDescarga=`<a href="{{url_web}}{{causa_pjud}}${anexo.causa_id}/${anexo.nombre_archivo}" target="_blank" class="btn btn-sm btn-primary"  title="Ver Anexo" onclick="event.preventDefault(); abrirPDF('{{url_web}}{{causa_pjud}}${anexo.causa_id}/${anexo.nombre_archivo}'); return false;"><i class="far fa-file-pdf" ></i></a>`;
+                            }else{
+                                botonDescarga="<button type='button' class='btn btn-sm btn-primary' disabled ><i class='far fa-clock'></i></button>";
+                            }
+                        }
+
+                        tbodyAnexosMovimiento.innerHTML += `
+                            <tr>
+                                <td>${botonDescarga}</td>
+                                <td>${anexo.fecha || ''}</td>
+                                <td>${anexo.referencia || ''}</td>
+                            </tr>
+                        `;
+                    });
+                }
+
+                $("#modalAnexosMovimiento").modal('show');
+               
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError);
+            }
+
+        });
+}
+>>>>>>> Stashed changes
 </script>
 {% endblock %}

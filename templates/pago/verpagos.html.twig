@@ -55,36 +55,16 @@
                     <td>{{pago.pagoCanal.nombre}}</td>
                     <td>
                         <div class="btn-group" role="group" aria-label="Basic example">
-                            {% if isMulta %}
-                            <a href="{{path('pago_show',{'id':pago.id})}}" class="btn btn-success"><i class="fas fa-eye"></i></a>
-                            <a href="{{url_web}}{{img_pagos}}{{pago.comprobante}}" class="btn btn-primary"><i class="far fa-file-image"></i></a>
-                            {% if loop.last %}
-                                {% if contrato.isFinalizado is null or not contrato.isFinalizado %}
-                                    
-                                    <a href="{{ path('pago_edit', {'id': pago.id}) }}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
-                                    {% if pago.pagoTipo.id == 7 %}
-                                        <form method="post" action="{{ path('pago_delete_nc', {'id': pago.id}) }}" onsubmit="return confirm('Estas seguro de eliminar este comprobante?');">
-                                            <input type="hidden" name="_method" value="DELETE">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ pago.id) }}">
-                                            <button class="btn btn-danger"><i class="fas fa-trash"></i></button>
-                                        </form>
-                                    {% else %}
-                                        <form method="post" action="{{ path('pago_delete', {'id': pago.id}) }}" onsubmit="return confirm('Estas seguro de eliminar este comprobante?');">
-                                            <input type="hidden" name="_method" value="DELETE">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ pago.id) }}">
-                                            <button class="btn btn-danger"><i class="fas fa-trash"></i></button>
-                                        </form>
-                                    {% endif %}
-                                    
-                                {% endif %}
-                            {% endif %}
-                            {% else %}
+                            {% if contrato.estadoSuscripcion !='ACTIVA' %}
+                                
+                            
+                                {% if isMulta %}
                                 <a href="{{path('pago_show',{'id':pago.id})}}" class="btn btn-success"><i class="fas fa-eye"></i></a>
                                 <a href="{{url_web}}{{img_pagos}}{{pago.comprobante}}" class="btn btn-primary"><i class="far fa-file-image"></i></a>
                                 {% if loop.last %}
                                     {% if contrato.isFinalizado is null or not contrato.isFinalizado %}
-                                        <a href="{{ path('pago_edit', {'id': pago.id}) }}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
                                         
+                                        <a href="{{ path('pago_edit', {'id': pago.id}) }}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
                                         {% if pago.pagoTipo.id == 7 %}
                                             <form method="post" action="{{ path('pago_delete_nc', {'id': pago.id}) }}" onsubmit="return confirm('Estas seguro de eliminar este comprobante?');">
                                                 <input type="hidden" name="_method" value="DELETE">
@@ -98,12 +78,35 @@
                                                 <button class="btn btn-danger"><i class="fas fa-trash"></i></button>
                                             </form>
                                         {% endif %}
+                                        
+                                    {% endif %}
+                                {% endif %}
+                                {% else %}
+                                    <a href="{{path('pago_show',{'id':pago.id})}}" class="btn btn-success"><i class="fas fa-eye"></i></a>
+                                    <a href="{{url_web}}{{img_pagos}}{{pago.comprobante}}" class="btn btn-primary"><i class="far fa-file-image"></i></a>
+                                    {% if loop.last %}
+                                        {% if contrato.isFinalizado is null or not contrato.isFinalizado %}
+                                            <a href="{{ path('pago_edit', {'id': pago.id}) }}" class="btn btn-warning"><i class="fas fa-edit"></i></a>
+                                            
+                                            {% if pago.pagoTipo.id == 7 %}
+                                                <form method="post" action="{{ path('pago_delete_nc', {'id': pago.id}) }}" onsubmit="return confirm('Estas seguro de eliminar este comprobante?');">
+                                                    <input type="hidden" name="_method" value="DELETE">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ pago.id) }}">
+                                                    <button class="btn btn-danger"><i class="fas fa-trash"></i></button>
+                                                </form>
+                                            {% else %}
+                                                <form method="post" action="{{ path('pago_delete', {'id': pago.id}) }}" onsubmit="return confirm('Estas seguro de eliminar este comprobante?');">
+                                                    <input type="hidden" name="_method" value="DELETE">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ pago.id) }}">
+                                                    <button class="btn btn-danger"><i class="fas fa-trash"></i></button>
+                                                </form>
+                                            {% endif %}
 
-                                
+                                    
+                                        {% endif %}
                                     {% endif %}
                                 {% endif %}
                             {% endif %}
-                            
                         </div>
                     </td>
                 </tr>
@@ -131,28 +134,29 @@
         </table>
         </div>
         <div class="card-footer">
-            {% if not contrato.isFinalizado and cuotas_multa is null %}
-                {% if permiteAgregarPago %}
-                    <a href="{{path('pago_new',{'id':contrato.id})}}" class="btn btn-primary" >Agregar pago</a>
+            {% if contrato.estadoSuscripcion!='ACTIVA' %}                   
+                {% if not contrato.isFinalizado and cuotas_multa is null %}
+                    {% if permiteAgregarPago %}
+                        <a href="{{path('pago_new',{'id':contrato.id})}}" class="btn btn-primary" >Agregar pago</a>
+                    {% else %}
+                        {% if (is_granted('view', 'agregarPagosFinalizado')) %}
+                            <a href="{{path('pago_new',{'id':contrato.id})}}" class="btn btn-primary" >Agregar pago</a>
+                        {% else %}
+                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                                Agregar pago
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                    <a href="{{path('pago_new_nc',{'id':contrato.id})}}" class="btn btn-primary" >Agregar Nota Crédito</a>
                 {% else %}
-                {% if (is_granted('view', 'agregarPagosFinalizado')) %}
-                    <a href="{{path('pago_new',{'id':contrato.id})}}" class="btn btn-primary" >Agregar pago</a>
-                {% else %}
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
-                        Agregar pago
-                    </button>
-                {% endif %}
-                {% endif %}
-                <a href="{{path('pago_new_nc',{'id':contrato.id})}}" class="btn btn-primary" >Agregar Nota Crédito</a>
-            {% else %}
-            {% if contrato.isFinalizado %}
-                 <a href="{{path('pago_new_nc',{'id':contrato.id})}}" class="btn btn-primary" >Agregar Nota Crédito</a>
-            {% endif %}
+                    {% if contrato.isFinalizado %}
+                    <a href="{{path('pago_new_nc',{'id':contrato.id})}}" class="btn btn-primary" >Agregar Nota Crédito</a>
+                    {% endif %}
+                    
                 
-             
-            
+                
+                {% endif %}
             {% endif %}
-             
         </div>
     </div>
     

@@ -35,7 +35,7 @@
         </div>
         <div class="col-sm-6 col-md-3">
             <small class="text-muted">Compañia</small>
-            <select name="cboCuenta" class="form-control" onchange="javascript:agendadores(this.value)" required>
+            <select name="cboCuenta" class="form-control" id="cboCuenta" onchange="javascript:agendadores(this.value)" required>
                 <option value=""></option>
    
                 {% for cuenta in cuentas %}
@@ -103,6 +103,9 @@
         return false;
     }
     function validarTelefono(telefono){
+
+        
+
         var resultado=false;
         $.ajax({
                 url:"/agenda/"+telefono+"/validartelefonoagenda",
@@ -123,11 +126,25 @@
 
     $(".btn-cargar").click(function(){
         console.log("click btn-cargar");
-        
-        var registrar1=validarTelefono($(".telefonoCliente").val());
+        if($(".telefonoCliente").val()==""){
+            alert("Debe ingresar un teléfono movil");
+            $(".telefonoCliente").focus();
+            return false;
+        } else{
+            var registrar1=validarTelefono($(".telefonoCliente").val());
+        }
+        if($("#cboCuenta").val()==""){
+            alert("Debe seleccionar una compañia");
+            return false;
+        }
+        if($("#cboAgendadores").val()==""){
+            alert("Debe seleccionar un agendador"); 
+            return false;
+        }
         var registrar2=validarTelefono($(".telefonoRecado").val());
         console.log("registrar1",registrar1);
         console.log("registrar2",registrar2);   
+
 
         if( !registrar1 || !registrar2){
             if(!confirm("El teléfono ya se encuentra registrado en la agenda. ¿Desea continuar?")){

@@ -38,6 +38,7 @@
                         {% endfor %}
                     </select>
                 {% endif %}
+                
                 {% if TipoFiltro=='Encuestas' %}
                     <select name="bPerfil" class="form-control">            
                             <option value="1"
@@ -69,6 +70,7 @@
                     </select>
                 {% endif %}
                 </div>
+
                 <div class="col-sm-12 col-md-2">
                 <label>AgendaId/Folio</label>
                         <input type="text" class="form-control bFolio" name="bFolio"  placeholder="" value="{{bFolio}}">

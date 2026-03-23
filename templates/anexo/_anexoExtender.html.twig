@@ -146,7 +146,7 @@
                 </div>
                 <div class="col-sm-12 col-md-3">
                     <small class="text-muted o">Vigencia en Meses</small>
-                    <select name="vigencia" id="vigencia" class="form-control">
+                    <select name="vigencia" id="vigencia" class="form-control" required>
                         <option value="">Seleccione vigencia</option>
                          {% for i in 1..contrato.vigencia %}
                             <option value="{{ i }}">{{ i }} meses</option>
@@ -162,6 +162,8 @@
                     {{form_row(form.observacion,{'label':false,'attr':{'class':'form-control'},'required':true})}}
                     
                 </div>
+
+                 {{ include('/anexo/_suscripcion.html.twig') }}
                 <div class="col-sm-12 col-md-12">
                     <button class="btn btn-primary" >Crear Anexo</button>
                 </div>

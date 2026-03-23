@@ -11,6 +11,7 @@ use App\Repository\AgendaRepository;
 use App\Repository\AgendaStatusRepository;
 use App\Entity\AgendaObservacion;
 use App\Entity\Canal;
+use App\Entity\MovatecLog;
 use App\Repository\UsuarioRepository;
 use App\Repository\CuentaRepository;
 use App\Repository\ContratoRepository;
@@ -145,8 +146,18 @@ class AgendaController extends AbstractController
                 $entityManager->flush();
                 $movatec=new Movatec($container);
                 $token=$movatec->login();
+                try{
                 $respuesta=$movatec->create_leads($token,$agenda->getId(),"",$agenda->getFechaCarga()->format('Y-m-d'),$agenda->getTelefonoCliente(),$agenda->getId());
-                    
+                }catch(Exception $ex){
+                    $movatecLog = new MovatecLog();
+                   
+                    $movatecLog->setAgenda($agenda);
+                    $entityManager->persist($movatecLog);
+                    $entityManager->flush();
+
+                }
+
+
                 $observacion=new AgendaObservacion();
                 $observacion->setAgenda($agenda);
                 $observacion->setUsuarioRegistro($usuarioRepository->find($user->getId()));
