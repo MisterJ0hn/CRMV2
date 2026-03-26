@@ -117,12 +117,28 @@ class Causa
      */
     private $juzgado;
 
+    /**
+     * @ORM\OneToMany(targetEntity=PjudCausa::class, mappedBy="causa")
+     */
+    private $pjudCausas;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $estadoParaPjud;
+
+    /**
+     * @ORM\Column(type="string", length=50, nullable=true)
+     */
+    private $estadoConsultaPjud;
+
     public function __construct()
     {
         $this->lineaTiempoTerminadas = new ArrayCollection();
         $this->causaObservacions = new ArrayCollection();
         $this->detalleCuadernos = new ArrayCollection();
         $this->estrategiaJuridicaReporteArchivos = new ArrayCollection();
+        $this->pjudCausas = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -427,6 +443,60 @@ class Causa
     public function setJuzgado(?Juzgado $juzgado): self
     {
         $this->juzgado = $juzgado;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PjudCausa>
+     */
+    public function getPjudCausas(): Collection
+    {
+        return $this->pjudCausas;
+    }
+
+    public function addPjudCausa(PjudCausa $pjudCausa): self
+    {
+        if (!$this->pjudCausas->contains($pjudCausa)) {
+            $this->pjudCausas[] = $pjudCausa;
+            $pjudCausa->setCausa($this);
+        }
+
+        return $this;
+    }
+
+    public function removePjudCausa(PjudCausa $pjudCausa): self
+    {
+        if ($this->pjudCausas->removeElement($pjudCausa)) {
+            // set the owning side to null (unless already changed)
+            if ($pjudCausa->getCausa() === $this) {
+                $pjudCausa->setCausa(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getEstadoParaPjud(): ?bool
+    {
+        return $this->estadoParaPjud;
+    }
+
+    public function setEstadoParaPjud(?bool $estadoParaPjud): self
+    {
+        $this->estadoParaPjud = $estadoParaPjud;
+
+        return $this;
+    }
+
+    public function getEstadoConsultaPjud(): ?string
+    {
+        return $this->estadoConsultaPjud;
+    }
+
+    public function setEstadoConsultaPjud(?string $estadoConsultaPjud): self
+    {
+        $this->estadoConsultaPjud = $estadoConsultaPjud;
 
         return $this;
     }

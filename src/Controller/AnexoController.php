@@ -27,12 +27,16 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use App\Enum\OrigenAnexo;
+
+
 
 /**
  * @Route("/anexo")
  */
 class AnexoController extends AbstractController
 {
+    
     /**
      * @Route("/{id}", name="anexo_index", methods={"GET","POST"})
      */
@@ -57,12 +61,28 @@ class AnexoController extends AbstractController
     /**
      * @Route("/{id}/new", name="anexo_new", methods={"GET","POST"})
      */
-    public function crear(Contrato $contrato): Response
+    public function crear(Contrato $contrato,Request $request): Response
     {
         $this->denyAccessUnlessGranted('create','anexo');
+
+        $origen = $request->getSession()->get('origen_anexo');
+  
+        $tiposAnexo=[["id"=>1,"nombre"=>"Agregar Causa"],
+            ["id"=>2,"nombre"=>"Extensión del plazo"],
+            ["id"=>3,"nombre"=>"Renegociación"]];
+
+        if($origen!=null){
+            if(trim($origen)==trim(OrigenAnexo::COBRANZA_IA)){
+                $tiposAnexo=[
+                    ["id"=>3,"nombre"=>"Renegociación"]
+                ];
+            }
+        }
+   
         return $this->render('anexo/crearAnexo.html.twig', [
             'pagina' => 'Nuevo Anexo',
-            'contrato'=>$contrato
+            'contrato'=>$contrato,
+            'tiposAnexo' => $tiposAnexo
         ]);
     }
 

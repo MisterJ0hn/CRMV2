@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Contrato;
+use App\Repository\ContratoEstadoSuscripcionRepository;
 use App\Repository\ContratoHistoricoSuscripcionRepository;
 use App\Repository\ModuloPerRepository;
 use App\Repository\UsuarioRepository;
@@ -27,7 +28,8 @@ class PagosAutomaticosController extends AbstractController
         PaginatorInterface $paginator,
         ModuloPerRepository $moduloPerRepository,
         Request $request,
-        UsuarioRepository   $usuarioRepository
+        UsuarioRepository   $usuarioRepository,
+        ContratoEstadoSuscripcionRepository $contratoEstadoSuscripcionRepository
     ): Response {
         $this->denyAccessUnlessGranted('view', 'pagos_automaticos');
         $user = $this->getUser();
@@ -40,7 +42,7 @@ class PagosAutomaticosController extends AbstractController
         $cerrador = null;
        
         $cerradores = $usuarioRepository->findBy(["usuarioTipo"=>6,"estado"=>1]);
-
+        $estados = $contratoEstadoSuscripcionRepository->findAll();
         if (null !== $request->query->get('bFolio') && $request->query->get('bFolio') != '') {
             $folio = $request->query->get('bFolio');
             $dateInicio = date('Y-m-d', mktime(0, 0, 0, date('m'), date('d'), date('Y')) - 60 * 60 * 24 * 30);
@@ -82,7 +84,6 @@ class PagosAutomaticosController extends AbstractController
             'contratos'      => $contratos,
             'bFiltro'     => $filtro,
             'bFolio'      => $folio,
-            'bEstado'     => $estado,
             'dateInicio'  => $dateInicio,
             'dateFin'     => $dateFin,
             'total'       => $total['total'] ?? 0,
@@ -90,7 +91,9 @@ class PagosAutomaticosController extends AbstractController
             'bCerrador'   => $cerrador,
             'cerradores'  => $cerradores,
             'totalEstados'=>$totalEstados,
-            'totalAbogados'=>$totalAbogados
+            'totalAbogados'=>$totalAbogados,
+            'estados' => $estados,
+            'bEstado' => $estado
         ]);
     }
 

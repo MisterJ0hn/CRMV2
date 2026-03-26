@@ -4,6 +4,7 @@ namespace App\Command;
 
 use App\Entity\Configuracion;
 use App\Entity\Contrato;
+use App\Entity\ContratoEstadoSuscripcion;
 use App\Entity\ContratoHistoricoSuscripcion;
 use App\Entity\Cuota;
 use App\Entity\VirtualPosLog;
@@ -160,15 +161,17 @@ class ValidarSuscripcionesCommand extends Command
                     $this->entityManager->persist($virtualPosLogCuota);
                     $this->entityManager->flush();
                 }
-                 $contrato->setEstadoSuscripcion("ACTIVA");
-
-                $observacionHistorico.="<h4> Revisión de cuotas pendientes en virtualPos</h4><ul>";
+                $contrato->setEstadoSuscripcion("ACTIVA");
+                $contrato->setContratoEstadoSuscripcion($this->em->getRepository(ContratoEstadoSuscripcion::class)->find(2));
+                
+                $observacionHistorico.="<h4>Revisión de cuotas pendientes en virtualPos</h4><ul>";
                 foreach($charges as $charge){
                     if(in_array($charge["status"],$this->estadosValidos)){
                         $cuota = $this->em->getRepository(Cuota::class)->findOneBy(["contrato"=>$contrato,"invoiceId"=>$charge["id"], "anular"=>null],["fechaPago"=>"ASC"]);
-                        if(null != $cuota){
-                            $observacionHistorico.="<li><strong>La cuota N°: ".$charge["description"]." no existe en el sistema, favor informar al administrador.<strong></li>";
-                            $contrato->setEstadoSuscripcion("ACTIVA_REVISAR");
+                        if(null == $cuota){
+                            $observacionHistorico.="<li><strong>La cuota N°: ".$charge["description"]." con fecha: ".$charge["charge_date"]." existe en VirtualPos pero no existe en el sistema.</strong></li>";
+                            $contrato->setEstadoSuscripcion("ACTIVA");
+                            $contrato->setContratoEstadoSuscripcion($this->em->getRepository(ContratoEstadoSuscripcion::class)->find(4));
                         }
                     }   
                     
@@ -194,11 +197,13 @@ class ValidarSuscripcionesCommand extends Command
                     $historicoSuscripcion->setTipo(1);
 
                     $contrato->setEstadoSuscripcion($response["suscription"]["status"]);
+                    $contrato->setContratoEstadoSuscripcion($this->em->getRepository(ContratoEstadoSuscripcion::class)->find(3));
                     $contrato->setSuscripcionId(null);
                     $contrato->setSesionSuscripcionActiva(0);
                 }
                 if($response["suscription"]["status"]=="SUSCRIBIENDO"){
                     $contrato->setEstadoSuscripcion(null);
+                    $contrato->setContratoEstadoSuscripcion($this->em->getRepository(ContratoEstadoSuscripcion::class)->find(1));
                     $historicoSuscripcion->setObservacion("VirtualPos indica que la suscripción esta: SUSCRIBIENDO");
                 }
                 $this->entityManager->persist($historicoSuscripcion);

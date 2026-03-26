@@ -45,13 +45,14 @@ class ReportePagoPrimeraCuotaController extends AbstractController
             ->setCellValue('B1', 'Agenda ID')
             ->setCellValue('C1', 'fecha_contrato')
             ->setCellValue('D1', 'MontoContrato')
-            ->setCellValue('E1', 'Cerrador')
-            ->setCellValue('F1', 'Fecha Desiste')
-            ->setCellValue('G1', 'fecha_vcto_1eraCuota')
-            ->setCellValue('H1', 'Monto_vcto_1eraCuota')
-            ->setCellValue('I1', 'Monto_pago_1eraCuota')
-            ->setCellValue('J1', 'Fecha_pago_1eraCuota')
-            ->setCellValue('K1', 'Status');
+            ->setCellValue('E1', 'Contratos_Virtualpos')
+            ->setCellValue('F1', 'Cerrador')
+            ->setCellValue('G1', 'Fecha Desiste')
+            ->setCellValue('H1', 'fecha_vcto_1eraCuota')
+            ->setCellValue('I1', 'Monto_vcto_1eraCuota')
+            ->setCellValue('J1', 'Monto_pago_1eraCuota')
+            ->setCellValue('K1', 'Fecha_pago_1eraCuota')
+            ->setCellValue('L1', 'Status');
 
         // Agregar datos
         $row = 2;
@@ -73,13 +74,14 @@ class ReportePagoPrimeraCuotaController extends AbstractController
                     ->setCellValue('B' . $row,  $cuota->getContrato()->getAgenda()->getId())
                     ->setCellValue('C' . $row, is_null($cuota->getContrato()->getFechaCreacion())?"":$cuota->getContrato()->getFechaCreacion()->format('Y-m-d H:i:s'))
                     ->setCellValue('D' . $row,  $cuota->getContrato()->getMontoContrato())
-                    ->setCellValue('E' . $row, $cuota->getContrato()->getAgenda()->getAbogado()->getNombre())
-                    ->setCellValue('F' . $row, is_null($cuota->getFechaDesiste())?"":$cuota->getFechaDesiste()->format('Y-m-d H:i:s'))
-                    ->setCellValue('G' . $row, is_null($cuota->getFechaVencimiento())?"":$cuota->getFechaVencimiento()->format('Y-m-d H:i:s'))
-                    ->setCellValue('H' . $row, $cuota->getMonto())
-                    ->setCellValue('I' . $row, $cuota->getPagado())
-                    ->setCellValue('J' . $row,  is_null($cuota->getFechaPago())?"":$cuota->getFechaPago()->format('Y-m-d H:i:s'))
-                    ->setCellValue('K' . $row, $status);
+                    ->setCellValue('E' . $row,  $cuota->getContrato()->getAceptaSuscripcion()?1:0)
+                    ->setCellValue('F' . $row, $cuota->getContrato()->getAgenda()->getAbogado()->getNombre())
+                    ->setCellValue('G' . $row, is_null($cuota->getFechaDesiste())?"":$cuota->getFechaDesiste()->format('Y-m-d H:i:s'))
+                    ->setCellValue('H' . $row, is_null($cuota->getFechaVencimiento())?"":$cuota->getFechaVencimiento()->format('Y-m-d H:i:s'))
+                    ->setCellValue('I' . $row, $cuota->getMonto())
+                    ->setCellValue('J' . $row, $cuota->getPagado())
+                    ->setCellValue('K' . $row,  is_null($cuota->getFechaPago())?"":$cuota->getFechaPago()->format('Y-m-d H:i:s'))
+                    ->setCellValue('L' . $row, $status);
             $row++;
         }
 

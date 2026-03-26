@@ -1,0 +1,167 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{pagina|default('agenda abogado')}}{% endblock %}
+
+{% block body %}
+<div class="row">
+<div class="col-sm-12 col-md-8">
+    <section  class="sticky-top">
+    <div class="card">
+        <div class="card-body table-responsive pad">
+           
+            <h4>Datos Lead</h4>
+            <div class="row">
+               
+                
+                <div class="col-sm-12 col-md-6">
+                    <small class="text-muted">Canal</small><br>
+                    <label>{{contrato.agenda.campania}}</label>
+                    
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <small class="text-muted">Nombre Cliente</small><br>
+                    <label>{{contrato.agenda.nombreCliente}}</label>
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <small class="text-muted">Rut Cliente</small><br>
+                    <label>{{contrato.agenda.rutCliente}}</label>
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <small class="text-muted">Telefono Cliente</small><br>
+                    <label><a href="https://api.whatsapp.com/send?phone={{ contrato.agenda.telefonoCliente|replace({'+':''}) }}&text=''" target="_blank"><i class="fa fa-whatsapp"></i>{{ contrato.agenda.telefonoCliente }}</a></label>
+                    
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <small class="text-muted">Telefono Recado Cliente</small><br>
+                    <label>{{contrato.agenda.telefonoRecadoCliente}}</label>
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <small class="text-muted">Correo Cliente</small><br>
+                    <label>{{contrato.agenda.emailCliente}}</label>
+                </div>
+                <div class="col-sm-12 col-md-2">
+                    <small class="text-muted">Monto Deuda</small>
+                    <br>
+                    <label>{{contrato.agenda.monto|number_format(0, ',', '.')}}</label>
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <small class="text-muted">Abogado</small><br>
+                    <label>{{contrato.agenda.abogado.nombre}}</label>
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <small class="text-muted">Reunión</small><br>
+                    <label>{{contrato.agenda.reunion.nombre}}</label>
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <small class="text-muted">Ciudad Cliente</small><br>
+                    <label>{{contrato.agenda.ciudadCliente}}</label>
+                    
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <small class="text-muted">Fecha</small><br>
+                    <label>{{contrato.agenda.fechaAsignado|date('Y-m-d')}}</label>
+                    
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <small class="text-muted">Hora</small><br>
+                    <label>{{contrato.agenda.fechaAsignado|date('h:i')}}</label>
+                    
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <small class="text-muted">Estado Agenda</small><br>
+                    <label>{{contrato.agenda.status}}</label>
+                    
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <small class="text-muted">Contacto Canal</small><br>
+                    <label>{{contrato.agenda.agendaContacto}}</label>
+                    
+                </div>
+                <div class="col-sm-12 col-md-3">
+                    <small class="text-muted">Consultor</small><br>
+                    <label>{{consultorActual.nombre}}</label>
+                    
+                </div>
+                
+            </div>
+            <br />
+            <h4>Gestión Reasignación</h4>
+            
+            <form action="{{path('contrato_consultor_reasignar',{'id':contrato.id})}}" method="post">
+                <div class="col-sm-12 col-md-3" >
+                <small class="text-muted">Consultor *</small>
+                    <select name="cboConsultor" class="form-control" required>
+                        <option value="">Seleccione</option>
+                        {% for consultor in consultores %}
+                            {% if consultor.usuario.id!=consultorActual.id %}
+                        <option value="{{consultor.usuario.id}}" >{{consultor.usuario.nombre}}</option>
+                            {% endif %}
+                        {% else %}
+                        <option value="">No hay consultores disponibles</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-sm-12 col-md-12" >
+                        <small class="text-muted">Observación *</small><br>
+                    <textarea name="txtObservacion" class="form-control" cols="30" rows="5" required></textarea>
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <button type="submit" class="btn btn-primary btn-reasignar">Reasignar</button>
+                </div>
+            </form>
+            
+        </div>
+
+    </div>
+    </section>
+</div>
+<div class="col-sm-12 col-md-4">
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+    
+        <!-- Timelime example  -->
+            <div class="row">
+                <div class="col-md-12">
+                <!-- The time line -->
+                    <div class="timeline">
+                        <!-- timeline time label -->
+                        <div class="time-label">
+                        <span class="bg-red">{{contrato.agenda.fechaCarga|date('d-m-Y H:i')}}</span>
+                        </div>
+                        <!-- /.timeline-label -->
+                        <!-- timeline item -->
+                        {% for observacion in contrato.agenda.agendaObservacions %}
+                            
+                        
+                        <div class="time-label">
+                            <span class="bg-green">{{observacion.fechaRegistro|date('d-m-Y')}}</span>
+                        </div>
+                        <div>
+                            <i class="fas fa-envelope bg-blue"></i>
+                            <div class="timeline-item">
+                                <span class="time"><i class="fas fa-clock"></i>{{observacion.fechaRegistro|date('h:i')}}</span>
+                                <h3 class="timeline-header"><a href="#">{{observacion.status}}</a> {{observacion.usuarioRegistro}} </h3>
+
+                                <div class="timeline-body">
+                                    {{observacion.observacion}}
+                                </div>
+                               
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div>
+                            <i class="fas fa-clock bg-gray"></i>
+                          </div>
+                    </div>
+                    
+                </div>
+                
+            </div>
+        </div>
+    </section>
+    </div>
+</div>
+
+
+{% endblock %}

@@ -110,7 +110,9 @@
                         
                                     <a href="{{ path('contrato_linea_tiempo', {'id': vwContrato.id}) }}" class="btn  btn-sm text-white bg-dark">LT</a>
                                     <a href="{{path('anexo_index',{'id':vwContrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos" ><i class="fas fa-file"></i></a>
-                                   
+                                   {% if is_granted('edit','contrato_consultor_reasignar') %}
+                                    <a href="{{ path('contrato_consultor_reasignar', {'id': vwContrato.id}) }}" class="btn  btn-sm bg-success"><i class="fas fa-exchange-alt"></i></a>
+                                    {% endif %}
                             </div>
                         </td>
                         

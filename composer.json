@@ -21,6 +21,7 @@
         "knplabs/knp-paginator-bundle": "^5.2",
         "knplabs/knp-snappy-bundle": "^1.7",
         "nelmio/cors-bundle": "^2.2",
+        "nick322/secure-spreadsheet": "^1.0",
         "phpdocumentor/reflection-docblock": "^5.3",
         "phpoffice/phpspreadsheet": "^1.14",
         "sensio/framework-extra-bundle": "^5.5",

@@ -74,7 +74,7 @@ class GrupoRepository extends ServiceEntityRepository
         ;
 
     }
-
+    
     // /**
     //  * @return Grupo[] Returns an array of Grupo objects
     //  */

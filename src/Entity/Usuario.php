@@ -381,6 +381,16 @@ class Usuario implements UserInterface
      */
     private $estrategiaJuridicaReporteArchivos;
 
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $encriptarDescarga;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $passwordEncriptacion;
+
     
     
     
@@ -1762,6 +1772,30 @@ class Usuario implements UserInterface
                 $estrategiaJuridicaReporteArchivo->setUsuarioCreacion(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getEncriptarDescarga(): ?bool
+    {
+        return $this->encriptarDescarga;
+    }
+
+    public function setEncriptarDescarga(?bool $encriptarDescarga): self
+    {
+        $this->encriptarDescarga = $encriptarDescarga;
+
+        return $this;
+    }
+
+    public function getPasswordEncriptacion(): ?string
+    {
+        return $this->passwordEncriptacion;
+    }
+
+    public function setPasswordEncriptacion(?string $passwordEncriptacion): self
+    {
+        $this->passwordEncriptacion = $passwordEncriptacion;
 
         return $this;
     }

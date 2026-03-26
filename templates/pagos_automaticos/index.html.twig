@@ -26,17 +26,16 @@
                 {% if totalEstado[0].estadoSuscripcion == 'Rechazado'%}
                 <span class="info-box-icon bg-danger"><i class="far fa-credit-card"></i></span>
                 {% endif %}
+                 {% if totalEstado[0].estadoSuscripcion == 'Suscrito Advertencia'%}
+                <span class="info-box-icon bg-warning text-danger"><i class="far fa-credit-card"></i></span>
+                {% endif %}
                 <div class="info-box-content">
                 <span class="info-box-text">{{totalEstado[0].estadoSuscripcion}}</span>
              
                 <span class="info-box-number">{{totalEstado['total']}}</span>
-                {% set totalPorEstados = totalPorEstados + totalEstado['total']%}
-                
-          
+                {% set totalPorEstados = totalPorEstados + totalEstado['total']%}     
                 </div>
-
                 
-                <!-- /.info-box-content -->
             </div>
             
         </div>
@@ -92,9 +91,10 @@
                     <label>Estado</label>
                     <select name="bEstado" class="form-control">
                         <option value="">Todos</option>
-                        <option value="pendiente" {% if bEstado == 'pendiente' %}selected{% endif %}>Pendiente</option>
-                        <option value="ACTIVA" {% if bEstado == 'ACTIVA' %}selected{% endif %}>Suscrito</option>
-                        <option value="Error" {% if bEstado == 'Error' %}selected{% endif %}>Rechazado</option>
+                        {% for estado in estados %}
+                            <option value="{{estado.id}}" {% if bEstado == estado.id %}selected{% endif %}>{{estado.nombre}}</option>
+                        {% endfor %}
+                        
                     </select>
                 </div>
                 <div class="col-sm-12 col-md-2">
@@ -139,6 +139,7 @@
                 <tr>
                     <th>{{ knp_pagination_sortable(contratos, 'Folio', 'folio') }} {% if contratos.isSorted('folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>{{ knp_pagination_sortable(contratos, 'AgendaId', 'contrato.agenda') }} {% if contratos.isSorted('contrato.agenda') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'SuscripcionId', 'contrato.suscripcionId') }} {% if contratos.isSorted('contrato.suscripcionId') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>{{ knp_pagination_sortable(contratos, 'Cliente', 'contrato.nombre') }} {% if contratos.isSorted('contrato.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>{{ knp_pagination_sortable(contratos, 'Abogado', 'contrato.agenda.abogado') }} {% if contratos.isSorted('contrato.agenda.abogado') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>{{ knp_pagination_sortable(contratos, 'Cto/Anexo', 'fechaCreacion') }} {% if contratos.isSorted('fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
@@ -161,7 +162,9 @@
                 <tr>
                     <td align="left">{{ vwContrato.folio }}</td>
                     <td align="left">{{ contrato.agenda.id }}</td>
+                    <td align="left">{{ contrato.suscripcionId }}</td>
                     <td align="left">{{ contrato.nombre }}</td>
+                    
                     <td align="left">
                         {% if contrato.agenda.abogado is not null %}
                             {{ contrato.agenda.abogado.nombre }}
@@ -314,5 +317,9 @@
             }
         });
     });
+    function buscar(status){
+        $("#bStatus").val(status);
+        $(".frmBuscar").submit();
+    }
 </script>
 {% endblock %}

@@ -464,6 +464,12 @@ class Contrato
      */
     private $usuarioCancelaSuscripcion;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=ContratoEstadoSuscripcion::class)
+     */
+    private $contratoEstadoSuscripcion;
+
+
 
     public function __construct()
     {
@@ -1827,6 +1833,18 @@ class Contrato
     public function setUsuarioCancelaSuscripcion(?Usuario $usuarioCancelaSuscripcion): self
     {
         $this->usuarioCancelaSuscripcion = $usuarioCancelaSuscripcion;
+
+        return $this;
+    }
+
+    public function getContratoEstadoSuscripcion(): ?ContratoEstadoSuscripcion
+    {
+        return $this->contratoEstadoSuscripcion;
+    }
+
+    public function setContratoEstadoSuscripcion(?ContratoEstadoSuscripcion $contratoEstadoSuscripcion): self
+    {
+        $this->contratoEstadoSuscripcion = $contratoEstadoSuscripcion;
 
         return $this;
     }

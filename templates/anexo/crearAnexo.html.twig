@@ -12,9 +12,9 @@
                 <div class="col-sm-12 col-md-3">
                     <select name="cboTipoAnexo" class="form-control tipoAnexo">
                         <option value="">Seleccione</option>
-                        <option value="1">Agregar causa</option>
-                        <option value="2">Extensión del plazo</option>
-                        <option value="3">Renegociación</option>
+                        {% for tipoAnexo in tiposAnexo %}
+                            <option value="{{tipoAnexo["id"]}}">{{tipoAnexo["nombre"]}}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 <div class="col-sm-12 col-md-3">

@@ -283,10 +283,7 @@ class CobranzaController extends AbstractController
         $folio=null;
         $compania=null;
         $queryTotales="";
-        $mostrarVencimientoSeleccionado="";
-        $segmento="";
-        
-        $configuracion = $configuracionRepository->find(1);
+        $request->getSession()->set('origen_anexo','cobranza_ia');
         //   "maximo ".$vencimiento->getValMax();
         //$vencimiento=$vencimientoArray[0];
         /*$vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'soloPorAdmin'=>false],["valMin"=>'ASC']);
@@ -1034,10 +1031,8 @@ class CobranzaController extends AbstractController
         $filtro=null;
         $folio=null;
         $compania=null;
-        $queryTotales="";
-        $segmento="";
-        
-        $configuracion = $configuracionRepository->find(1);
+
+       
         //   "maximo ".$vencimiento->getValMax();
         //$vencimiento=$vencimientoArray[0];
         $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'soloPorAdmin'=>false],["valMin"=>'ASC']);
@@ -1050,11 +1045,8 @@ class CobranzaController extends AbstractController
        
         $fecha=null;
         $fechaVW=null;
-        $error='';
         $status=1;
-        $error_toast="";
-        
-       
+
         if(null !== $request->query->get('error_toast')){
             $error_toast=$request->query->get('error_toast');
         }

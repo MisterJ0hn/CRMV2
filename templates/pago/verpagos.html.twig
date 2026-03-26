@@ -149,12 +149,18 @@
                     {% endif %}
                     <a href="{{path('pago_new_nc',{'id':contrato.id})}}" class="btn btn-primary" >Agregar Nota Crédito</a>
                 {% else %}
+                   
                     {% if contrato.isFinalizado %}
                     <a href="{{path('pago_new_nc',{'id':contrato.id})}}" class="btn btn-primary" >Agregar Nota Crédito</a>
                     {% endif %}
                     
                 
                 
+                {% endif %}
+            {% else %}
+                
+                {% if (is_granted('view', 'agregarPagosVP')) %}
+                    <a href="{{path('pago_new',{'id':contrato.id})}}" class="btn btn-primary" >Agregar pago</a>
                 {% endif %}
             {% endif %}
         </div>

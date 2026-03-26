@@ -12,13 +12,13 @@ use GuzzleHttp\Psr7\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class PjudScraping{
-    public $url = "https://api.haddacloud.com/gateway/api";
+    public $url = "http://138.117.149.186:3000/api";
     public $apiKey= "";
     public $accountKey="04K_PH7RLR_XuhVZmojjE6q2Z4PBWiteq82GjGTe36g";
     public $opciones="";
     public $header="";
-    public $user="extarnal-api@alfaromadariaga.cl";
-    public $pass=".XA>7u£T]K]3ToW86>";
+    public $user="adminti";
+    public $pass="$$1212";
     public $token="";
     private $container;
 
@@ -31,7 +31,7 @@ class PjudScraping{
         $entityManager=$this->container->get('doctrine')->getManager();
         
         //Agregamos log para movatec
-        $log = new MovatecLog(); 
+        $log = new PjudScrapingLog(); 
         $log->setFechaRegistro(new \DateTime(date("Y-m-d H:i")));
 
         $loginResponse = new ResponseLogin();
@@ -40,17 +40,17 @@ class PjudScraping{
             "Accept: application/json");
         try{
         $client = new \GuzzleHttp\Client();
-        $response = $client->request('POST',$this->url.'/v2/login/access-token-forms', [
-            'body' =>'{"email":"'.$this->user.'","hashed_password":"'.$this->pass.'"}',
+        $response = $client->request('POST',$this->url.'/auth', [
+            'body' =>'{"usuario":"'.$this->user.'","password":"'.$this->pass.'"}',
             'headers' =>[
                 'Content-Type' => 'application/json'
                 ],
             ]);
             if($response->getStatusCode()==200){
                 $responseBody = json_decode($response->getBody(), true);
-                if (isset($responseBody['access_token'])) {
+                if (isset($responseBody['token'])) {
                     
-                    $loginResponse->setToken($responseBody['access_token']);
+                    $loginResponse->setToken($responseBody['token']);
                     $loginResponse->setTokenType($responseBody['token_type'] ?? null);
 
                     $log->setExito(1);                    
@@ -78,58 +78,50 @@ class PjudScraping{
         }
     }
 
-    public function enviarDatos(string $rit, string $competencia, string $corte, string $tribunal, string $tipoCausa, string $cliente, string $rut, string $caratulado, string $abogado, string $juzgado, string $folio){
+    public function enviarDatos(string $token, string $numero,string $letra,int $anio, string $competencia, string $corte, string $tribunal,int $causaId,int $estado){
         $entityManager=$this->container->get('doctrine')->getManager();
-
-        //Agregamos log para movatec
+        
+        //Agregamos log para scraping
         $log = new PjudScrapingLog(); 
         $log->setFechaRegistro(new \DateTime(date("Y-m-d H:i")));
-
-        $loginResponse = new ResponseLogin();
-        $this->header=array(
-            "Content-Type: application/json",
-            "Accept: application/json");
-        try{
-        $client = new \GuzzleHttp\Client();
         $body='{
-                "rit": "'.$rit.'",
-                "competencia": "'.$competencia.'",
-                "corte": "'.$corte.'",
-                "tribunal": "'.$tribunal.'",
-                "tipoCausa": "'.$tipoCausa.'",
-                "cliente": "'.$cliente.'",
-                "rut": "'.$rut.'",
-                "caratulado": "'.$caratulado.'",
-                "abogado": "'.$abogado.'",
-                "juzgado": "'.$juzgado.'",
-                "folio": "'.$folio.'"
-                }';
-        $response = $client->request('POST',$this->url.'/v2/envio', [
-            'body' =>$body,
-            'headers' =>[
-                'Content-Type' => 'application/json'
-                ],
-            ]);
-            if($response->getStatusCode()==200){
-                $responseBody = json_decode($response->getBody(), true);
-                if (isset($responseBody['access_token'])) {
-                    
-                    $loginResponse->setToken($responseBody['access_token']);
-                    $loginResponse->setTokenType($responseBody['token_type'] ?? null);
-
+                        "numero":'.$numero.',
+                        "letra":"'.$letra.'",
+                        "anio":'.$anio.',
+                        "competencia":'.$competencia.',
+                        "corte":'.$corte.',
+                        "tribunal":'.$tribunal.',
+                        "crm_causa_id":'.$causaId.',
+                        "estado_contrato":'.$estado.',
+                        "skip_pdfs":false
+                        }';
+        $log->setRequest($body."(Bearer ".$token.")");
+        try{
+            if( $token){
+                $client = new \GuzzleHttp\Client();
+                
+                $response = $client->request('POST',$this->url.'/generar_scrapping', [
+                    'body' =>$body,
+                    'headers' =>[
+                        'Content-Type' => 'application/json',
+                        'Authorization' => 'Bearer '.$token
+                        ],
+                    'timeout' => 240,
+                     'connect_timeout' => 240
+                    ]);
+                if($response->getStatusCode()==200){
+                                       
                     $log->setExito(1);                    
                     $log->setResponse($response->getBody());
                     
                     $entityManager->persist($log);
                     $entityManager->flush();
 
-                    return $loginResponse->getToken();
+                    
                 }else{
+
                     throw new Exception($response->getBody());
                 }
-            }else{
-
-                throw new Exception($response->getBody());
             }
         } catch (Exception $e) {
            

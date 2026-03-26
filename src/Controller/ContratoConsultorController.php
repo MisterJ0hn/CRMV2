@@ -1,9 +1,15 @@
 <?php
 
 namespace App\Controller;
+
+use App\Entity\AgendaObservacion;
+use App\Entity\Contrato;
 use Knp\Component\Pager\PaginatorInterface;
 use App\Repository\CuentaRepository;
+use App\Repository\GrupoRepository;
 use App\Repository\ModuloPerRepository;
+use App\Repository\UsuarioGrupoRepository;
+use App\Repository\UsuarioRepository;
 use App\Repository\VwContratoConsultorRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -30,6 +36,7 @@ class ContratoConsultorController extends AbstractController
         $otros="";
         $folio="";
         $tipoCliente="prime";
+        
         if(null !== $request->query->get('error_toast')){
             $error_toast=$request->query->get('error_toast');
         }
@@ -77,13 +84,33 @@ class ContratoConsultorController extends AbstractController
         }
         switch($user->getUsuarioTipo()->getId()){
             case 3:
-            case 4:
+           
             case 1:
             case 8:
                 $query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
-          
+            case 4:
+                $grupos = $user->getusuarioGrupos();
+
+                
+
+        
+                $listGrupos='';
+
+                $i=0;
+                foreach ($grupos as $grupo) {
+                    
+                    if($i>0){
+                        $listGrupos.=',';
+                    }
+                    $listGrupos.=$grupo->getGrupo()->getId();
+                    $i++;
+                }
+                $fecha.=" and co.grupo in ($listGrupos) ";
+                $query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha);
+                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+                break;
             default:
                 $query=$contratoRepository->findByPers($user->getId(),null,$compania,$filtro,null,$fecha);
                 $companias=$cuentaRepository->findByPers($user->getId());
@@ -110,6 +137,74 @@ class ContratoConsultorController extends AbstractController
             'error_toast'=>$error_toast,
             'TipoFiltro'=>'Contrato',
             'bTipoCliente'=>$tipoCliente
+        ]);
+    }
+    /**
+    * @Route("/{id}/reasignar" , name="contrato_consultor_reasignar" , methods={"GET","POST"})   
+    */
+    public function reasignarGrupo(Contrato $contrato, 
+                                    UsuarioGrupoRepository $usuarioGrupoRepository,
+                                    GrupoRepository $grupoRepository,
+                                    Request $request,
+                                    ModuloPerRepository $moduloPerRepository,
+                                    UsuarioRepository   $usuarioRepository
+                                    ):Response
+    {
+        
+        $this->denyAccessUnlessGranted('edit','contrato_consultor_reasignar');
+        $user=$this->getUser();
+        $pagina=$moduloPerRepository->findOneByName('contrato_consultor_reasignar',$user->getEmpresaActual());
+
+        if($request->request->get('cboConsultor')!=null){
+            $entityManager = $this->getDoctrine()->getManager();
+            $consultorNuevo=$request->request->get('cboConsultor');
+
+            $usuarioGrupo=$usuarioGrupoRepository->findPrimerGrupoDisponiblePorUsuario($consultorNuevo);
+            
+            if(null == $usuarioGrupo){
+                //si no hay lotes para utilizar, se setean en false todos para poder utilizar...
+                $grupos=$grupoRepository->findBy(['estado'=>true]);
+                foreach($grupos as $grupo){
+                    $grupo->setUtilizado(false);
+                    $entityManager->persist($grupo);
+                    $entityManager->flush();
+                }
+                $grupo=$grupoRepository->findPrimerDisponible();
+
+                $grupo->setUtilizado(true);
+                $entityManager->persist($grupo);
+                $entityManager->flush();
+            }else{
+                $grupo = $usuarioGrupo->getGrupo();
+                $grupo->setUtilizado(true);
+                $entityManager->persist($grupo);
+                $entityManager->flush();
+            }
+            $contrato->setGrupo($grupo);
+            $agenda = $contrato->getAgenda();
+            
+            $observacion=new AgendaObservacion();
+            $observacion->setAgenda($agenda);
+            $observacion->setUsuarioRegistro($usuarioRepository->find($user->getId()));
+            $observacion->setStatus($agenda->getStatus());
+            $observacion->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+            $observacion->setObservacion($request->request->get('txtObservacion'));
+            $observacion->setSubStatus($agenda->getSubStatus());
+            $entityManager->persist($agenda);
+            $entityManager->persist($observacion);
+            $entityManager->flush();
+            return $this->redirectToRoute('contrato_consultor_index',['error_toast'=>"Toast.fire({icon: 'success',title: 'Registro grabado con exito'})"]);
+
+        }
+        $usuarioConsultor = $usuarioGrupoRepository->findOneBy(["grupo"=>$contrato->getGrupo()]);
+        $consultores = $usuarioGrupoRepository->consultores();
+        
+       
+        return $this->render('contrato_consultor/reasignar.html.twig', [
+            'contrato' => $contrato,
+            'pagina'    => $pagina ? $pagina->getNombre() : 'Contrato Consultor',
+            'consultores' => $consultores,
+            'consultorActual' => $usuarioConsultor->getUsuario()
         ]);
     }
 }

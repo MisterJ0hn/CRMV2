@@ -83,6 +83,16 @@ class VwContratoPagoAutomatico
      */
     private $estadoSuscripcion;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $estadoSuscripcionOrden;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $estadoSuscripcionId;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -240,6 +250,30 @@ class VwContratoPagoAutomatico
     public function setEstadoSuscripcion(string $estadoSuscripcion): self
     {
         $this->estadoSuscripcion = $estadoSuscripcion;
+
+        return $this;
+    }
+
+    public function getEstadoSuscripcionOrden(): ?int
+    {
+        return $this->estadoSuscripcionOrden;
+    }
+
+    public function setEstadoSuscripcionOrden(?int $estadoSuscripcionOrden): self
+    {
+        $this->estadoSuscripcionOrden = $estadoSuscripcionOrden;
+
+        return $this;
+    }
+
+    public function getEstadoSuscripcionId(): ?int
+    {
+        return $this->estadoSuscripcionId;
+    }
+
+    public function setEstadoSuscripcionId(?int $estadoSuscripcionId): self
+    {
+        $this->estadoSuscripcionId = $estadoSuscripcionId;
 
         return $this;
     }

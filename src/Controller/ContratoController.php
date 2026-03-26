@@ -17,7 +17,9 @@ use App\Entity\Cartera;
 use App\Entity\Causa;
 use App\Entity\CausaObservacion;
 use App\Entity\CausaObservacionArchivo;
+use App\Entity\Configuracion;
 use App\Entity\ContratoAudios;
+use App\Entity\ContratoHistoricoSuscripcion;
 use App\Entity\ContratoMee;
 use App\Entity\ContratoObservacion;
 use App\Entity\Cuaderno;
@@ -27,6 +29,8 @@ use App\Entity\EstrategiaJuridicaReporteArchivos;
 use App\Entity\LineaTiempoObservacion;
 use App\Entity\LineaTiempoTerminada;
 use App\Entity\Mensaje;
+use App\Entity\PjudEbook;
+use App\Entity\VirtualPosLog;
 use App\Form\ContratoRolType;
 use App\Form\MensajeType;
 use App\Repository\ActuacionAnexoProcesalRepository;
@@ -45,6 +49,7 @@ use App\Repository\AgendaStatusRepository;
 use App\Repository\AnexoProcesalRepository;
 use App\Repository\CarteraRepository;
 use App\Repository\CausaObservacionRepository;
+use App\Repository\CausaRepository;
 use App\Repository\ModuloPerRepository;
 use App\Repository\CuotaRepository;
 use App\Repository\ConfiguracionRepository;
@@ -69,8 +74,13 @@ use App\Repository\LineaTiempoObservacionRepository;
 use App\Repository\MateriaCorteRepository;
 use App\Repository\MateriaEstrategiaRepository;
 use App\Repository\MeeRepository;
+use App\Repository\PjudCausaRepository;
+use App\Repository\PjudEbookRepository;
+use App\Repository\PjudMovimientoRepository;
 use App\Repository\UsuarioCarteraRepository;
+use App\Repository\UsuarioGrupoRepository;
 use App\Repository\VwContratoRepository;
+use App\Repository\VwPjudCuadernosRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -82,7 +92,9 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use App\Service\ContratoFunciones;
+use App\Service\PjudScraping;
 use App\Service\Toku;
+use App\Service\VirtualPos;
 use DateTime;
 use Doctrine\ORM\EntityRepository;
 use Exception;
@@ -96,6 +108,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
+use Symfony\Component\Validator\Constraints\Json;
 use Symfony\Component\Validator\Constraints\Length;
 
 /**
@@ -116,6 +129,7 @@ class ContratoController extends AbstractController
         $error_toast="";
         $otros="";
         $folio="";
+        $request->getSession()->set("origen_anexo",null);
         if(null !== $request->query->get('error_toast')){
             $error_toast=$request->query->get('error_toast');
         }
@@ -472,6 +486,37 @@ class ContratoController extends AbstractController
             'observaciones'=>$causaObservacionRepository->findBy(['contrato'=>$contrato],['fechaRegistro'=>'Desc'])
         ]);
     }
+    /**
+     * @Route("/{id}/suscripcion", name="contrato_ver_suscripcion", methods={"GET"})
+     */
+    public function verSuscripcion(Contrato $contrato,
+                        DiasPagoRepository $diasPagoRepository,
+                        ModuloPerRepository $moduloPerRepository,
+                        CausaObservacionRepository $causaObservacionRepository): Response
+    {
+        $this->denyAccessUnlessGranted('view','contrato');
+        $user=$this->getUser();
+        $pagina=$moduloPerRepository->findOneByName('contrato',$user->getEmpresaActual());
+        $url_suscripcion = $this->getParameter("url_web")."/suscripcion/".$contrato->getSesionSuscripcion();
+        $historicoSuscripcion = new ContratoHistoricoSuscripcion();
+        $historicoSuscripcion->setContrato($contrato);
+        $historicoSuscripcion->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+        
+        $historicoSuscripcion->setObservacion($user->getUsername()." obtiene link para suscripción");
+        $historicoSuscripcion->setSuscripcionId("");
+        $historicoSuscripcion->setExito(true);
+        $entityManager=$this->getDoctrine()->getManager();
+        $entityManager->persist($historicoSuscripcion);
+        $entityManager->flush();
+        return $this->render('contrato/show.html.twig', [
+            'contrato' => $contrato,
+            'suscripcionId'=>$url_suscripcion,
+            'agenda'=>$contrato->getAgenda(),
+            'pagina'=>$pagina->getNombre(),
+            'diasPagos'=>$diasPagoRepository->findAll(),
+            'observaciones'=>$causaObservacionRepository->findBy(['contrato'=>$contrato],['fechaRegistro'=>'Desc'])
+        ]);
+    }
 
     /**
      * @Route("/{id}/new_rol", name="contrato_new_rol", methods={"GET","POST"})
@@ -506,6 +551,16 @@ class ContratoController extends AbstractController
             'mode'=>$mode,
            
         ]);
+    }
+    
+   
+    /**
+     * @Route("/{id}/obtener_sesion_suscripcion", name="contrato_obtener_sesion_suscripcion", methods={"GET","POST"})
+     */
+    public function obtenerSesionSuscripcion(Contrato $contrato): JsonResponse
+    {   
+        $url_suscripcion = $this->getParameter("url_web")."/suscripcion/".$contrato->getSesionSuscripcion();
+        return $this->json( ["url_suscripcion"=>$url_suscripcion],200);
     }
     
     /**
@@ -547,6 +602,8 @@ class ContratoController extends AbstractController
                     CarteraRepository $carteraRepository,
                     UsuarioCarteraRepository $usuarioCarteraRepository,
                     AgendaContactoRepository $agendaContactoRepository,
+                    CausaRepository $causaRepository,
+                            PjudScraping $pjudScraping,
                     \Knp\Snappy\Pdf $snappy): Response
     {
         $this->denyAccessUnlessGranted('edit','contrato');
@@ -792,6 +849,35 @@ class ContratoController extends AbstractController
                 $entityManager->persist($contrato);
                 $entityManager->flush();
             }
+
+            
+            //solicitiamos informacion a webscrapping para obtener historial PJUD
+                $token=$pjudScraping->login();
+                $causas = $causaRepository->findBy(['agenda'=>$agenda,'estado'=>1,'estadoConsultaPjud'=>null]);
+                foreach ($causas as $causa) {
+                    try{
+                        $pjudScraping->enviarDatos($token,
+                                                    $causa->getRol(),
+                                                    $causa->getLetra(),
+                                                    $causa->getAnio(),
+                                                    $causa->getMateriaEstrategia()->getMateria()->getPjudCompetenciaId(),
+                                                    $causa->getCorte() ? $causa->getCorte()->getPjudCorteId():"0",
+                                                    $causa->getJuzgado() ? $causa->getJuzgado()->getPjudTribunalId():"0",
+                                                    $causa->getId(),
+                                                    1);
+
+                        
+                        $causa->setEstadoConsultaPjud("Consultando");
+                        $entityManager->persist($causa);    
+                        $entityManager->flush();
+                    }catch(\Exception $e){
+                        $causa->setEstadoConsultaPjud("NoOk");
+                        $entityManager->persist($causa);    
+                        $entityManager->flush();
+                    }
+                }
+                
+            
             return $this->redirectToRoute('contrato_pdf',['id'=>$contrato->getId()]);
         }
         return $this->render('contrato/edit.html.twig', [
@@ -824,14 +910,10 @@ class ContratoController extends AbstractController
                             UserPasswordEncoderInterface $encoder,
                             UsuarioTipoRepository $usuarioTipoRepository,
                             ConfiguracionRepository $configuracionRepository,
-                            ContratoRepository $contratoRepository,
-                            ContratoFunciones $contratoFunciones,
                             CuentaRepository $cuentaRepository,
-                            LotesRepository $lotesRepository,
                             RegionRepository $regionRepository,
                             ComunaRepository $comunaRepository,
                             CiudadRepository $ciudadRepository,
-                            MeeRepository $meeRepository,
                             CuentaMateriaRepository $cuentaMateriaRepository
                             ): Response
     {
@@ -894,23 +976,15 @@ class ContratoController extends AbstractController
             $contrato->setDiaPago($request->request->get('chkDiasPago'));
             $contrato->setFechaCreacion(new \DateTime(date("Y-m-d H:i:s")));
             $contrato->setSucursal($sucursalRepository->find($request->request->get('cboSucursal')));
-            //$contrato->setTramitador($usuarioRepository->find($request->request->get('cboTramitador')));
-            //$contrato->setIdLote($lote);
-            
-            //Extraer ultimo Folio:::
 
-            /*$ultContrato=$contratoRepository->findLoteMax($user->getEmpresaActual(),'c.folio');
-
-            //sumamos el folio:::
-            if($ultContrato){
-                $nuevoFolio= $ultContrato->getFolio()+1;
+            if(null !== $request->request->get("chkAceptaSuscripcion")){
+                $contrato->setAceptaSuscripcion(1);
+                $this->crearSesionSuscripcion($contrato);
             }else{
-                $nuevoFolio=1;
+                $contrato->setAceptaSuscripcion(0);
             }
 
-            $contrato->setFolio($nuevoFolio);
-
-            */
+            
             $agenda=$contrato->getAgenda();
 
             $usuario=$usuarioRepository->findOneBy(['username'=>$contrato->getEmail()]);
@@ -1039,8 +1113,9 @@ class ContratoController extends AbstractController
                     $numeroCuota++;
                 }
             }
-    
-          
+
+
+            
             return $this->redirectToRoute('contrato_pdf',['id'=>$contrato->getId()]);
         }
 
@@ -1067,21 +1142,48 @@ class ContratoController extends AbstractController
      */
     public function reasignar(Request $request, 
                             Contrato $contrato,
-                            UsuarioRepository $usuarioRepository
+                            UsuarioRepository $usuarioRepository,
+                            ConfiguracionRepository $configuracionRepository
                             ): Response
     {
         $this->denyAccessUnlessGranted('create','contrato_reasignar');
         $user=$this->getUser();
-       
+        $entityManager = $this->getDoctrine()->getManager();
         $cerradores = $usuarioRepository->findBy(['usuarioTipo'=>6,'estado'=>1,'empresaActual'=>$user->getEmpresaActual()]); 
 
         if($request->request->get('cboCerrador')){
             $agenda=$contrato->getAgenda();
             $agenda->setAbogado($usuarioRepository->find($request->request->get('cboCerrador')));
-            $entityManager = $this->getDoctrine()->getManager();
+            
             $entityManager->persist($agenda);
             $entityManager->flush();
             return $this->redirect($request->headers->get('referer'));
+        }
+        $virtualPosLog = new VirtualPosLog();
+        $configuracion = $configuracionRepository->find(1);
+        $virtualPos = new VirtualPos($configuracion->getVirtualPosApiKey(),
+                                    $configuracion->getVirtualPosSecretKey(),
+                                    $configuracion->getVirtualPosPlan(),
+                                    $configuracion->getVirtualPosUrl());
+        
+        // lo primero será anular los cargos que aun no se han cobrado.
+        try{
+            $response= $virtualPos->cancelarCargosFuturos($contrato->getSuscripcionId());
+            $virtualPosLog->setExito(1);
+            $virtualPosLog->setContrato($contrato);
+            $virtualPosLog->setResponse(json_encode($response));
+            $virtualPosLog->setRequest("");
+            $virtualPosLog->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+            $entityManager->persist($virtualPosLog);
+            $entityManager->flush();
+        }catch(\Exception $e){
+            $virtualPosLog->setExito(0);
+            $virtualPosLog->setContrato($contrato);
+            $virtualPosLog->setResponse($e->getMessage());
+            $virtualPosLog->setRequest("");
+            $virtualPosLog->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+            $entityManager->persist($virtualPosLog);
+            $entityManager->flush();
         }
         return $this->render('contrato/_reasignar.html.twig', [
             'contrato' => $contrato,
@@ -1125,8 +1227,13 @@ class ContratoController extends AbstractController
         /*$dompdf->stream($filename, [
             "Attachment" => true
         ]);*/
-        return $this->redirectToRoute('contrato_index');
+        if($contrato->getAceptaSuscripcion()){
+             return $this->redirectToRoute('contrato_ver_suscripcion',["id"=>$contrato->getId()]);
+        }else{
+            return $this->redirectToRoute('contrato_index');
+        }
     }
+    
     /**
      * @Route("/{id}/terminar", name="contrato_terminar", methods={"GET","POST"})
      */
@@ -1134,7 +1241,10 @@ class ContratoController extends AbstractController
                     DiasPagoRepository $diasPagoRepository,
                     ModuloPerRepository $moduloPerRepository,
                     Request $request,
-                    ContratoFunciones $contratoFunciones): Response
+                    ConfiguracionRepository $configuracionRepository,
+                    ContratoFunciones $contratoFunciones,
+                    CausaRepository $causaRepository,
+                    PjudScraping $pjudScraping): Response
     {
         $this->denyAccessUnlessGranted('create','terminos');
         $user=$this->getUser();
@@ -1143,7 +1253,63 @@ class ContratoController extends AbstractController
 
         if(null !== $request->query->get('status')){
             $error_toast=$contratoFunciones->terminarContrato($contrato,$request->query->get('status'),$request->request->get('txtObservacion'));
-           
+            $entityManager = $this->getDoctrine()->getManager();
+            $causas = $causaRepository->findBy(['agenda'=>$contrato->getAgenda(),'estado'=>1]);
+            foreach ($causas as $causa) {
+                $causa->setEstadoParaPjud(false);
+                
+                $entityManager->persist($causa);
+                $entityManager->flush();
+            }
+            $virtualPosLog = new VirtualPosLog();
+            
+            $configuracion = $configuracionRepository->find(1);
+            $virtualPos = new VirtualPos($configuracion->getVirtualPosApiKey(),
+                                        $configuracion->getVirtualPosSecretKey(),
+                                        $configuracion->getVirtualPosPlan(),
+                                        $configuracion->getVirtualPosUrl());
+            
+            // lo primero será anular los cargos que aun no se han cobrado.
+            try{
+                $response= $virtualPos->cancelarCargosFuturos($contrato->getSuscripcionId());
+                $virtualPosLog->setExito(1);
+                $virtualPosLog->setContrato($contrato);
+                $virtualPosLog->setResponse(json_encode($response));
+                $virtualPosLog->setRequest("");
+                $virtualPosLog->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+                $entityManager->persist($virtualPosLog);
+                $entityManager->flush();
+            }catch(\Exception $e){
+                $virtualPosLog->setExito(0);
+                $virtualPosLog->setContrato($contrato);
+                $virtualPosLog->setResponse($e->getMessage());
+                $virtualPosLog->setRequest("");
+                $virtualPosLog->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+                $entityManager->persist($virtualPosLog);
+                $entityManager->flush();
+            }
+
+            try{
+            //solicitiamos informacion a webscrapping para obtener historial PJUD
+                $token=$pjudScraping->login();
+                foreach ($causas as $causa) {
+                   $response = $pjudScraping->enviarDatos($token,
+                                                $causa->getRol()?$causa->getRol():"",
+                                                $causa->getLetra()?$causa->getLetra():"",
+                                                $causa->getAnio()?$causa->getAnio():0,
+                                                $causa->getMateriaEstrategia()->getMateria()->getPjudCompetenciaId(),
+                                                $causa->getCorte()?$causa->getCorte()->getPjudCorteId():"0",
+                                                $causa->getJuzgado()?$causa->getJuzgado()->getPjudTribunalId():"0",
+                                                $causa->getId(),
+                                                $causa->getEstadoParaPjud());
+                }
+                
+            }catch(\Exception $e){
+                //en caso de error, se captura la excepcion para evitar que el proceso de contratacion se vea afectado por problemas en el scrapping.
+                //se podria loguear el error para su posterior revision.
+            }
+
+            
             return $this->redirectToRoute('contrato_index',['error_toast'=>$error_toast]);
 
         }
@@ -1199,14 +1365,17 @@ class ContratoController extends AbstractController
                         MateriaEstrategiaRepository $materiaEstrategiaRepository,
                         CuentaMateriaRepository $cuentaMateriaRepository,
                         MateriaCorteRepository $materiaCorteRepository,
-                        ContratoObservacionRepository $contratoObservacionRepository): Response
+                        ContratoObservacionRepository $contratoObservacionRepository,
+                        UsuarioGrupoRepository $usuarioGrupoRepository): Response
     {
-        $this->denyAccessUnlessGranted('create','linea_tiempo');
+        $this->denyAccessUnlessGranted('view','linea_tiempo');
         $user=$this->getUser();
         $pagina=$moduloPerRepository->findOneByName('linea_tiempo',$user->getEmpresaActual());
 
         $cuenta=$contrato->getAgenda()->getCuenta();
         $cuenta_materia=$cuentaMateriaRepository->findOneBy(['cuenta'=>$cuenta->getId(),'estado'=>1]);
+        $usuarioGrupo = $usuarioGrupoRepository->findOneBy(['grupo'=>$contrato->getGrupo()->getId()]);
+
 
         return $this->render('contrato/lineaTiempo.html.twig', [
             'contrato' => $contrato,
@@ -1215,6 +1384,7 @@ class ContratoController extends AbstractController
             'juzgados' => $cuenta->getJuzgadoCuentas(),
             'servicios'=>$materiaEstrategiaRepository->findBy(['materia'=>$cuenta_materia->getMateria()->getId(),'estado'=>1]),
             'observaciones'=>$contratoObservacionRepository->findBy(['contrato'=>$contrato],['fechaRegistro'=>'Desc']),
+            'consultor'=>$usuarioGrupo->getUsuario()->getNombre(),
         ]);
     }
     /**
@@ -1226,7 +1396,7 @@ class ContratoController extends AbstractController
                          ContratoObservacionRepository $contratoObservacionRepository,
                         EstrategiaJuridicaReporteArchivosRepository $estrategiaJuridicaReporteArchivosRepository): Response
     {
-        $this->denyAccessUnlessGranted('create','linea_tiempo');
+        $this->denyAccessUnlessGranted('view','linea_tiempo');
         $user=$this->getUser();
         $pagina=$moduloPerRepository->findOneByName('linea_tiempo',$user->getEmpresaActual());
 
@@ -1250,7 +1420,7 @@ class ContratoController extends AbstractController
                         EstrategiaJuridicaReporteRepository $estrategiaJuridicaReporteRepository
                         ): Response
     {
-        $this->denyAccessUnlessGranted('create','linea_tiempo');
+        $this->denyAccessUnlessGranted('view','linea_tiempo');
         $user=$this->getUser();
        
         if($request->files->get('archivoReporte')){
@@ -1652,7 +1822,7 @@ class ContratoController extends AbstractController
                                 DetalleCuadernoRepository $detalleCuadernoRepository
                                 ): Response
     {
-        $this->denyAccessUnlessGranted('create','linea_tiempo');
+        $this->denyAccessUnlessGranted('view','linea_tiempo');
         $user=$this->getUser();
         $pagina=$moduloPerRepository->findOneByName('linea_tiempo',$user->getEmpresaActual());
         $fechaUltimoIngreso=$causa->getFechaUltimoIngreso();
@@ -1777,6 +1947,8 @@ class ContratoController extends AbstractController
 
         return $this->redirectToRoute('contrato_linea_tiempo_detalle',['id'=>$causa->getId()]);
     }
+
+    
     /**
      * @Route("/{id}/observacion", name="contrato_observacion", methods={"GET","POST"})
      */
@@ -2236,6 +2408,24 @@ class ContratoController extends AbstractController
 
         return $this->redirectToRoute('contrato_show',["id"=>$contrato->getId()]);
         
+    }
+
+    //25-03-2026: agregar eliminar causa
+    /**
+     * @Route("/{id}/eliminar_causa", name="contrato_eliminar_causa" , methods={"GET"})
+     */
+    public function eliminarCausa(Causa $causa):JsonResponse
+    {
+        $this->denyAccessUnlessGranted('edit','linea_tiempo');
+        try{
+            $entityManager = $this->getDoctrine()->getManager();
+            $causa->setEstado(false);
+            $entityManager->persist($causa);
+            $entityManager->flush();
+            return $this->json(["exito"=>true],200);
+        }catch(Exception $ex){
+            return $this->json(["exito"=>false,"mensaje"=>$ex->getMessage()],500);
+        }
     }
 
     public function crearSesionSuscripcion(Contrato $contrato)

@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\AgendaRepository;
+use App\Repository\ConfiguracionRepository;
 use App\Repository\CuentaRepository;
 use App\Repository\UsuarioRepository;
 use App\Repository\VwCausasActivasFinalRepository;
@@ -17,6 +18,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Csv;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Nick\SecureSpreadsheet\Encrypt;
 
 /**
  * @Route("/resumen_causas")
@@ -316,11 +318,11 @@ class ResumenCausasController extends AbstractController
      */
     public function excel(Request $request,
                         VwCausasActivasFinalRepository $vwCausasActivasFinalRepository,
-                        VwClientesActivosFinalRepository $vwClientesActivosFinalRepository, AgendaRepository $agendaRepository ): Response
+                        VwClientesActivosFinalRepository $vwClientesActivosFinalRepository, AgendaRepository $agendaRepository, ConfiguracionRepository $configuracionRepository): Response
     {
         
         $this->denyAccessUnlessGranted('view','resumen_causas_excel');
-        
+        $user = $this->getUser();
         $materia="";
         $bTipoCuenta="";
        
@@ -334,16 +336,19 @@ class ResumenCausasController extends AbstractController
             case 'civil':
                 $cuentasId="1,2,3,10";
                 $fileName="ResumenCivil.xlsx";
+                $fileName_protegido="ResumenCivil_protegido.xlsx";
                 $titulo = "Resumen Causas Civil ";
                 break;
             case 'tributaria':
                 $cuentasId="4,6";
                 $fileName="ResumenTributaria.xlsx";
+                $fileName_protegido="ResumenTributaria_protegido.xlsx";
                 $titulo = "Resumen Causas Tributaria ";
                 break;
             case 'familia':
                 $cuentasId="7";
                 $fileName="ResumenFamilia.xlsx";
+                $fileName_protegido="ResumenFamilia_protegido.xlsx";
                 $titulo = "Resumen Causas Familia ";
                 break;
         }
@@ -436,19 +441,32 @@ class ResumenCausasController extends AbstractController
         }
 
         $sheet->setTitle($titulo);
- 
+        $security = $spreadSheet->getSecurity();
+        $security->setLockWindows(true);
+        $security->setLockStructure(true);
+        $security->setWorkbookPassword("123456"); 
         // Create your Office 2007 Excel (XLSX Format)
         $writer = new Xlsx($spreadSheet);
         /*$writer->setDelimiter(',');
         $writer->setEnclosure('');*/
-            
+           
         // Create a Temporary file in the system
-        
         $temp_file = tempnam(sys_get_temp_dir(), $fileName);
-    
-        // Create the excel file in the tmp directory of the system
+        $temp_file_protegido = tempnam(sys_get_temp_dir(), $fileName_protegido);
         $writer->save($temp_file);
-    
+        $configuracion = $configuracionRepository->find(1);
+        if($configuracion->getClaveEncriptacionDescargas()){
+            $encryptor = new Encrypt();
+            $encryptor->input($temp_file)
+            ->password($configuracion->getClaveEncriptacionDescargas())
+            ->output( $temp_file_protegido);
+            $temp_file = $temp_file_protegido;   
+        }
+        // Create the excel file in the tmp directory of the system
+        
+
+        
+        //exec('libreoffice --headless --convert-to xlsx:"Calc MS Excel 2007 XML:EncryptFile=true;Password=123456" '.$temp_file);
         // Return the excel file as an attachment
         return $this->file($temp_file, $fileName, ResponseHeaderBag::DISPOSITION_ATTACHMENT);
         

@@ -57,11 +57,9 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
 
 
         if(!is_null($estado) && $estado != ''){
-            if($estado == 'pendiente'){
-                $query->andWhere('co.EstadoSuscripcion is null');
-            }else{
-                $query->andWhere("co.EstadoSuscripcion = '$estado'");
-            }
+            
+           $query->andWhere("c.estadoSuscripcionId = $estado");
+    
         }
         if(!is_null($cerrador) && $cerrador != ''){
             $query->andWhere("a.abogado = '$cerrador'");
@@ -96,11 +94,9 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
 
 
         if(!is_null($estado) && $estado != ''){
-            if($estado == 'pendiente'){
-                $query->andWhere('co.EstadoSuscripcion is null');
-            }else{
-                $query->andWhere("co.EstadoSuscripcion = '$estado'");
-            }
+           
+                $query->andWhere("c.estadoSuscripcionId = $estado");
+           
         }
         if(!is_null($cerrador) && $cerrador != ''){
             $query->andWhere("a.abogado = '$cerrador'");
@@ -133,11 +129,8 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
 
 
         if(!is_null($estado) && $estado != ''){
-            if($estado == 'pendiente'){
-                $query->andWhere('co.EstadoSuscripcion is null');
-            }else{
-                $query->andWhere("co.EstadoSuscripcion = '$estado'");
-            }
+
+            $query->andWhere("c.estadoSuscripcionId = $estado");
         }
         if(!is_null($cerrador) && $cerrador != ''){
             $query->andWhere("a.abogado = '$cerrador'");
@@ -156,6 +149,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
             $query->andWhere($fecha);
         }
         $query->groupBy("c.estadoSuscripcion");
+        $query->orderBy("c.estadoSuscripcionOrden","Asc");
         
         return $query->getQuery()->getResult();
     }
@@ -171,11 +165,9 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
 
 
         if(!is_null($estado) && $estado != ''){
-            if($estado == 'pendiente'){
-                $query->andWhere('co.EstadoSuscripcion is null');
-            }else{
-                $query->andWhere("co.EstadoSuscripcion = '$estado'");
-            }
+       
+                $query->andWhere("c.estadoSuscripcionId = $estado");
+
         }
         if(!is_null($cerrador) && $cerrador != ''){
             $query->andWhere("a.abogado = '$cerrador'");

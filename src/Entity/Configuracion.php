@@ -66,6 +66,36 @@ class Configuracion
      */
     private $deudaMinima;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $virtualPosUrl;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $virtualPosApiKey;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $virtualPosSecretKey;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $virtualPosPlan;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $OcultarBase64EnTrasa;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $claveEncriptacionDescargas;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -186,6 +216,78 @@ class Configuracion
     public function setDeudaMinima(int $deudaMinima): self
     {
         $this->deudaMinima = $deudaMinima;
+
+        return $this;
+    }
+
+    public function getVirtualPosUrl(): ?string
+    {
+        return $this->virtualPosUrl;
+    }
+
+    public function setVirtualPosUrl(?string $virtualPosUrl): self
+    {
+        $this->virtualPosUrl = $virtualPosUrl;
+
+        return $this;
+    }
+
+    public function getVirtualPosApiKey(): ?string
+    {
+        return $this->virtualPosApiKey;
+    }
+
+    public function setVirtualPosApiKey(?string $virtualPosApiKey): self
+    {
+        $this->virtualPosApiKey = $virtualPosApiKey;
+
+        return $this;
+    }
+
+    public function getVirtualPosSecretKey(): ?string
+    {
+        return $this->virtualPosSecretKey;
+    }
+
+    public function setVirtualPosSecretKey(?string $virtualPosSecretKey): self
+    {
+        $this->virtualPosSecretKey = $virtualPosSecretKey;
+
+        return $this;
+    }
+
+    public function getVirtualPosPlan(): ?string
+    {
+        return $this->virtualPosPlan;
+    }
+
+    public function setVirtualPosPlan(string $virtualPosPlan): self
+    {
+        $this->virtualPosPlan = $virtualPosPlan;
+
+        return $this;
+    }
+
+    public function getOcultarBase64EnTrasa(): ?bool
+    {
+        return $this->OcultarBase64EnTrasa;
+    }
+
+    public function setOcultarBase64EnTrasa(?bool $OcultarBase64EnTrasa): self
+    {
+        $this->OcultarBase64EnTrasa = $OcultarBase64EnTrasa;
+
+        return $this;
+    }
+
+    public function getClaveEncriptacionDescargas(): ?string
+    {
+        return $this->claveEncriptacionDescargas;
+    }
+
+    public function setClaveEncriptacionDescargas(?string $claveEncriptacionDescargas): self
+    {
+        $this->claveEncriptacionDescargas = $claveEncriptacionDescargas;
 
         return $this;
     }

@@ -42,8 +42,8 @@
                         <p>{{contrato.tramitador ? contrato.tramitador.nombre:''}}</p>                    
                     </div>
                     <div class="col-sm-12 col-md-4">
-                        <small class="text-muted">Fecha Contrato</small><br>
-                        <p>{{contrato.fechaCreacion|date('Y-m-d')}}</p>                    
+                        <small class="text-muted">Consultor</small><br>
+                        <p>{{consultor ? consultor:''}}</p>                    
                     </div>
                     
                     <div class="col-sm-12 col-md-4">
@@ -59,9 +59,9 @@
                         <p>{{contrato.telefono}}</p>   
                     </div>
                     <div class="col-sm-12 col-md-4">
-                        <small class="text-muted">Teléfono Recado</small><br>
+                        <small class="text-muted">Fecha Contrato</small><br>
                     
-                        <p>{{contrato.telefonoRecado}}</p>   
+                        <p>{{contrato.fechaCreacion|date('Y-m-d')}}</p>   
                     </div>
                     <div class="col-sm-12 col-md-4">
                         <small class="text-muted">Email</small><br>
@@ -161,8 +161,8 @@
 
                     {% for causa in contrato.agenda.causas %}
                     {% if causa.estado == true %}
-                        <tr>
-                            <td>
+                        <tr data-id="{{causa.id}}">
+                            <td >
                             {{causa.id}}
                             </td>
                             <td>
@@ -206,10 +206,20 @@
                                         {% if causa.materiaEstrategia.estrategiaJuridica.id == 4 %}
                                           <a href="{{path('contrato_linea_tiempo_reporte',{'id':causa.id})}}" type="button" class="btn btn-warning btn-sm" ><i class="fas fa-clipboard-list"></i></a>                                          
                                         {% endif %}
-                                        <button class="btn btn-sm btn-info btn-ver-causa"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#modalDetalleCivil">👁</button>
-                                        <a href="" class="btn btn-sm btn-secondary"><i class="fas fa-gavel"></i></a>
+                                        {% if causa.estadoConsultaPjud == 'Ok' %}
+                                            <button class="btn btn-sm btn-info btn-ver-causa"
+                                            data-toggle="modal"
+                                            data-target="#modalDetalleCivil"><i class="fas fa-eye"></i></button>
+                                        {% elseif causa.estadoConsultaPjud =='Consultando' %}
+                                        <a href="" class="btn btn-sm btn-info"><i class="fas fa-clock"></i></a>
+                                        {% else %}
+                                        <a href="#" class="btn btn-sm btn-secondary" onclick="generar_scrapping({{causa.id}});"><i class="fas fa-gavel"></i></a>
+                                        {% endif %}
+                                        {% if is_granted("edit", "linea_tiempo")  %}
+                                            <a href="#" onclick="eliminarCausa({{causa.id}});" class="btn  btn-sm btn-danger"><i class="fas fa-trash"></i></a>
+                                        {% endif %}
+                                        
+                                        
                                 </div>                        
                             </td>
                         </tr>
@@ -328,31 +338,43 @@
           <div class="col-md-4"><strong>Etapa:</strong> <span id="m_etapa">-</span></div>
           <div class="col-md-4"><strong>Tribunal:</strong> <span id="m_tribunal">-</span></div>
         </div>
+        <div class="row">
+            <div class="col-md-3 btn-demanda">
+            </div>
+            <div class="col-md-3 btn-anexo">
+            </div>
+            <div class="col-md-3 btn-certificado">
+            </div>
+            <div class="col-md-3 btn-ebook">
+            </div>
+             
 
+        </div>
         <hr>
 
         <!-- CUADERNO -->
         <h6><strong>Historia Causa Cuaderno</strong></h6>
         <select id="m_cuaderno" class="form-select w-25 mb-3" onchange="filtrarPorCuaderno()">
-            <option value="">Todos los cuadernos</option>
+            
         </select>
+        <button class="btn btn-warning" data-toggle="modal" data-target="#informacionReceptorModal"><i class="fas fa-folder"></i></button>
 
         <!-- TABS -->
         <ul class="nav nav-tabs mb-3">
             <li class="nav-item">
-                <a class="nav-link active" data-bs-toggle="tab" href="#tabHistoria">Historia</a>
+                <a class="nav-link active" datatoggle="tab" href="#tabHistoria">Historia</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#tabLitigantes">Litigantes</a>
+                <a class="nav-link" data-toggle="tab" href="#tabLitigantes">Litigantes</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#tabNotif">Notificaciones</a>
+                <a class="nav-link" data-toggle="tab" href="#tabNotif">Notificaciones</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#tabEscritos">Escritos por Resolver</a>
+                <a class="nav-link" data-toggle="tab" href="#tabEscritos">Escritos por Resolver</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" data-bs-toggle="tab" href="#tabExhortos">Exhortos</a>
+                <a class="nav-link" data-toggle="tab" href="#tabExhortos">Exhortos</a>
             </li>
         </ul>
 
@@ -376,25 +398,90 @@
             </div>
 
             <!-- LOS OTROS TABS -->
-            <div class="tab-pane fade" id="tabLitigantes">Contenido litigantes...</div>
-            <div class="tab-pane fade" id="tabNotif">Contenido notificaciones...</div>
-            <div class="tab-pane fade" id="tabEscritos">Contenido escritos...</div>
-            <div class="tab-pane fade" id="tabExhortos">Contenido exhortos...</div>
+            <div class="tab-pane fade" id="tabLitigantes">
+            <table id="tablaLitigantes" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Participante</th>
+                    <th>Rut</th>
+                    <th>Persona</th>
+                    <th>Razon Social</th>
+                </tr>
+                </thead>
+                <tbody>
+                    <!-- filas dinamicas -->
+                </tbody>
+            </table>
+            </div>
+            <div class="tab-pane fade" id="tabNotif">
+                <table id="tablaNotificaciones" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Tipo</th>
+                        <th>Fecha Tramite</th>
+                        <th>Tipo Part</th>
+                        <th>Nombre</th>
+                        <th>Tramite</th>
+                        <th>Observacion</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <!-- filas dinamicas -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="tab-pane fade" id="tabEscritos">
+                <table id="tablaEscritos" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Doc</th>
+                        <th>Anexo</th>
+                        <th>Fecha Ingreso</th>
+                        <th>Tipo</th>
+                        <th>Solicitante</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <!-- filas dinamicas -->
+                    </tbody>
+                </table>
+            
+            </div>
+            <div class="tab-pane fade" id="tabExhortos">
+            <table id="tablaExhortos" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Rol Origen</th>
+                    <th>Tipo Exhorto</th>
+                    <th>Rol Destino</th>
+                    <th>Fecha Orden</th>
+                    <th>Fecha Ingreso</th>
+                    <th>Tribunal Destino</th>
+                    <th>Estado Exhorto</th>
+                </tr>
+                </thead>
+                <tbody>
+                    <!-- filas dinamicas -->
+                </tbody>
+            </table>
+            </div>
 
         </div>
 
       </div>
 
       <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <button class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
       </div>
 
     </div>
   </div>
 </div>
-
-<<<<<<< Updated upstream
-=======
+<div class="modal fade" id="informacionReceptorModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Información de Receptor</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -497,7 +584,6 @@
         </div>
     </div>
 </div>
->>>>>>> Stashed changes
 <script>
     $('.btn-ocultar').hide();
     $('.btn-modificar').hide();
@@ -619,8 +705,6 @@
         });
     });
     
-<<<<<<< Updated upstream
-=======
 
 document.addEventListener('DOMContentLoaded', function() {
     // Asociar eventos a los botones de ver causa ya renderizados desde PHP/SQL
@@ -668,7 +752,7 @@ async function buscarCausa(causaId) {
         cuadernosDisponibles.forEach(cuad => {
             selectCuaderno.innerHTML += `<option value="${cuad.id}">${cuad.nombre}</option>`;
         });
-
+        
         //console.log('respuesta:', respuesta);
         // Mostrar info de cabecera
         if (respuesta.causa) {
@@ -1155,7 +1239,36 @@ function renderizarAnexosMovimiento(movId)
             }
 
         });
+
+        
 }
->>>>>>> Stashed changes
+{% if is_granted("edit", "linea_tiempo")  %}
+function eliminarCausa(id){
+    if(confirm("Seguro que desea eliminar esta causa?.")){
+        $.ajax({
+            url:"/contrato/"+id+"/eliminar_causa",
+            type: "get",
+            beforeSend: function(){
+                    
+            },
+            success:function(data){
+                // Aquí puedes manejar la respuesta si es necesario
+                response=data;
+                if(response.exito){
+                    alert("Causa eliminada correctamente.");
+                }else{
+                    alert(response.mensaje);
+                }
+
+                window.location.reload();
+                
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError);
+            }
+        });
+    }
+}
+{% endif %}
 </script>
 {% endblock %}

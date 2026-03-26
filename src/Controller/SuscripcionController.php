@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Configuracion;
 use App\Entity\Contrato;
+use App\Entity\ContratoEstadoSuscripcion;
 use App\Entity\ContratoHistoricoSuscripcion;
 use App\Entity\Pago;
 use App\Entity\PagoCuotas;
@@ -11,6 +12,7 @@ use App\Entity\VirtualPosLog;
 use App\Form\PlanType;
 use App\Form\VirtualPosCrearSuscripcionType;
 use App\Repository\ConfiguracionRepository;
+use App\Repository\ContratoEstadoSuscripcionRepository;
 use App\Repository\ContratoRepository;
 use App\Repository\CuentaCorrienteRepository;
 use App\Repository\CuotaRepository;
@@ -208,7 +210,8 @@ class SuscripcionController extends AbstractController
     public function new(Request $request, 
                         $uuid, ContratoRepository $contratoRepository,
                         ConfiguracionRepository $configuracionRepository,
-                        CuotaRepository $cuotaRepository): Response
+                        CuotaRepository $cuotaRepository,ContratoEstadoSuscripcionRepository $contratoEstadoSuscripcionRepository
+                       ): Response
     {
 
         $contrato = $contratoRepository->findOneBy(["sesionSuscripcion"=>$uuid]);
@@ -231,14 +234,14 @@ class SuscripcionController extends AbstractController
 
                 try{
                     if($contrato->getSuscripcionUrl()==null){
-                        $url_suscripcion=$this->inscribir($contrato,$configuracion,$cuotas,$url_return);
+                        $url_suscripcion=$this->inscribir($contrato,$configuracion,$contratoEstadoSuscripcionRepository->find(1),$cuotas,$url_return);
                         //redireccionamos a la pagina de virtual pos
                         return new RedirectResponse($url_suscripcion);
                         /*$redirect_js='setTimeout(() => {
                                     <!--window.location.href="'.$response["url_redirect"].'";-->
                                     }, "1000");';*/
                     }else{
-                        //si existe url de suscripcion, es po que ya se intento realizar la inscripcion.
+                        //si existe url de suscripcion, es por que ya se intento realizar la inscripcion.
                         $estado = $this->consultarSuscripcion($contrato->getSuscripcionId(),$configuracion);
                        
                         switch($estado){
@@ -250,7 +253,8 @@ class SuscripcionController extends AbstractController
                                 break;
                             case "SUSCRIPCION_FALLIDA":
                             case "CANCELADA":
-                                $url_suscripcion=$this->inscribir($contrato,$configuracion,$cuotas,$url_return);
+                                
+                                $url_suscripcion=$this->inscribir($contrato,$configuracion,$contratoEstadoSuscripcionRepository->find(1),$cuotas,$url_return);
                                 break;
                             default:
                                  throw new Exception("Existe un error interno, comunicarse con adminitración");
@@ -266,11 +270,14 @@ class SuscripcionController extends AbstractController
                     $virtualPosLog->setFechaRegistro(new \DateTime(date("Y-m-d")));
                     $virtualPosLog->setResponse($e->getMessage());
                     $entityManager->persist($virtualPosLog);
+
                     $entityManager->flush();
+                    
                     $error='<div class="alert alert-danger" role="alert">
                         <strong>Error</strong><br><p>'.$e->getMessage().'</p>
                         </div>';
                 }
+
             }
         }else{
             $error='<div class="alert alert-danger" role="alert">
@@ -291,7 +298,7 @@ class SuscripcionController extends AbstractController
     public function validar(Request $request, 
                         $uuid, ContratoRepository $contratoRepository,
                         ConfiguracionRepository $configuracionRepository,
-                        CuotaRepository $cuotaRepository
+                        CuotaRepository $cuotaRepository,ContratoEstadoSuscripcionRepository $contratoEstadoSuscripcionRepository
                        ):Response
     {
         $contrato = $contratoRepository->findOneBy(["sesionSuscripcion"=>$uuid]);
@@ -306,12 +313,14 @@ class SuscripcionController extends AbstractController
                                             $configuracion->getVirtualPosPlan(),
                                             $configuracion->getVirtualPosUrl());
                 $response = $virtualPos->recuperarSuscripcion($virtualPosUuid);
+                
                 if($response["suscription"]["status"]=="ACTIVA"){
                     $cuotas = $cuotaRepository->findBy(["contrato"=>$contrato, "anular"=>null],["fechaPago"=>"ASC"]);
                     foreach ($cuotas as $cuota) {
                         if($cuota->getInvoiceId()==null){
                             $response_cuotas=$virtualPos->crearCuota($cuota,$contrato->getSuscripcionId());
                             $cuota->setInvoiceId($response_cuotas["response"]["charge"]["id"]);
+
                             $entityManager->persist($cuota);
                             $entityManager->flush();
                             $virtualPosLogCuota = new VirtualPosLog();
@@ -333,6 +342,7 @@ class SuscripcionController extends AbstractController
                     $historicoSuscripcion->setSuscripcionId($contrato->getSuscripcionId());
 
                     $contrato->setSesionSuscripcionActiva(0);
+                    $contrato->setContratoEstadoSuscripcion($contratoEstadoSuscripcionRepository->find(2));
                     $contrato->setEstadoSuscripcion($response["suscription"]["status"]);
 
                     $entityManager->persist($historicoSuscripcion);
@@ -349,6 +359,7 @@ class SuscripcionController extends AbstractController
                     $historicoSuscripcion->setObservacion("La validación de la suscripción ha fallado. El servicio devolvió: ".$response["suscription"]["status"]);
                     $historicoSuscripcion->setSuscripcionId($contrato->getSuscripcionId());
                     $contrato->setEstadoSuscripcion("Error");
+                    $contrato->setContratoEstadoSuscripcion($contratoEstadoSuscripcionRepository->find(3));
                     $entityManager->persist($historicoSuscripcion);
                     $entityManager->persist($contrato);
                     $entityManager->flush();
@@ -373,7 +384,8 @@ class SuscripcionController extends AbstractController
                     $entityManager->persist($cuota);
                     $entityManager->flush();
                 }
-                $contrato->setEstadoSuscripcion("Error");
+                $contrato->setContratoEstadoSuscripcion($contratoEstadoSuscripcionRepository->find(3));
+                $contrato->setEstadoSuscripcion($response["suscription"]["status"]);
                 $entityManager->persist($contrato);
                 $entityManager->flush();
                 $error='<div class="alert alert-danger" role="alert"><strong>Error</strong><br><p>Ha ocurrido un error al momento de la carga de cuotas, la suscripcion ha sido cancelada, vuelva a intentarlo.</p>
@@ -396,7 +408,7 @@ class SuscripcionController extends AbstractController
     public function validarAsync(Request $request, 
                         $uuid, ContratoRepository $contratoRepository,
                         ConfiguracionRepository $configuracionRepository,
-                        CuotaRepository $cuotaRepository
+                        CuotaRepository $cuotaRepository,ContratoEstadoSuscripcionRepository $contratoEstadoSuscripcionRepository
                        ):JsonResponse
     {
 
@@ -414,7 +426,8 @@ class SuscripcionController extends AbstractController
             $response = $virtualPos->recuperarSuscripcion($virtualPosUuid);
             
             if($response["suscription"]["status"]=="ACTIVA"){
-                try{     
+                try{
+                    
                     $cuotas = $cuotaRepository->findBy(["contrato"=>$contrato, "anular"=>null],["fechaPago"=>"ASC"]);
                     foreach ($cuotas as $cuota) {
                             if($cuota->getInvoiceId()==null){
@@ -431,7 +444,8 @@ class SuscripcionController extends AbstractController
                                 $virtualPosLogCuota->setRequest($response_cuotas["request"]);
                                 $entityManager->persist($virtualPosLogCuota);
                                 $entityManager->flush();
-                            }                  
+                            }
+                    
                     }
 
                     $historicoSuscripcion = new ContratoHistoricoSuscripcion();
@@ -442,6 +456,7 @@ class SuscripcionController extends AbstractController
                     $historicoSuscripcion->setSuscripcionId($contrato->getSuscripcionId());
 
                     $contrato->setSesionSuscripcionActiva(0);
+                    $contrato->setContratoEstadoSuscripcion($contratoEstadoSuscripcionRepository->find(2));
                     $contrato->setEstadoSuscripcion($response["suscription"]["status"]);
 
                     $entityManager->persist($historicoSuscripcion);
@@ -464,7 +479,8 @@ class SuscripcionController extends AbstractController
                         $entityManager->persist($cuota);
                         $entityManager->flush();
                     }
-                    $contrato->setEstadoSuscripcion("Error");
+                    $contrato->setContratoEstadoSuscripcion($contratoEstadoSuscripcionRepository->find(3));
+                    $contrato->setEstadoSuscripcion($response["suscription"]["status"]);
                     $entityManager->persist($contrato);
                     $entityManager->flush();
                     return $this->json(["exito"=>0,"mensaje"=>$e->getMessage()],400);
@@ -478,6 +494,7 @@ class SuscripcionController extends AbstractController
                 $historicoSuscripcion->setObservacion("La validación Async de la suscripción ha fallado. El servicio devolvió: ".$response["suscription"]["status"]);
                 $historicoSuscripcion->setSuscripcionId($contrato->getSuscripcionId());
                 $contrato->setEstadoSuscripcion("Error");
+                $contrato->setContratoEstadoSuscripcion($contratoEstadoSuscripcionRepository->find(3));
                 $entityManager->persist($historicoSuscripcion);
                 $entityManager->persist($contrato);
                 $entityManager->flush();
@@ -536,7 +553,8 @@ class SuscripcionController extends AbstractController
                                 $virtualPosLogCuota->setRequest($response_cuotas["request"]);
                                 $entityManager->persist($virtualPosLogCuota);
                                 $entityManager->flush();
-                            }                    
+                            }
+                    
                     }
 
                     $historicoSuscripcion = new ContratoHistoricoSuscripcion();
@@ -545,11 +563,14 @@ class SuscripcionController extends AbstractController
                     $historicoSuscripcion->setExito(true);
                     $historicoSuscripcion->setObservacion("La Re-validación de la suscripción fue exitosa");
                     $historicoSuscripcion->setSuscripcionId($contrato->getSuscripcionId());
+
                     $contrato->setSesionSuscripcionActiva(0);
                     $contrato->setEstadoSuscripcion($response["suscription"]["status"]);
+
                     $entityManager->persist($historicoSuscripcion);
                     $entityManager->flush();
                 }catch(Exception $e){
+
                     $historicoSuscripcion = new ContratoHistoricoSuscripcion();
                     $historicoSuscripcion->setContrato($contrato);
                     $historicoSuscripcion->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
@@ -569,6 +590,7 @@ class SuscripcionController extends AbstractController
                     $contrato->setEstadoSuscripcion("Error");
                     $entityManager->persist($contrato);
                     $entityManager->flush();
+          
                     return $this->json(["exito"=>0,"mensaje"=>$historicoSuscripcion->getObservacion()],200);
                 }
             }else{
@@ -594,7 +616,7 @@ class SuscripcionController extends AbstractController
         return $this->json(["exito"=>1],200);
     }
     
-    public function inscribir(Contrato $contrato,Configuracion $configuracion,$cuotas,$url_return){
+    public function inscribir(Contrato $contrato,Configuracion $configuracion,ContratoEstadoSuscripcion $contratoEstadoSuscripcion,$cuotas,$url_return){
         
         $entityManager = $this->getDoctrine()->getManager();
         $virtualPos = new VirtualPos($configuracion->getVirtualPosApiKey(),
@@ -623,6 +645,8 @@ class SuscripcionController extends AbstractController
             $contrato->setSuscripcionId($response["suscription"]["id"]);
             $contrato->setSuscripcionUrl($response["url_redirect"]);
             $contrato->setEstadoSuscripcion(null);
+            $contrato->setContratoEstadoSuscripcion($contratoEstadoSuscripcion);
+        
             $entityManager->persist($contrato);
             $entityManager->flush();
 

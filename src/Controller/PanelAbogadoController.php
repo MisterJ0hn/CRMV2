@@ -10,6 +10,8 @@ use App\Entity\ContratoRol;
 use App\Entity\AgendaObservacion;
 use App\Entity\Causa;
 use App\Entity\Contrato;
+use App\Entity\ContratoEstadoSuscripcion;
+use App\Entity\ContratoHistoricoSuscripcion;
 use App\Entity\ContratoMee;
 use App\Entity\Cuenta;
 use App\Entity\Cuota;
@@ -28,6 +30,7 @@ use App\Repository\CarteraRepository;
 use App\Repository\CausaRepository;
 use App\Repository\CiudadRepository;
 use App\Repository\ComunaRepository;
+use App\Repository\ContratoEstadoSuscripcionRepository;
 use App\Repository\CuentaMateriaRepository;
 use App\Repository\SucursalRepository;
 use App\Repository\CuentaRepository;
@@ -43,6 +46,7 @@ use App\Repository\ReunionRepository;
 use App\Repository\RegionRepository;
 use App\Repository\UsuarioCarteraRepository;
 use App\Repository\UsuarioCuentaRepository;
+use App\Service\PjudScraping;
 use App\Service\Tramitacion;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -411,7 +415,10 @@ class PanelAbogadoController extends AbstractController
                             UsuarioCarteraRepository $usuarioCarteraRepository,
                             GrupoRepository $grupoRepository,
                             CuotaRepository $cuotaRepository,
-                            AgendaContactoRepository $agendaContactoRepository
+                            AgendaContactoRepository $agendaContactoRepository,
+                            CausaRepository $causaRepository,
+                            PjudScraping $pjudScraping,
+                            ContratoEstadoSuscripcionRepository $contratoEstadoSuscripcionRepository
                             ):Response
     {
         $this->denyAccessUnlessGranted('create','panel_abogado');
@@ -449,6 +456,7 @@ class PanelAbogadoController extends AbstractController
                 $agenda->setReunion($reunionRepository->find($request->request->get('cboReunion')));
             }
             
+            
             $entityManager = $this->getDoctrine()->getManager();
             $entityManager->persist($agenda);
             $entityManager->flush();
@@ -474,6 +482,12 @@ class PanelAbogadoController extends AbstractController
             }else{
                 $contrato->setCiudad($agenda->getCiudadCliente());
             }
+            if(null !== $request->request->get("chkAceptaSuscripcion")){
+                $contrato->setAceptaSuscripcion(1);
+                $contrato->setContratoEstadoSuscripcion($contratoEstadoSuscripcionRepository->find(1));
+               
+            }
+
             $contrato->setCuotas(1);
             $contrato->setMontoNivelDeuda($agenda->getMonto()); 
             $contrato->setPagoActual($agenda->getPagoActual()); 
@@ -754,6 +768,17 @@ class PanelAbogadoController extends AbstractController
                         $numeroCuota++;
                     }
                 }
+                if($contrato->getAceptaSuscripcion()){
+                    $historicoSuscripcion = new ContratoHistoricoSuscripcion();
+                    $historicoSuscripcion->setContrato($contrato);
+                    $historicoSuscripcion->setExito(true);
+                    $historicoSuscripcion->setFechaRegistro(new \DateTime(date("Y-m-d H:i:s")));
+                    $historicoSuscripcion->setObservacion("Usuario acepta suscripción de pago automático");
+                    $historicoSuscripcion->setSuscripcionId("");
+                    $entityManager->persist($historicoSuscripcion);
+                    $entityManager->flush();
+                    $this->crearSesionSuscripcion($contrato);
+                }
             }
 
             if($contrato->getAgenda()->getIdGhl()!=""){
@@ -772,9 +797,37 @@ class PanelAbogadoController extends AbstractController
                     $materiaNombre,
                     $contrato->getAgenda()->getStatus()->getId());
             }
+
+            
+                $token=$pjudScraping->login();
+                $causas = $causaRepository->findBy(['agenda'=>$agenda,'estado'=>1]);
+                foreach ($causas as $causa) {
+                    try{
+                        //solicitiamos informacion a webscrapping para obtener historial PJUD
+                        $pjudScraping->enviarDatos($token,
+                                                    $causa->getRol()?$causa->getRol():"",
+                                                    $causa->getLetra()?$causa->getLetra():"",
+                                                    $causa->getAnio()?$causa->getAnio():0,
+                                                    $causa->getMateriaEstrategia()->getMateria()->getPjudCompetenciaId(),
+                                                    $causa->getCorte() ? $causa->getCorte()->getPjudCorteId():"0",
+                                                    $causa->getJuzgado() ? $causa->getJuzgado()->getPjudTribunalId():"0",
+                                                    $causa->getId(),
+                                                    1);
+                        $causa->setEstadoConsultaPjud("Consultando");
+                        $entityManager->persist($causa);    
+                        $entityManager->flush();
+                    }catch(\Exception $e){
+                        //en caso de error, se captura la excepcion para evitar que el proceso de contratacion se vea afectado por problemas en el scrapping.
+                        //se podria loguear el error para su posterior revision.
+                    }
+                }
+                
+            
             return $this->redirectToRoute('contrato_pdf',['id'=>$contrato->getId()]);
            // return $this->redirectToRoute('contrato_finalizar',['id'=>$contrato->getId()]);
         }
+
+        
         return $this->render('panel_abogado/contrata.html.twig',[
             'agenda'=>$agenda,
             'contrato'=>$contrato,
@@ -971,18 +1024,17 @@ class PanelAbogadoController extends AbstractController
 
     }
 
-    public function validarCuota($idContrato,$numeroCuota){
-        $entityManager = $this->getDoctrine()->getManager();
-
-        $cuota = $entityManager->getRepository(Cuota::class)->findOneBy(['contrato'=>$idContrato,'numero'=>$numeroCuota]);
-
-        if($cuota!=null){
-            return true;
-        }else{
-            return false;
-        }
-    }
+    
      
-   
+    public function crearSesionSuscripcion(Contrato $contrato)
+    {
+        $contratoEstadoSuscripcion = $this->getDoctrine()->getRepository(ContratoEstadoSuscripcion::class)->find(1);
+        $contrato->setSesionSuscripcion(uniqid());
+        $contrato->setSesionSuscripcionActiva(1);
+        $contrato->setContratoEstadoSuscripcion($contratoEstadoSuscripcion);
+        $entityManager = $this->getDoctrine()->getManager();
+        $entityManager->persist($contrato);
+        $entityManager->flush();
+    }
 
 }

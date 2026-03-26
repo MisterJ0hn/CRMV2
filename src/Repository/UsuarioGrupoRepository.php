@@ -47,6 +47,29 @@ class UsuarioGrupoRepository extends ServiceEntityRepository
         }
     }
 
+    public function consultores(){
+        return $this->createQueryBuilder('u')
+                ->groupBy("u.Usuario")
+                ->getQuery()
+                ->getResult()
+                ;
+    }
+    public function findPrimerGrupoDisponiblePorUsuario($usuarioId): ?UsuarioGrupo
+    {
+        $query=$this->createQueryBuilder('u')
+        ->join('u.grupo','g')
+        ->andWhere('g.utilizado = false')
+        ->andWhere('g.estado = true')
+        ->andWhere('u.Usuario ='. $usuarioId)
+        ->orderBy('g.id','ASC');
+
+        return $query->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+
+    }
+
     // /**
     //  * @return UsuarioGrupo[] Returns an array of UsuarioGrupo objects
     //  */
