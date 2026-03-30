@@ -317,7 +317,7 @@ class AppExtension extends AbstractExtension
     public function getVip($esVigente){
         
         if($esVigente==1){
-            return "<i class='fas fa-star text-warning' title='Cliente VIP'></i>";
+            return "<i class='fas fa-star text-success' title='Cliente VIP'></i>";
         }
         return "<i class='fas fa-star text-secondary' title='Cliente VIP'></i>";
     }

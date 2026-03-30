@@ -72,13 +72,13 @@
 			</div>
 			<div class="col-sm-6 col-md-3">
 				<small class="text-muted">FechaIngreso *</small>
-				<input type="text" name="fecha_ingreso" class="form-control date" value="{{usuario.fechaActivacion?usuario.fechaActivacion|date('Y-m-d'):''}}" required>
+				<input type="text" name="fecha_ingreso" class="form-control date" value="{% if usuario is defined %} {{usuario.fechaActivacion ? usuario.fechaActivacion|date('Y-m-d'):''}} {% endif %}" required>
 			</div>
 			
 			<div class="col-sm-6 col-md-3">
 				<small class="text-muted">Fecha Nacimiento * </small>
 
-				<input type="text" name="fecha_nacimiento" class="form-control date" value="{{usuario.fechaNacimiento?usuario.fechaNacimiento|date('Y-m-d'):''}}" required>
+				<input type="text" name="fecha_nacimiento" class="form-control date" value="{% if usuario is defined %} {{usuario.fechaNacimiento?usuario.fechaNacimiento|date('Y-m-d'):''}} {% endif %}" required>
 			</div>
 		</div>
 	</section>

@@ -1403,11 +1403,11 @@ class PagoController extends AbstractController
                 'etapa'=>1,
             ]);
         }else{
-
+             
             return $this->render('pago/tipoPago.html.twig', [
                 
                 'contrato'=>$contrato,
-                'pagoTipos'=>$pagoTipoRepository->findBy(['id'=>[1,2,3,4,5,6]]),
+                'pagoTipos'=>$pagoTipoRepository->obtenerTiposPago(),
              ] );
         }
         

@@ -19,6 +19,15 @@ class PagoTipoRepository extends ServiceEntityRepository
         parent::__construct($registry, PagoTipo::class);
     }
 
+    public function obtenerTiposPago(){
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.estado = 1')
+            ->andWhere('p.id != 7')
+            ->orderBy('p.id', 'ASC')
+            ->getQuery()
+            ->getResult()
+        ;
+    }
     // /**
     //  * @return PagoTipo[] Returns an array of PagoTipo objects
     //  */

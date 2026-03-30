@@ -139,6 +139,14 @@ class VwCausasActivasFinal{
      */
     private $fechaObservacionCliente;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Causa::class)
+     */
+    private $causa;
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $diasUltObservacion;
     public function getCuentaId()
     {
         return $this->cuentaId;
@@ -476,4 +484,26 @@ class VwCausasActivasFinal{
         return $this;
     }
 
+    public function getCausa(): ?Causa
+    {
+        return $this->causa;
+    }
+
+    public function setCausa(?Causa $causa): self
+    {
+        $this->causa = $causa;
+
+        return $this;
+    }
+     public function getDiasUltObservacion(): ?int
+    {
+        return $this->diasUltObservacion;
+    }
+
+    public function setDiasUltObservacion(?int $diasUltObservacion): self
+    {
+        $this->diasUltObservacion = $diasUltObservacion;
+
+        return $this;
+    }
 }

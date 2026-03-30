@@ -9,16 +9,13 @@ use App\Entity\Ticket;
 use App\Entity\TicketEstado;
 use App\Entity\TicketHistorial;
 use App\Entity\TicketTipo;
-use App\Entity\UsuarioTipo;
 use App\Form\TicketType;
 use App\Repository\ContratoRepository;
 use App\Repository\CuentaRepository;
 use App\Repository\EmpresaRepository;
-use App\Repository\GrupoRepository;
 use App\Repository\TicketEstadoRepository;
 use App\Repository\TicketHistorialRepository;
 use App\Repository\TicketRepository;
-use App\Repository\TicketTipoRepository;
 use App\Repository\TicketTipoSolicitudRepository;
 use App\Repository\UsuarioCuentaRepository;
 use App\Repository\UsuarioGrupoRepository;
@@ -29,7 +26,6 @@ use Doctrine\ORM\EntityRepository;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -355,6 +351,7 @@ class TicketController extends AbstractController
                             UsuarioGrupoRepository $usuarioGrupoRepository): Response
     {
         $user=$this->getUser();
+        $usuarioActual=$this->getUser();
         $rechazado = false;
         $usuarioGrupo = $usuarioGrupoRepository->findOneBy(['grupo'=>$ticket->getContrato()->getGrupo()]);
         $usuarioReporte=$usuarioGrupo->getUsuario()->getNombre();
@@ -364,6 +361,7 @@ class TicketController extends AbstractController
         $form->handleRequest($request);
         $habilitarConfirmar=0;
         if($ticket->getEstado()->getId()==3){
+
             if($ticket->getOrigen()->getId()==$user->getId()){
                 $habilitarConfirmar=1;
             }
@@ -481,7 +479,7 @@ class TicketController extends AbstractController
             $rechazado = true;
         }
          
-
+        echo "Hbilitar confirmar: ".$habilitarConfirmar;
         return $this->render('ticket/gestion.html.twig', [
             'ticket' => $ticket,
             'ticketTipo'=>$ticket->getTicketTipo(),
@@ -492,7 +490,7 @@ class TicketController extends AbstractController
             'rechazado'=>$rechazado,
             'usuarioReporte'=>$usuarioReporte,
             'habilitarConfirmar'=>$habilitarConfirmar,
-            'usuarioIdActual'=>$user->getId(),
+            'usuarioIdActual'=>$usuarioActual->getId(),
             'usuarioIdOrigenTicket'=>$ticket->getOrigen()->getId(),
             'usuarioIdEncargadoTicket'=>$ticket->getEncargado()->getId()
             

@@ -37,7 +37,7 @@
                     
                     
                     {% if ticket.estado.id == 4 %}
-                        
+                        <p>paso antes de confirmar</p>
                             {{ include('ticket/_cerrado.html.twig') }}
                             
                     {% endif %}
@@ -54,13 +54,7 @@
                             {{ include('ticket/_asignar.html.twig') }}
 
                         {% endif %}
-                        {% if ticket.estado.id == 3 %}
-                    
-                            {{ include('ticket/_cerrar.html.twig') }}
-                            {% if habilitarConfirmar == 1 %}
-                                 {{ include('ticket/_confirmacion.html.twig') }}
-                            {% endif %}
-                        {% endif %}
+                        
                         
                     {% else %}
                         {% if ticket.estado.id == 2 %}
@@ -70,8 +64,17 @@
                             
                             
                         {% endif %}
+                        
                     {% endif %}
-                    
+                    {% if ticket.estado.id == 3 %}
+                        <p>paso antes de confirmar</p>
+                            {{ include('ticket/_cerrar.html.twig') }}
+                          
+                            {% if habilitarConfirmar == 1 %}
+                            paso despues de confirmar
+                                 {{ include('ticket/_confirmacion.html.twig') }}
+                            {% endif %}
+                        {% endif %}
                 </div>
             </div>
             </section>

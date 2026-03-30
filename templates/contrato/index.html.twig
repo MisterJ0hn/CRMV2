@@ -53,12 +53,8 @@
                         <!--<th><i class="fas fa-search text-info"></i></th>-->
                         <th><i class="fas fa-traffic-light"></i></th>
                         <th><i class="fas fa-star text-secondary"></i></th>
-<<<<<<< Updated upstream
-                        <th>Acciones</th>
-=======
                         <th><i class="far fa-credit-card text-success"></i></th>
                         <th><i class="fas fa-ellipsis-h ml-1"></i></th>
->>>>>>> Stashed changes
                         
                     </tr>
                 </thead>
@@ -90,13 +86,11 @@
                                 <input type="hidden" class="pago" value="{{pago|date('Y-m-d')}}">
                                 {{semaforoContrato(pago|date('Y-m-d'))|raw}}
                             {% endif %}
-                        </td>
-                        <td>{{ getVip(contrato.vip)|raw }}</td>
-                        {% if sesion.getSesion.usuarioTipo.id in [1,3,4,6,8,7] %}
+                        </td>                       
                         <td>
                         {% if contrato.vip == 1 %}
                      
-                            {{contrato.vencimientoId?getVip(0)|raw:getVip(1)|raw}}
+                            {{contrato.moroso==0?getVip(1)|raw:getVip(0)|raw}}
                             
                         {% endif %}
                         </td>
@@ -125,67 +119,67 @@
                         
 
                         
-                        {% if sesion.getSesion.usuarioTipo.id in [1,8,3,11] %}
-                            {% for audio in contrato.contratoAudios %}
-                            {% set numero=random() %}
+                            {% if sesion.getSesion.usuarioTipo.id in [1,8,3,11] %}
+                                {% for audio in contrato.contratoAudios %}
+                                {% set numero=random() %}
 
-                                    <div class="grAudio{{numero}}">
-                                        
-                                        <button type="button" class="btn btn-warning btn-sm btn{{numero}} " ><i class="fas fa-play"></i></button> 
-                                        <a href="#" class="btn btn-danger btn-sm btnCerrar{{numero}} " style="display:hidden"><i class="fas fa-trash-alt"></i></a>
-                                        
-                                    </div>
-                                    <audio class="audio{{numero}}" id="audio{{numero}}">
-                                        <source src="{{audio_contratos}}{{audio.url}}"  type="audio/mp3">
-                                    </audio>
-                                    <script>
-                                        var v{{numero}} = document.getElementById("audio{{numero}}");
-                                        v{{numero}}.pause();
-                                        $('btn{{numero}}').html('<i class="fas fa-play"></i>');
-                                        sound = false;
-                                        $(".btn{{numero}}").click(function(){
-                                            console.log({{numero}});
-                                            //v{{numero}}.play();
-                                            if (!sound) {
-                                                v{{numero}}.play();
-                                                $(this).html('<i class="fas fa-pause"></i>');
-                                                sound = true;
-                                            } else {
-                                                v{{numero}}.pause();
-                                                $(this).html('<i class="fas fa-play"></i>');
-                                                sound = false;
-                                            } 
-                                        });
-                                        $('.btnCerrar{{numero}}').hide();
-                                        $(".grAudio{{numero}}").hover(function(){
-                                            $('.btnCerrar{{numero}}').show();
-                                        },function() {
-                                                $('.btnCerrar{{numero}}').hide();
-                                        });
-                                        $('.btnCerrar{{numero}}').click(function(){
-                                            var respuesta=confirm("Esta seguro de eliminar este Audio?");
-                                            if(respuesta){
-                                                window.location.href="{{path('contrato_audio_delete',{'id':contrato.id}) }}";
-                                            }
-                                        });
+                                        <div class="grAudio{{numero}}">
+                                            
+                                            <button type="button" class="btn btn-warning btn-sm btn{{numero}} " ><i class="fas fa-play"></i></button> 
+                                            <a href="#" class="btn btn-danger btn-sm btnCerrar{{numero}} " style="display:hidden"><i class="fas fa-trash-alt"></i></a>
+                                            
+                                        </div>
+                                        <audio class="audio{{numero}}" id="audio{{numero}}">
+                                            <source src="{{audio_contratos}}{{audio.url}}"  type="audio/mp3">
+                                        </audio>
+                                        <script>
+                                            var v{{numero}} = document.getElementById("audio{{numero}}");
+                                            v{{numero}}.pause();
+                                            $('btn{{numero}}').html('<i class="fas fa-play"></i>');
+                                            sound = false;
+                                            $(".btn{{numero}}").click(function(){
+                                                console.log({{numero}});
+                                                //v{{numero}}.play();
+                                                if (!sound) {
+                                                    v{{numero}}.play();
+                                                    $(this).html('<i class="fas fa-pause"></i>');
+                                                    sound = true;
+                                                } else {
+                                                    v{{numero}}.pause();
+                                                    $(this).html('<i class="fas fa-play"></i>');
+                                                    sound = false;
+                                                } 
+                                            });
+                                            $('.btnCerrar{{numero}}').hide();
+                                            $(".grAudio{{numero}}").hover(function(){
+                                                $('.btnCerrar{{numero}}').show();
+                                            },function() {
+                                                    $('.btnCerrar{{numero}}').hide();
+                                            });
+                                            $('.btnCerrar{{numero}}').click(function(){
+                                                var respuesta=confirm("Esta seguro de eliminar este Audio?");
+                                                if(respuesta){
+                                                    window.location.href="{{path('contrato_audio_delete',{'id':contrato.id}) }}";
+                                                }
+                                            });
 
+                                            
+                                        </script>
                                         
-                                    </script>
-                                    
+                                {% else %}
+                                    <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#exampleModal" data-contrato="{{contrato.id}}"><i class="fas fa-upload"></i></button>
+        
+                                {% endfor %}
+                                <a href="{{ path('contrato_cartera', {'id': contrato.id}) }}" type="button" class="btn btn-info btn-sm" ><i class="fas fa-briefcase"></i></a>
+                        
+                            {% endif %}
+
+                            {% if contrato.pdf is null %}
+                                <button type="button" class="btn btn-secondary btn-sm"><i class="fas fa-file-pdf"></i></button>
                             {% else %}
-                                <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#exampleModal" data-contrato="{{contrato.id}}"><i class="fas fa-upload"></i></button>
-    
-                            {% endfor %}
-                            <a href="{{ path('contrato_cartera', {'id': contrato.id}) }}" type="button" class="btn btn-info btn-sm" ><i class="fas fa-briefcase"></i></a>
-                     
-                        {% endif %}
 
-                        {% if contrato.pdf is null %}
-                               <button type="button" class="btn btn-secondary btn-sm"><i class="fas fa-file-pdf"></i></button>
-                        {% else %}
-
-                                <a href="{{url_web}}{{pdf_contrato}}{{contrato.pdf}}" class="btn btn-success btn-sm"><i class="fas fa-file-pdf"></i></a>
-                        {% endif %}
+                                    <a href="{{url_web}}{{pdf_contrato}}{{contrato.pdf}}" class="btn btn-success btn-sm"><i class="fas fa-file-pdf"></i></a>
+                            {% endif %}
                             <a href="{{ path('contrato_show', {'id': contrato.id}) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>
                             <a href="{{ path('contrato_edit', {'id': contrato.id}) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
                         

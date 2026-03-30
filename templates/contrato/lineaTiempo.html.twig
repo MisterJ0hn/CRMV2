@@ -354,15 +354,23 @@
 
         <!-- CUADERNO -->
         <h6><strong>Historia Causa Cuaderno</strong></h6>
-        <select id="m_cuaderno" class="form-select w-25 mb-3" onchange="filtrarPorCuaderno()">
-            
-        </select>
-        <button class="btn btn-warning" data-toggle="modal" data-target="#informacionReceptorModal"><i class="fas fa-folder"></i></button>
+        <div class="form-group row">
+            <div class="col-sm-12 col-md-4">
+                <select id="m_cuaderno" class="form-control " onchange="filtrarPorCuaderno()">
+                    
+                </select>
+            </div>
+            <div class="col-sm-12 col-md-4">
+
+                <button class="btn btn-warning" data-toggle="modal" data-target="#informacionReceptorModal"><i class="fas fa-folder"></i></button>
+            </div>
+
+        </div>
 
         <!-- TABS -->
         <ul class="nav nav-tabs mb-3">
             <li class="nav-item">
-                <a class="nav-link active" datatoggle="tab" href="#tabHistoria">Historia</a>
+                <a class="nav-link active" data-toggle="tab" href="#tabHistoria">Historia</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" href="#tabLitigantes">Litigantes</a>

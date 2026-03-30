@@ -126,23 +126,26 @@
                     <tr>
                         <th>{{ knp_pagination_sortable(cuotas, 'Folio', 'contrato.folio') }} {% if cuotas.isSorted('contrato.folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>{{ knp_pagination_sortable(cuotas, 'AgendaId', 'contrato.agenda.id') }} {% if cuotas.isSorted('contrato.agenda.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(cuotas, 'Equipo', 'equipoTrabajo') }} {% if cuotas.isSorted('equipoTrabajo') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        
                         <th>{{ knp_pagination_sortable(cuotas, 'Lote', 'contrato.idLote.nombre') }} {% if cuotas.isSorted('contrato.idLote.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <!--<th>{{ knp_pagination_sortable(cuotas, 'Telefono', 'contrato.telefono') }} {% if cuotas.isSorted('contrato.telefono') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         -->
-                        <th>Cobrador</th>
+                      <th>{{ knp_pagination_sortable(cuotas, 'Cobrador', 'cobrador.nombre') }} {% if cuotas.isSorted('cobrador.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        
                         <th>{{ knp_pagination_sortable(cuotas, 'Cliente', 'contrato.nombre') }} {% if cuotas.isSorted('contrato.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         
                         <!--<th>{{ knp_pagination_sortable(cuotas, 'Rut', 'contrato.rut') }} {% if cuotas.isSorted('contrato.rut') %} <i class="fas fa-sort"></i>{% endif %}</th>-->
                         <!--<th>{{ knp_pagination_sortable(cuotas, 'Fecha Contrato', 'contrato.fechaCreacion') }} {% if cuotas.isSorted('contrato.fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>-->
-                        <th>{{ knp_pagination_sortable(cuotas, 'Vcto', 'fechaPago') }} {% if cuotas.isSorted('fechaPago') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(cuotas, 'CuotaMora', 'fechaPago') }} {% if cuotas.isSorted('fechaPago') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>D.Mora</th>
                         
                         <!--<th>DSG</th>-->
-                        <th>V.Cuota</th>
+                        <th>$Cuota</th>
                         <th>$Mora</th>
                         <th>U.Pago</th>
                         <th>{{ knp_pagination_sortable(cuotas, 'U.Gestión', 'contrato.fechaUltimaGestion') }} {% if cuotas.isSorted('contrato.fechaUltimaGestion') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(cuotas, 'U.Rpta', 'contrato.ultimaFuncion') }} {% if cuotas.isSorted('contrato.ultimaFuncion') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(cuotas, 'U.Rspta', 'contrato.ultimaFuncion') }} {% if cuotas.isSorted('contrato.ultimaFuncion') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>{{ knp_pagination_sortable(cuotas, 'Compromiso', 'contrato.fechaCompromiso') }} {% if cuotas.isSorted('contrato.fechaCompromiso') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>C.Pgda</th>
                         <th>{{ knp_pagination_sortable(cuotas, 'Q.Gestión', 'contrato.qMov') }} {% if cuotas.isSorted('contrato.qMov') %} <i class="fas fa-sort"></i>{% endif %}</th>
@@ -167,14 +170,15 @@
                     <tr>
                         <td>{{ contrato.folio }}</td>
                         <td>{{ contrato.agenda.id }}</td>
+                         <td align="center">
+                            {{ cuota.equipoTrabajo }}
+                         </td>
                         <td align="center">{{ contrato.idLote.nombre|default('') }}</td>
                         
                        <!-- <td><a href="https://api.whatsapp.com/send?phone={{ contrato.telefono }}&text=" target="_blank">{{ contrato.telefono }}</a></td>-->
                         <td>
-                            {% if contrato.idLote.usuarioLotes is defined %}
-                                {% for usuarioLote in contrato.idLote.usuarioLotes %}
-                                {{ usuarioLote.usuario }}
-                                {% endfor %}
+                            {% if cuota.cobrador %}
+                                {{ cuota.cobrador.nombre }}
                             {% endif %}
                         </td>
                         <td>{{ contrato.nombre }}</td>

@@ -47,7 +47,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
         }
     }
 
-        public function findBySuscripcion($filtro=null, $folio=null, $estado=null, $fecha=null, $cerrador=null){
+    public function findBySuscripcion($filtro=null, $folio=null, $estado=null, $fecha=null, $cerrador=null){
         $query=$this->createQueryBuilder('c');
         $query->join('c.contrato','co');
         $query->join('co.agenda','a');
@@ -89,7 +89,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
         $query->join('c.contrato','co');
         $query->join('co.agenda','a');
         $query->join('a.cuenta','cu');
-
+        $query->andWhere('a.status not in (13,15)');
         $query->andWhere('co.aceptaSuscripcion = true');
 
 
@@ -124,7 +124,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
         $query->join('c.contrato','co');
         $query->join('co.agenda','a');
         $query->join('a.cuenta','cu');
-
+        $query->andWhere('a.status not in (13,15)');
         $query->andWhere('co.aceptaSuscripcion = true');
 
 
@@ -160,7 +160,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
         $query->join('c.contrato','co');
         $query->join('co.agenda','a');
         $query->join('a.cuenta','cu');
-
+        $query->andWhere('a.status not in (13,15)');
         $query->andWhere('co.aceptaSuscripcion = true');
 
 

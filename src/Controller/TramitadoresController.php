@@ -346,15 +346,11 @@ class TramitadoresController extends AbstractController
                 $cartera->setAsignado(false);
                 $cartera->setEstado(1);
                 $entityManager->persist($cartera);
-                $entityManager->flush();
-
-       
+                $entityManager->flush();       
             }
 
-            if(isset($_POST['cboCarteras'])){
-                
-                $carteras=$_POST['cboCarteras'];
-                
+            if(isset($_POST['cboCarteras'])){                
+                $carteras=$_POST['cboCarteras'];                
                 foreach($carteras as $_cartera){
                     $cartera=$carteraRepository->find($_cartera);
                     $usuarioCartera=new UsuarioCartera();
@@ -368,14 +364,11 @@ class TramitadoresController extends AbstractController
 
                     $entityManager->persist($cartera);
                     $entityManager->flush();
-                    $contratoRepository->updateTicketPorCartera($usuario->getId(),$cartera->getId());
+                   // $contratoRepository->updateTicketPorCartera($usuario->getId(),$cartera->getId());
                     $contratoRepository->updateTramitadorCartera($usuario->getId(),$cartera->getId());
-
                 }
             }
 
-            echo "estado cartera ".$usuario->getEstadoCartera();
-            echo "<br>";
             if($usuario->getEstadoCartera()==true){
                 $usuarioCarteras=$usuarioCarteraRepository->findBy(['usuario'=>$usuario]);
                 foreach ($usuarioCarteras as $usuarioCartera) {
@@ -468,7 +461,7 @@ class TramitadoresController extends AbstractController
                 $entityManager->flush();
 
                 $cartera->setAsignado(false);
-
+                //$cartera->setEstado(1);
                 $entityManager->persist($cartera);
                 $entityManager->flush();
 

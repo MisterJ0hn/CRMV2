@@ -96,6 +96,11 @@ class Configuracion
      */
     private $claveEncriptacionDescargas;
 
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $diasMorisidadVip;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -288,6 +293,18 @@ class Configuracion
     public function setClaveEncriptacionDescargas(?string $claveEncriptacionDescargas): self
     {
         $this->claveEncriptacionDescargas = $claveEncriptacionDescargas;
+
+        return $this;
+    }
+
+    public function getDiasMorisidadVip(): ?int
+    {
+        return $this->diasMorisidadVip;
+    }
+
+    public function setDiasMorisidadVip(?int $diasMorisidadVip): self
+    {
+        $this->diasMorisidadVip = $diasMorisidadVip;
 
         return $this;
     }

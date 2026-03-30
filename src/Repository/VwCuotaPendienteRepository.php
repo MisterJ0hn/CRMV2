@@ -237,6 +237,141 @@ class VwCuotaPendienteRepository extends ServiceEntityRepository
             ->getResult()
         ;
     }
+    public function findVencimientoIncumplimiento($usuario=null,$empresa=null,$compania=null,$filtro=null,$tipoUsuario=null,$vigente=true, $otros=null,$conrestriccion=true,$esCobranza=false,$segmento=null){
+        
+         /**JRM: 2025-11-13 - Se agrega función de si la deuda es menor a la deuda minima, 
+        *devuelva la fecha de la siguiente cuota
+        */
+
+        $query=$this->createQueryBuilder('c');
+        $query->join('c.contrato','co');
+        $query->join('co.agenda','a');
+        $query->join('a.cuenta','cu');
+        
+        if($conrestriccion==true){
+            if($vigente){
+                if($esCobranza){
+                    /**
+                     * JRM: 2025-12-20 - Se agrega filtro por segmento, para que muestre solo las cuotas mayores a la 3
+                     */
+                    
+                    $query->andWhere('c.numero = 1');
+           
+                    
+                }                                
+                $query->andWhere(' co.isFinalizado = false or co.isFinalizado is null'); 
+
+            }else{
+                $query->andWhere(' co.isFinalizado=true');
+            }
+        }
+        
+
+        if(!is_null($empresa)){
+            
+            $query->andWhere('cu.empresa = '.$empresa);
+        }
+        switch($tipoUsuario){
+            case 6://Abogado
+                if(!is_null($usuario)){
+                    $query->andWhere('a.abogado = '.$usuario)
+                    ->andWhere("DATEDIFF(now(),c.fechaPago)<=30")
+                    ->andWhere("c.numero=1");
+
+                }
+                break;
+            case 7://Tramitador
+                if(!is_null($usuario))
+                    $query->andWhere('co.tramitador = '.$usuario);
+                break;
+        }
+        
+        
+        if(!is_null($filtro)){ 
+            $query->andWhere("(co.nombre like '%$filtro%' or co.rut like '%$filtro%')")
+         ;
+
+        }
+        if(!is_null($compania)){
+            $query->andWhere('a.cuenta = '.$compania);
+        }
+        
+        if(!is_null($otros) && $otros!=''){ 
+            $query->andWhere($otros)
+         ;
+
+        }
+        $query->orderBy("co.fechaCreacion","Desc");
+        $query->groupBy('c.contrato');
+        
+        return $query->getQuery()
+            ->getResult()
+        ;
+    }
+public function findVencimientoIncumplimientoGroup($usuario=null,$empresa=null,$compania=null,$filtro=null,$tipoUsuario=null,$vigente=true, $otros=null,$conrestriccion=true,$esCobranza=false,$segmento=null){
+        $query=$this->createQueryBuilder('c');
+
+        $query->select(array('c','count(distinct c.id)','sum(c.monto)'));
+        $query->join('c.contrato','co');
+        $query->join('co.agenda','a');
+        $query->join('a.cuenta','cu');
+        
+        if($conrestriccion==true){
+            if($vigente){
+                if($esCobranza){
+                     /**
+                     * JRM: 2025-12-20 - Se agrega filtro por segmento, para que muestre solo las cuotas mayores a la 3
+                     */
+                    $query->andWhere('c.numero = 1');
+                }
+                $query->andWhere(' co.isFinalizado = false or co.isFinalizado is null'); 
+
+            }else{
+                $query->andWhere(' co.isFinalizado=true');
+            }
+        }
+        
+
+        if(!is_null($empresa)){
+            
+            $query->andWhere('cu.empresa = '.$empresa);
+        }
+        switch($tipoUsuario){
+            case 6://Abogado
+                if(!is_null($usuario)){
+                    $query->andWhere('a.abogado = '.$usuario)
+                    ->andWhere("DATEDIFF(now(),c.fechaPago)<=30")
+                    ->andWhere("c.numero=1");
+
+                }
+                break;
+            case 7://Tramitador
+                if(!is_null($usuario))
+                    $query->andWhere('co.tramitador = '.$usuario);
+                break;
+        }
+        
+        
+        if(!is_null($filtro)){ 
+            $query->andWhere("(co.nombre like '%$filtro%' or co.rut like '%$filtro%')")
+         ;
+
+        }
+        if(!is_null($compania)){
+            $query->andWhere('a.cuenta = '.$compania);
+        }
+        
+        if(!is_null($otros) && $otros!=''){ 
+            $query->andWhere($otros)
+         ;
+
+        }
+    
+        return $query->getQuery()
+            ->getResult()
+        ;
+    }
+
 
     public function findPagado($usuario=null,$empresa=null,$compania=null,$filtro=null,$tipoUsuario=null,$vigente=true, $otros=null,$conrestriccion=true,$esCobranza=false){
         $query=$this->createQueryBuilder('c')

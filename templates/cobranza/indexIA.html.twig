@@ -148,10 +148,8 @@
                         
                        
                         <td>
-                            {% if contrato.idLote.usuarioLotes is defined %}
-                                {% for usuarioLote in contrato.idLote.usuarioLotes %}
-                                {{ usuarioLote.usuario }}
-                                {% endfor %}
+                            {% if cuota.cobrador %}
+                                {{ cuota.cobrador.nombre }}
                             {% endif %}
                         </td>
                         <td>{{ contrato.nombre }}</td>

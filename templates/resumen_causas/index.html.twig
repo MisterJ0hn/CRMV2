@@ -28,25 +28,7 @@
       
         </div>
         {% endif %}
-         {% if bTipoCuenta=='alDia' or bTipoCuenta=='' %}
-        <div class="col-sm-6 col-md-3">
-            
-            <div class="info-box">
-                <span class="info-box-icon bg-info"><i class="fas fa-search"></i></span>
-    
-                <div class="info-box-content">
-                <span class="info-box-text">Causas Al Día</span>
-                <span class="info-box-number">{{resumen[0].causasAlDia}}</span>
-                {% set total= total + resumen[0].causasAlDia %}
-                <a href="javascript:enviar('alDia')" class="small-box-footer" >
-                    Ver Más <i class="fas fa-arrow-circle-right"></i>
-                </a>
-                </div>
-                <!-- /.info-box-content -->
-            </div>
-      
-        </div>
-        {% endif %}
+         
         {% if bTipoCuenta=='clientesActivos' or bTipoCuenta=='' %} 
         <div class="col-sm-6 col-md-3">
             
@@ -104,25 +86,7 @@
       
         </div>
         {% endif %}
-        {% if bTipoCuenta=='clientesActivosVIP' or bTipoCuenta=='' %}
-        <div class="col-sm-6 col-md-3">
-            
-            <div class="info-box">
-                <span class="info-box-icon bg-info"><i class="fas fa-search"></i></span>
-    
-                <div class="info-box-content">
-                <span class="info-box-text">Clientes Activos VIP</span>
-                <span class="info-box-number">{{resumen[0].clientesActivosVIP}}</span>
-                {% set total= total + resumen[0].clientesActivosVIP %}
-                <a href="javascript:enviar('clientesActivosVIP')" class="small-box-footer" >
-                    Ver Más <i class="fas fa-arrow-circle-right"></i>
-                </a>
-                </div>
-                <!-- /.info-box-content -->
-            </div>
-      
-        </div>
-        {% endif %}
+        
         {% if bTipoCuenta=='clientesAlDiaVIP' or bTipoCuenta=='' %}
         <div class="col-sm-6 col-md-3">
             
@@ -149,7 +113,7 @@
                 <span class="info-box-icon bg-info"><i class="fas fa-search"></i></span>
     
                 <div class="info-box-content">
-                <span class="info-box-text">Causas activas con ROl</span>
+                <span class="info-box-text">Causas Al Día con ROl</span>
                 <span class="info-box-number">{{resumen[0].causasActivasConRol}}</span>
                 {% set total= total + resumen[0].causasActivasConRol %}
                 <a href="javascript:enviar('conRol')" class="small-box-footer" >
@@ -168,7 +132,7 @@
                 <span class="info-box-icon bg-info"><i class="fas fa-search"></i></span>
     
                 <div class="info-box-content">
-                <span class="info-box-text">Causas activas sin Rol</span>
+                <span class="info-box-text">Causas Al Día sin Rol</span>
                 <span class="info-box-number">{{resumen[0].causasActivasSinRol}}</span>
                 {% set total= total + resumen[0].causasActivasSinRol %}
                 <a href="javascript:enviar('sinRol')" class="small-box-footer" >

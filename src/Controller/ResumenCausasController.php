@@ -318,7 +318,9 @@ class ResumenCausasController extends AbstractController
      */
     public function excel(Request $request,
                         VwCausasActivasFinalRepository $vwCausasActivasFinalRepository,
-                        VwClientesActivosFinalRepository $vwClientesActivosFinalRepository, AgendaRepository $agendaRepository, ConfiguracionRepository $configuracionRepository): Response
+                        VwClientesActivosFinalRepository $vwClientesActivosFinalRepository, 
+                        AgendaRepository $agendaRepository, 
+                        ConfiguracionRepository $configuracionRepository): Response
     {
         
         $this->denyAccessUnlessGranted('view','resumen_causas_excel');
@@ -409,16 +411,21 @@ class ResumenCausasController extends AbstractController
         $sheet->setCellValue('G1', 'Activo');
         $sheet->setCellValue('H1', 'Moroso');
         $sheet->setCellValue('I1', 'VIP');
-        $sheet->setCellValue('J1', 'Rol');
-        $sheet->setCellValue('K1', 'U.ObservaciónCausa');
+        $sheet->setCellValue('J1', 'Rol/Rit');
+        $sheet->setCellValue('K1', 'CausaId');
+        //$sheet->setCellValue('L1', 'U.ObservaciónCausa');
         $sheet->setCellValue('L1', 'C.Finalizada');
         $sheet->setCellValue('M1', 'Telefono Cliente');
-        $sheet->setCellValue('N1', 'U.ObservacionCliente');
-
+        //$sheet->setCellValue('O1', 'U.ObservacionCliente');
+        $sheet->setCellValue('N1', 'Ult.Observacion');
         $sheet = $spreadSheet->getActiveSheet();
         $i=2;
         foreach($queryresumen as $causa){
-           
+            if($causa->getCausa()->getLetra()!=null && $causa->getCausa()->getRol()!=null && $causa->getCausa()->getAnio()!=null){
+                $rolrit=$causa->getCausa()->getLetra()."-".$causa->getCausa()->getRol()."-".$causa->getCausa()->getAnio();
+            }else{
+                $rolrit="";
+            }
             $sheet->setCellValue('A'.$i, $causa->getCuentaNombre());
             $sheet->setCellValue('B'.$i, $causa->getAgendaId());
             $sheet->setCellValue('C'.$i, $causa->getFolio());
@@ -428,15 +435,17 @@ class ResumenCausasController extends AbstractController
             $sheet->setCellValue('G'.$i, $causa->getActivo());
             $sheet->setCellValue('H'.$i, $causa->getMoroso());
             $sheet->setCellValue('I'.$i, $causa->getVip());
-            $sheet->setCellValue('J'.$i, $causa->getRol());
-            $sheet->setCellValue('K'.$i, $causa->getFechaRegistroObservacion()?$causa->getFechaRegistroObservacion():"");
+            $sheet->setCellValue('J'.$i, $rolrit);
+            $sheet->setCellValue('K'.$i, $causa->getRol());
+           // $sheet->setCellValue('L'.$i, $causa->getFechaRegistroObservacion()?$causa->getFechaRegistroObservacion():"");
             $sheet->setCellValue('L'.$i, $causa->getCausaFinalizada());
             if($bTipoCuenta=="clientesActivosVIP" || $bTipoCuenta=="clientesAlDiaVIP"){
                 $agenda=$agendaRepository->find($causa->getAgendaId());
            
                 $sheet->setCellValue('M'.$i, $agenda?$agenda->getTelefonoCliente():"");
             }
-            $sheet->setCellValue('N'.$i, $causa->getFechaObservacionCliente()?$causa->getFechaObservacionCliente():"");
+            $sheet->setCellValue('N'.$i, $causa->getDiasUltObservacion() );
+           // $sheet->setCellValue('O'.$i, $causa->getFechaObservacionCliente()?$causa->getFechaObservacionCliente():"");
             $i++;
         }
 

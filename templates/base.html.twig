@@ -543,7 +543,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
                     $('#staticBackdrop').modal('show');
                 {% endif %}
-                document.addEventListener('contextmenu', event => event.preventDefault());
+                /*document.addEventListener('contextmenu', event => event.preventDefault());
                 document.addEventListener('keydown', function(e) {
                 // Verifica si la tecla presionada es 'c' y si la tecla Ctrl (o Cmd en Mac) está activa
                 if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
@@ -552,13 +552,13 @@ scratch. This page gets rid of all links and provides the needed markup only.
                 }
                 });
                 document.addEventListener("keyup", function(e) {
-                // El código 44 corresponde a la tecla Impr Pant
-                if (e.key === 'PrintScreen' || e.keyCode === 44) {
-                    // Opción 1: Limpiar el portapapeles (requiere permisos)
-                    navigator.clipboard.writeText('');
-                    alert('La captura de pantalla está deshabilitada en este sitio.');
-                }
-            }, false);
+                    // El código 44 corresponde a la tecla Impr Pant
+                    if (e.key === 'PrintScreen' || e.keyCode === 44) {
+                        // Opción 1: Limpiar el portapapeles (requiere permisos)
+                        navigator.clipboard.writeText('');
+                        alert('La captura de pantalla está deshabilitada en este sitio.');
+                    }
+                }, false);*/
             </script>
         {% endblock %}
    <!-- Control Sidebar -->

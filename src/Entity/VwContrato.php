@@ -540,7 +540,10 @@ class VwContrato
      * @ORM\Column(type="text", nullable=true)
      */
     private $ultObservacion;
-
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $moroso;
     public function __construct()
     {
         $this->contratoRols = new ArrayCollection();
@@ -2068,6 +2071,16 @@ class VwContrato
 
         return $this;
     }
+    public function getMoroso(): ?int
+    {
+        return $this->moroso;
+    }
 
+    public function setMoroso(?int $moroso): self
+    {
+        $this->moroso = $moroso;
+
+        return $this;
+    }
     
 }
