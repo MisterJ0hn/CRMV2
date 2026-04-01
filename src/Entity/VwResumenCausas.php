@@ -68,6 +68,10 @@ class VwResumenCausas{
      * @ORM\Column(type="integer")
      */
     private $causasActivasFinalizadas;
+    /**
+     * @ORM\Column(type="datetime")
+     */
+    private $fechaActualizacion;
 
     public function getCuentaId(): ?int
     {
@@ -212,4 +216,14 @@ class VwResumenCausas{
         return $this;
     }
 
+    public function getFechaActualizacion(): ?\DateTime
+    {
+        return $this->fechaActualizacion;
+    }
+    public function setFechaActualizacion(?\DateTime $fechaActualizacion): self
+    {
+        $this->fechaActualizacion = $fechaActualizacion;
+        return $this;
+    }
 }
+

@@ -13,6 +13,7 @@ use App\Repository\MateriaEstrategiaRepository;
 use Doctrine\ORM\EntityManager;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -89,6 +90,21 @@ class CausaController extends AbstractController
             'causas' => $causas,
             
         ]);
+
+    }
+
+    /**
+     * @Route("/{id}/estado", name="causa_estado", methods={"GET"})
+     */
+    public function estado(Causa $causa,
+                            Request $request, 
+                            CausaRepository $causaRepository,
+                            MateriaEstrategiaRepository $materiaEstrategiaRepository,
+                            JuzgadoCuentaRepository $juzgadoCuentaRepository):JsonResponse
+    {
+        
+        
+        return new JsonResponse(['estado'=>$causa->getEstado()]);
 
     }
 

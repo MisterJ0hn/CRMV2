@@ -157,6 +157,7 @@ class PanelAbogadoController extends AbstractController
             case 3:
             case 4:
             case 1:
+            case 13:
                 $abogados=$usuarioRepository->findBy(['usuarioTipo'=>$usuarioTipoRepository->find(6),'estado'=>1]);
 
                 $query=$agendaRepository->findByPers($abogado,$user->getEmpresaActual(),$compania,$statues,$filtro,1,$fecha);

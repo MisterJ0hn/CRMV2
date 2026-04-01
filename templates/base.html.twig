@@ -151,6 +151,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
               {% if fechaUltimoIngreso is defined %}
                 <p> {{fechaUltimoIngreso?'Último Ingreso: ' ~ fechaUltimoIngreso|date('Y-m-d h:i'):''}}</p>
               {% endif %}
+              {% if fechaActualizacion is defined %}
+                <p> {{fechaActualizacion?'Fecha de Actualización: ' ~ fechaActualizacion|date('Y-m-d h:i'):''}}</p>
+              {% endif %}
               </li>
             </ol>
           </div><!-- /.col -->
@@ -221,6 +224,40 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
         
     	</div>
+        {# ── Geolocalización del usuario ── #}
+        <script>
+        (function () {
+            if (!navigator.geolocation) return;
+            if (sessionStorage.getItem('geo_enviado')) return;
+
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                var lat = pos.coords.latitude;
+                var lng = pos.coords.longitude;
+
+                // Reverse-geocoding con Nominatim (sin API key)
+                fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng, {
+                    headers: { 'Accept-Language': 'es' }
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var addr   = data.address || {};
+                    var ciudad = addr.city || addr.town || addr.village || addr.county || '';
+                    var pais   = addr.country || '';
+
+                    return fetch('{{ path("user_activity_log_geo") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ lat: lat, lng: lng, ciudad: ciudad, pais: pais })
+                    });
+                })
+                .then(function (r) {
+                    if (r.ok) sessionStorage.setItem('geo_enviado', '1');
+                })
+                .catch(function () {});
+            }, function () {}, { timeout: 8000 });
+        })();
+        </script>
+
         {% block javascripts %}
    
 
@@ -559,7 +596,9 @@ scratch. This page gets rid of all links and provides the needed markup only.
                         alert('La captura de pantalla está deshabilitada en este sitio.');
                     }
                 }, false);*/
+                
             </script>
+
         {% endblock %}
    <!-- Control Sidebar -->
 

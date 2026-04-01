@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass=VwClientesActivosFinalRepository::class)
- * @ORM\Table(name="vw_clientes_activos_final")
+ * @ORM\Table(name="temp_clientes_activos_final")
  */
 class VwClientesActivosFinal{
     /**
@@ -138,7 +138,10 @@ class VwClientesActivosFinal{
      * @ORM\Column(type="datetime",nullable=true)
      */
     private $fechaObservacionCliente;
-
+        /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $diasUltObservacion;
 
     public function getCuentaId()
     {
@@ -476,5 +479,15 @@ class VwClientesActivosFinal{
         $this->fechaObservacionCliente = $fechaObservacionCliente;
         return $this;
     }
+     public function getDiasUltObservacion(): ?int
+    {
+        return $this->diasUltObservacion;
+    }
 
+    public function setDiasUltObservacion(?int $diasUltObservacion): self
+    {
+        $this->diasUltObservacion = $diasUltObservacion;
+
+        return $this;
+    }
 }

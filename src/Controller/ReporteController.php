@@ -97,6 +97,7 @@ class ReporteController extends AbstractController
             case 3:
             case 1:
             case 4:
+            case 13:
                 $query=$agendaRepository->findByAgendReporte(null,$user->getEmpresaActual(),$compania,$statuesgroup,$filtro,0,$fecha);   
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
             break;

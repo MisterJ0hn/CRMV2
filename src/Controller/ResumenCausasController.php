@@ -45,7 +45,12 @@ class ResumenCausasController extends AbstractController
         }
        
         $resumen = $vwResumenCausasRepository->findGroupByTodo($companias);
-
+         $resumenCausa=$vwResumenCausasRepository->fechaActualizacion($companias);
+         $fechaActualizacion=null;
+         if($resumenCausa){
+            $fechaActualizacion=$resumenCausa->getFechaActualizacion();
+        }
+        
 /*
         
         switch ($bTipoCuenta) {
@@ -96,7 +101,7 @@ class ResumenCausasController extends AbstractController
             "companias"=>$companias,
             "bTipoCuenta"=>$bTipoCuenta,
             "bMateria"=>"familia",
-            
+            'fechaActualizacion'=>$fechaActualizacion,
         ]);
     }
 
@@ -120,7 +125,8 @@ class ResumenCausasController extends AbstractController
         }
        
         $resumen = $vwResumenCausasRepository->findGroupByTodo($companias);
-
+        $resumenCausa=$vwResumenCausasRepository->fechaActualizacion($companias);
+        
 
         
         /*switch ($bTipoCuenta) {
@@ -161,7 +167,11 @@ class ResumenCausasController extends AbstractController
             20 ,
             array('defaultSortFieldName' => 'id', 'defaultSortDirection' => 'desc'));
            
-        
+            $fechaActualizacion=null;
+
+        if($resumenCausa){
+            $fechaActualizacion=$resumenCausa->getFechaActualizacion();
+        }
         
         return $this->render('resumen_causas/index.html.twig', [
             'pagina' => 'Resumen Causas Civil',
@@ -171,6 +181,7 @@ class ResumenCausasController extends AbstractController
             "companias"=>$companias,
             "bTipoCuenta"=>$bTipoCuenta,
             "bMateria"=>"civil",
+            'fechaActualizacion'=>$fechaActualizacion,
             
             
         ]);
@@ -196,7 +207,11 @@ class ResumenCausasController extends AbstractController
         }
        
         $resumen = $vwResumenCausasRepository->findGroupByTodo($companias);
-
+         $resumenCausa=$vwResumenCausasRepository->fechaActualizacion($companias);
+         $fechaActualizacion=null;
+         if($resumenCausa){
+            $fechaActualizacion=$resumenCausa->getFechaActualizacion();
+        }
 
         /*
         switch ($bTipoCuenta) {
@@ -247,7 +262,7 @@ class ResumenCausasController extends AbstractController
             "companias"=>$companias,
             "bTipoCuenta"=>$bTipoCuenta,
             "bMateria"=>"tributaria",
-            
+            'fechaActualizacion'=>$fechaActualizacion,
             
         ]);
     }
@@ -421,10 +436,14 @@ class ResumenCausasController extends AbstractController
         $sheet = $spreadSheet->getActiveSheet();
         $i=2;
         foreach($queryresumen as $causa){
-            if($causa->getCausa()->getLetra()!=null && $causa->getCausa()->getRol()!=null && $causa->getCausa()->getAnio()!=null){
-                $rolrit=$causa->getCausa()->getLetra()."-".$causa->getCausa()->getRol()."-".$causa->getCausa()->getAnio();
+            if($bTipoCuenta=="clientesActivosVIP" || $bTipoCuenta=="clientesAlDiaVIP" || $bTipoCuenta=="clientesActivos"){
+                 $rolrit="";
             }else{
-                $rolrit="";
+                if($causa->getCausa()->getLetra()!=null && $causa->getCausa()->getRol()!=null && $causa->getCausa()->getAnio()!=null){
+                    $rolrit=$causa->getCausa()->getLetra()."-".$causa->getCausa()->getRol()."-".$causa->getCausa()->getAnio();
+                }else{
+                    $rolrit="";
+                }
             }
             $sheet->setCellValue('A'.$i, $causa->getCuentaNombre());
             $sheet->setCellValue('B'.$i, $causa->getAgendaId());

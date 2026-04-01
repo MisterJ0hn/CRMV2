@@ -65,16 +65,10 @@
         </div>
         
     {% endif %}
-    {% if mostrarVencimientoSeleccionado != "" %}
-        <div class="alert alert-success" role="alert">
-            <h4 class="alert-heading"> {{vencimientoSeleccionado.nombre}}</h4>
-        </div>
-        
-    {% endif %}
     </section>
     <div class="card">
         <div class="card-header">
-            <form action="" method="get" class="frmBuscar">
+            <form action="{{path("cobranza_index_incumplimiento")}}" method="get" class="frmBuscar">
             <input type="hidden" name="bStatus" id="bStatus" value="{{status|default('')}}">
                 <div class="row">
                     <div class="col-sm-12 col-md-3">
@@ -137,15 +131,15 @@
                         
                         <!--<th>{{ knp_pagination_sortable(cuotas, 'Rut', 'contrato.rut') }} {% if cuotas.isSorted('contrato.rut') %} <i class="fas fa-sort"></i>{% endif %}</th>-->
                         <!--<th>{{ knp_pagination_sortable(cuotas, 'Fecha Contrato', 'contrato.fechaCreacion') }} {% if cuotas.isSorted('contrato.fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>-->
-                        <th>{{ knp_pagination_sortable(cuotas, 'CuotaMora', 'fechaPago') }} {% if cuotas.isSorted('fechaPago') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(cuotas, 'Vcto', 'fechaPago') }} {% if cuotas.isSorted('fechaPago') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>D.Mora</th>
                         
                         <!--<th>DSG</th>-->
-                        <th>$Cuota</th>
+                        <th>V.Cuota</th>
                         <th>$Mora</th>
                         <th>U.Pago</th>
                         <th>{{ knp_pagination_sortable(cuotas, 'U.Gestión', 'contrato.fechaUltimaGestion') }} {% if cuotas.isSorted('contrato.fechaUltimaGestion') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(cuotas, 'U.Rspta', 'contrato.ultimaFuncion') }} {% if cuotas.isSorted('contrato.ultimaFuncion') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(cuotas, 'U.Rpta', 'contrato.ultimaFuncion') }} {% if cuotas.isSorted('contrato.ultimaFuncion') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>{{ knp_pagination_sortable(cuotas, 'Compromiso', 'contrato.fechaCompromiso') }} {% if cuotas.isSorted('contrato.fechaCompromiso') %} <i class="fas fa-sort"></i>{% endif %}</th>
                         <th>C.Pgda</th>
                         <th>{{ knp_pagination_sortable(cuotas, 'Q.Gestión', 'contrato.qMov') }} {% if cuotas.isSorted('contrato.qMov') %} <i class="fas fa-sort"></i>{% endif %}</th>
@@ -161,6 +155,7 @@
                     </tr>
                 </thead>
                 <tbody>
+    
     
                 {% for cuota in cuotas %}
               
@@ -219,7 +214,7 @@
                         <td>
                             <a href="{{ path('cobranza_lote', {'id': contrato.id}) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
                             <a href="{{ path('vercobranza_view', {'id': contrato.id}) }}" class="btn btn-success btn-sm"><i class="far fa-eye"></i></a>
-                            <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn btn-sm text-white bg-dark">LT</a>
+                            <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn  btn-sm text-white bg-dark">LT</a>
                             <a href="{{ path('anexo_index', {'id': contrato.id}) }}" class="btn btn-info btn-sm"><i class="fas fa-file"></i></a>
                         </td>
                     </tr>
@@ -274,7 +269,7 @@
     });
 
     $(".buscar").on('click',function(){
-        $(".frmBuscar").attr('action',"{{path('cobranza_index')}}");
+        $(".frmBuscar").attr('action',"{{path('cobranza_index_incumplimiento')}}");
         $(".frmBuscar").submit();
     });
 
@@ -282,8 +277,5 @@
         $("#bStatus").val(status);
         $(".frmBuscar").submit();
     }
-
-    
     </script>
-
 {% endblock %}

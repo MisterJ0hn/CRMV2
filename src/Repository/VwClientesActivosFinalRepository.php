@@ -33,6 +33,7 @@ class VwClientesActivosFinalRepository extends ServiceEntityRepository
                 break;
             case 'clientesAlDia':
                 $qb->andWhere('v.moroso = 0')
+                
                 ->distinct(true);
                 break;
             case 'clientesMorosos':
@@ -46,6 +47,7 @@ class VwClientesActivosFinalRepository extends ServiceEntityRepository
             case 'clientesAlDiaVIP':
                 $qb->andWhere('v.moroso = 0')
                 ->andWhere('v.vip = 1')
+                ->andWhere('v.causaFinalizada = 0')
                 ->distinct(true);
                 break;
             case 'conRol':

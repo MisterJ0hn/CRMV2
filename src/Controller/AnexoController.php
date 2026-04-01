@@ -77,6 +77,16 @@ class AnexoController extends AbstractController
                     ["id"=>3,"nombre"=>"Renegociación"]
                 ];
             }
+            if(trim($origen)==trim(OrigenAnexo::COBRANZA)){
+                $tiposAnexo=[
+                    ["id"=>3,"nombre"=>"Renegociación"]
+                ];
+            }
+            if(trim($origen)==trim(OrigenAnexo::INCUMPLIMIENTO)){
+                $tiposAnexo=[
+                    ["id"=>3,"nombre"=>"Renegociación"]
+                ];
+            }
         }
    
         return $this->render('anexo/crearAnexo.html.twig', [
@@ -599,7 +609,7 @@ class AnexoController extends AbstractController
      */
     public function pdf(ContratoAnexo $contratoAnexo)
     {
-        $this->denyAccessUnlessGranted('view','contrato');
+        $this->denyAccessUnlessGranted('view','anexo');
         $filename = sprintf('Anexo-'.$contratoAnexo->getId().'-%s.pdf',rand(0,9000));
        
         switch($contratoAnexo->getTipoAnexo()){

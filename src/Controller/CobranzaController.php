@@ -92,7 +92,7 @@ class CobranzaController extends AbstractController
         $error='';
         $status=1;
         $error_toast="";
-        
+        $request->getSession()->set('origen_anexo','cobranza');
         if($equipoTrabajoUsuario){
             $equipoTrabajovencimientos=$equipoTrabajoVencimientoRepository->findBy(['equipoTrabajo'=>$equipoTrabajoUsuario->getEquipoTrabajo()->getId()]);
             $vencimientosMap = array_map(function(EquipoTrabajoVencimiento $etv) {
@@ -483,7 +483,7 @@ class CobranzaController extends AbstractController
         $queryTotales="";
         $segmento="";
         
-       
+       $request->getSession()->set('origen_anexo','incumplimiento');
         //   "maximo ".$vencimiento->getValMax();
         //$vencimiento=$vencimientoArray[0];
         $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'soloPorAdmin'=>false],["valMin"=>'ASC']);

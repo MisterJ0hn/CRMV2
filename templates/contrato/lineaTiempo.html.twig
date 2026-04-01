@@ -211,7 +211,7 @@
                                             data-toggle="modal"
                                             data-target="#modalDetalleCivil"><i class="fas fa-eye"></i></button>
                                         {% elseif causa.estadoConsultaPjud =='Consultando' %}
-                                        <a href="" class="btn btn-sm btn-info"><i class="fas fa-clock"></i></a>
+                                        <a href="" class="btn btn-sm btn-info"><i class="fas fa-sync-alt fa-spin"></i></a>
                                         {% else %}
                                         <a href="#" class="btn btn-sm btn-secondary" onclick="generar_scrapping({{causa.id}});"><i class="fas fa-gavel"></i></a>
                                         {% endif %}

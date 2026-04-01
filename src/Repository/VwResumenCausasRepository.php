@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\VwResumenCausas;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -76,7 +77,8 @@ class VwResumenCausasRepository extends ServiceEntityRepository
                      SUM(v.clientesAlDiaVIP) as clientesAlDiaVIP, 
                      SUM(v.causasActivasConRol) as causasActivasConRol, 
                      SUM(v.causasActivasSinRol) as causasActivasSinRol, 
-                     SUM(v.causasActivasFinalizadas) as causasActivasFinalizadas');
+                     SUM(v.causasActivasFinalizadas) as causasActivasFinalizadas,
+                     v.fechaActualizacion as fechaActualizacion');
         if(!is_null($cuentaId)){
             $query->where('v.cuentaId in ('.$cuentaId.')');    
         
@@ -87,6 +89,18 @@ class VwResumenCausasRepository extends ServiceEntityRepository
 
         return $query->getQuery()
         ->getResult();
+    }
+
+    public function fechaActualizacion($cuentaId=null): ?VwResumenCausas
+    {
+        $query= $this->createQueryBuilder('v');
+        if(!is_null($cuentaId)){
+            $query->where('v.cuentaId in ('.$cuentaId.')');    
+        }
+
+        return $query->getQuery()
+        ->setMaxResults(1)
+        ->getOneOrNullResult();
     }
 
 }
