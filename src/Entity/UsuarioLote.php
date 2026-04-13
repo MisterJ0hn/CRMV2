@@ -28,6 +28,11 @@ class UsuarioLote
      */
     private $lote;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=EquipoTrabajo::class)
+     */
+    private $equipoTrabajo;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -53,6 +58,18 @@ class UsuarioLote
     public function setLote(?Lotes $lote): self
     {
         $this->lote = $lote;
+
+        return $this;
+    }
+
+    public function getEquipoTrabajo(): ?EquipoTrabajo
+    {
+        return $this->equipoTrabajo;
+    }
+
+    public function setEquipoTrabajo(?EquipoTrabajo $equipoTrabajo): self
+    {
+        $this->equipoTrabajo = $equipoTrabajo;
 
         return $this;
     }

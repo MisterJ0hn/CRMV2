@@ -1,0 +1,1 @@
+[Sun Mar 22 04:57:36.639805 2026] [core:error] [pid 4542] [client 147.93.146.163:48628] AH00126: Invalid URI in request POST /cgi-bin/.%2e/.%2e/.%2e/.%2e/.%2e/.%2e/.%2e/.%2e/.%2e/.%2e/bin/sh HTTP/1.1

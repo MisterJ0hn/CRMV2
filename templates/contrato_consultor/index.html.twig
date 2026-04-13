@@ -1,340 +1,203 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Contrato index{% endblock %}
+{% block title %}Contrato Consultor{% endblock %}
 
 {% block body %}
 <style>
-
 .contenedor-boton{
     position: relative;
     display: inline-flex;
     align-items: center;
 }
-
-/* menu oculto */
 .menu-botones{
     display: none;
     margin-right: 10px;
     white-space: nowrap;
 }
-
-/* botones horizontales */
 .menu-botones button{
     margin-right: 5px;
 }
 
+/* Skeleton */
+.skeleton-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 8px;
+}
+.skeleton-cell {
+    background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.3s infinite;
+    border-radius: 4px;
+    height: 14px;
+    flex-shrink: 0;
+}
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+.skeleton-header {
+    background: #f4f6f9;
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    gap: 8px;
+    border-bottom: 2px solid #dee2e6;
+}
+.skeleton-header .skeleton-cell {
+    background: linear-gradient(90deg, #d0d5dd 25%, #e4e8ef 50%, #d0d5dd 75%);
+    background-size: 200% 100%;
+    height: 13px;
+}
 </style>
-    <form action="" method="get" class="form-envio">               
-        <input type="hidden" name="bTipoCliente" class="bTipoCliente" value="{{bTipoCliente}}">
-        {{ include('/cuadrosBusquedas/busquedaContratoConsultor.html.twig') }}
-    </form>
 
-       
-    <div class="card card-primary card-outline card-outline-tabs">
-        <div class="card-header p-0 border-bottom-0">
-        <ul class="nav nav-tabs" role="tablist">
+<form id="form-busqueda" action="" method="get">
+    <input type="hidden" name="tab" id="hdTab" value="{{ tabInicial }}">
+    {{ include('/cuadrosBusquedas/busquedaContratoConsultor.html.twig') }}
+</form>
+
+<div class="card card-primary card-outline card-outline-tabs">
+    <div class="card-header p-0 border-bottom-0">
+        <ul class="nav nav-tabs" id="tabs-consultor" role="tablist">
             <li class="nav-item">
-                    <a class="nav-link {% if bTipoCliente=='prime' %}
-                        active
-                    {% endif %}"  href="#" onclick="seleccionarTipoCliente('prime')" data-toggle="pill">Prime</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if bTipoCliente=='preferente' %}
-                        active
-                    {% endif %}"  href="#" onclick="seleccionarTipoCliente('preferente')" data-toggle="pill">Preferente</a>
-                </li>
-            </ul>
-        </div>
-       
-                
-        <div class="card-body table-responsive p-0" style="height: 500px;">
-            
-            <table class="table table-head-fixed text-nowrap table-striped table-sm">
-                <thead>
-                    <tr>
-                        <th>{{ knp_pagination_sortable(contratos, 'Folio', 'contrato.folio') }} {% if contratos.isSorted('contrato.folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(contratos, 'AgendaId', 'contrato.agenda.id') }} {% if contratos.isSorted('contrato.agenda.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(contratos, 'Grupo', 'contrato.grupo') }} {% if contratos.isSorted('contrato.grupo') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(contratos, 'Consultor', 'consultor') }} {% if contratos.isSorted('consultor') %} <i class="fas fa-sort"></i>{% endif %}</th>                        
-                        <th>{{ knp_pagination_sortable(contratos, 'Cliente', 'contrato.nombre') }} {% if contratos.isSorted('contrato.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                       <th>{{ knp_pagination_sortable(contratos, 'Tramitador', 'contrato.tramitador') }} {% if contratos.isSorted('contrato.tramitador') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(contratos, 'Contrato/Anexo', 'fechaCreacion') }} {% if contratos.isSorted('fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        
-                        <th>{{ knp_pagination_sortable(contratos, 'U.Observación', 'fechaUltimaObservacion') }} {% if contratos.isSorted('fechaUltimaObservacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th><i class="fas fa-traffic-light"></i></th>
-                        <th><i class="far fa-credit-card text-success"></i></th>
-                        <th><i class="fas fa-ellipsis-h ml-3"></i></th>
-                        
-                    </tr>
-                </thead>
-                <tbody>
-                {% for vwContrato in contratos %}
-                    <tr>
-                         <td>{{ vwContrato.contrato.folio }}</td>
-                        
-                        <td>{{ vwContrato.contrato.agenda.id }}</td>
-                        <td>{{ vwContrato.contrato.grupo.id }}</td>
-                        <td>{{ vwContrato.consultor?vwContrato.consultor.nombre:"" }}</td>
-                         
-                        <td>{{ vwContrato.contrato.nombre }}</td>
-                        <td>{{ vwContrato.contrato.tramitador ? vwContrato.contrato.tramitador.nombre : '' }}</td>
-                        
-                        <td>{{ vwContrato.fechaCreacion|date('d-m-Y H:i') }}</td>
-                        <td>{{ vwContrato.fechaUltimaObservacion?vwContrato.fechaUltimaObservacion|date('d-m-Y H:i'):"" }}</td>
-                        <td>
-                            {% set pago = proximoPago(vwContrato.id) %}
-                            {% if pago %}
-                                <input type="hidden" class="pago" value="{{pago|date('Y-m-d')}}">
-                                {{semaforoContrato(pago|date('Y-m-d'))|raw}}
-                            {% endif %}
-                        </td>
-                      
-                        <td>
-                        {% if vwContrato.contrato.aceptaSuscripcion==1 %}
-                            
-                        
-                            {% if vwContrato.contrato.estadoSuscripcion != null %}
-                                {% if vwContrato.contrato.estadoSuscripcion == "ACTIVA" %}
-                                    <i class="far fa-credit-card text-success" title='Suscripción Activa'></i>
-                                {% else %}
-                                    <i class="far fa-credit-card text-danger" title='Suscripción Fallida'></i>
-                                {% endif %}
-                            {% else %}
-                                <i class="far fa-credit-card text-warning" title='Suscripción en proceso'></i>
-                            {% endif %}
-                        {% endif %}
-                        </td>
-                        <td>
-                
-                            <div class="btn-group btn-group-sm " role="group" aria-label="Basic example">
-                        
-                                    <a href="{{ path('contrato_linea_tiempo', {'id': vwContrato.id}) }}" class="btn  btn-sm text-white bg-dark">LT</a>
-                                    <a href="{{path('anexo_index',{'id':vwContrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos" ><i class="fas fa-file"></i></a>
-                                   {% if is_granted('edit','contrato_consultor_reasignar') %}
-                                    <a href="{{ path('contrato_consultor_reasignar', {'id': vwContrato.id}) }}" class="btn  btn-sm bg-success"><i class="fas fa-exchange-alt"></i></a>
-                                    {% endif %}
-                            </div>
-                        </td>
-                        
-                                    
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="16">No hay contratos</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="card-footer">
-            <div class="card-footer clearfix">
-                {# display navigation #}
-           <div class="navigation">
-               {{ knp_pagination_render(contratos,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
-               'position': 'centered',
-               'rounded': true,
-               }) }}
-           </div>
-       </div>
-            
-        </div>
+                <a class="nav-link tab-link {% if tabInicial == 'prime' %}active{% endif %}"
+                   href="#" data-tab="prime">Prime</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link tab-link {% if tabInicial == 'preferente' %}active{% endif %}"
+                   href="#" data-tab="preferente">Preferente</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link tab-link {% if tabInicial == 'morosos' %}active{% endif %}"
+                   href="#" data-tab="morosos">
+                  Morosos
+                </a>
+            </li>
+        </ul>
     </div>
 
-
-<!-- Modal -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Cargar Audio</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-            <form action="{{path('contrato_audio_upload')}}" enctype="multipart/form-data" method="post">
-                <div class="row">
-                    <div class="col-sm-9 col-md-9">
-                        <input type="file" name="file" class="form-control" accept=".mp3,.wav,.amr,.ogg,.mp4">
-                         <small class="text-muted">Solo permite formato mp3, wav, ogg o amr</small><br>
-                        <input type="hidden" name="hdContrato" id="hdContrato">
-                    </div>
-                    <div class="col-sm-3 col-md-3">
-                        <button type="submit" class="btn btn-primary">Subir <i class="fas fa-upload"></i></button>
-                    </div>
-                </div>
-            </form>
-      </div>
+    <div id="tab-content">
+        {{ include('contrato_consultor/_skeleton.html.twig') }}
     </div>
-  </div>
-</div>
-
- <!-- reproducir audio -->
-<div class="modal fade" id="repAudio" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Reproducir Audio</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-           
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- Modal Reasignar -->
-<div class="modal fade" id="reasignarModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="reasignarModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Reasignar</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <h5 class="modal-title">Reasignar</h5>
+        <button type="button" class="close" data-dismiss="modal">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
-            
-            <div class="reasignarModalBody">
-                
-            </div>
-            
+        <div class="reasignarModalBody"></div>
       </div>
     </div>
   </div>
 </div>
 
-    <script>
-        $('#bFecha').daterangepicker({
-        
-            "drops": "down",
-            "startDate":"{{dateInicio}}",
-            "endDate": "{{dateFin}}",
-            "locale": {
-                "format": "YYYY-MM-DD",
-                "applyLabel": "Apply",
-                "cancelLabel": "Cancel",
+<script>
+    var tabActivo = '{{ tabInicial }}';
+
+    function skeletonHtml() {
+        var cols = [9, 6, 5, 10, 14, 10, 9, 9, 3, 3, 5]; // % widths per column
+        var header = '<div class="skeleton-header">' +
+            cols.map(function(w){ return '<div class="skeleton-cell" style="width:' + w + '%"></div>'; }).join('') +
+            '</div>';
+        var rows = '';
+        for (var i = 0; i < 12; i++) {
+            rows += '<div class="skeleton-row">' +
+                cols.map(function(w){
+                    var opacity = 0.6 + Math.random() * 0.4;
+                    return '<div class="skeleton-cell" style="width:' + w + '%;opacity:' + opacity.toFixed(2) + '"></div>';
+                }).join('') +
+            '</div>';
+        }
+        return '<div class="card-body p-0">' + header + rows + '</div>';
+    }
+
+    function cargarTab(tab, page) {
+        tabActivo = tab;
+        $('#hdTab').val(tab);
+
+        var params = $('#form-busqueda').serialize();
+        // ensure tab and page are set correctly
+        params = params.replace(/tab=[^&]*/,'tab=' + tab);
+        if (page && page > 1) {
+            params += '&page=' + page;
+        }
+
+        $('#tab-content').html(skeletonHtml());
+
+        $.ajax({
+            url: '/contrato_consultor/tab_data',
+            type: 'GET',
+            data: params,
+            success: function(html) {
+                $('#tab-content').html(html);
+                $(".btn-busqueda").prop("disabled", false);
+            },
+            error: function() {
+                $('#tab-content').html('<div class="card-body"><p class="text-danger">Error al cargar los datos.</p></div>');
             }
-        }, function(start, end, label) {
-        console.log('New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD') + ' (predefined range: ' + label + ')');
+        });
         
-        });
-        $(".bFolio").change(function(){
-            $(".bFiltro").val('');
-        });
-        $(".bFiltro").change(function(){
-            $(".bFolio").val('');
-        });
-        $(".bFecha").change(function(){
-            $(".bFolio").val('');
-        });
+    }
 
-       $('#exampleModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget) // Button that triggered the modal
-            var contrato = button.data('contrato') // Extract info from data-* attributes
-            // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-            // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-            var modal = $(this)
-            
-            modal.find('#hdContrato').val(contrato)
-        })
+    // Intercept pagination clicks inside tab-content
+    $(document).on('click', '#tab-content .pagination a', function(e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        var page = 1;
+        var match = url.match(/[?&]page=(\d+)/);
+        if (match) page = parseInt(match[1]);
+        cargarTab(tabActivo, page);
+    });
 
+    // Tab click
+    $('.tab-link').on('click', function(e) {
+        e.preventDefault();
+        $('.tab-link').removeClass('active');
+        $(this).addClass('active');
+        cargarTab($(this).data('tab'));
+    });
+
+    // Form submit → AJAX for active tab
+    $('#form-busqueda').on('submit', function(e) {
+        e.preventDefault();
+        cargarTab(tabActivo);
+       
         
-        const cargarSonido = function (fuente) {
-            const sonido = document.createElement("audio");
-            sonido.src = fuente;
-            sonido.setAttribute("preload", "auto");
-            sonido.setAttribute("controls", "none");
-            sonido.style.display = "none"; // <-- oculto
-            document.body.appendChild(sonido);
-            return sonido;
-        };
+    });
 
-        $('#modalAnexos').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget) // Button that triggered the modal
-            var contrato = button.data('contrato') // Extract info from data-* attributes
-            // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-            // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-            var modal = $(this)
-            
-            modal.find('#hdContrato').val(contrato)
-
-            
-
-        });
-
-        function modalAnexo(contrato){
-            $.ajax({
-                url:"/contrato/"+contrato+"/anexos",
-                type: "post",
-                dataType: "html",
-                cache: false,
-                contentType: false,
-                processData: false,
-                async: true,
-                beforeSend: function(){
-                    $(".bodyAnexos").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>'); 
-                },
-                success:function(data){
-                    $(".bodyAnexos").html(data);
-                }
-
-            });
+    // Daterangepicker init
+    $('#bFecha').daterangepicker({
+        "drops": "down",
+        "startDate": "{{ dateInicio }}",
+        "endDate":   "{{ dateFin }}",
+        "locale": {
+            "format": "YYYY-MM-DD",
+            "applyLabel": "Apply",
+            "cancelLabel": "Cancel"
         }
-            
-        $(".btn-export-excel").on("click",function(){
-            $(".form-envio").attr("action","/contrato/export_excel");
-            $(".form-envio").submit();
-            $("button").prop('disabled',false);
+    });
 
-        });
-         $(".btn-buscar").on("click",function(){
-            $(".form-envio").attr("action","/contrato");
-            $(".form-envio").submit();
-            $("button").prop('disabled',false);
+    $(".bFolio").change(function(){ $(".bFiltro").val(''); });
+    $(".bFiltro").change(function(){ $(".bFolio").val(''); });
+    $(".bFecha").change(function(){  $(".bFolio").val(''); });
 
-        });
+    // Load initial tab on page ready
+    $(document).ready(function() {
+        cargarTab(tabActivo);
 
-        function reasignarCerrador(contratoId){
-            $.ajax({
-                url:"/contrato/"+contratoId+"/reasignar",
-                type: "get",
-                dataType: "html",
-                cache: false,
-                contentType: false,
-                processData: false,
-                async: true,
-                beforeSend: function(){
-                    
-                },
-                success:function(data){
-                    $(".reasignarModalBody").html(data);
-                    $("#reasignarModal").modal('show');
+    });
 
-                },
-                statusCode: {
-                    403: function() {
-                        $(".reasignarModalBody").html("<p> Acceso Denegado</p>");
-                        $("#reasignarModal").modal('show');
-                    }
-
-                }
-
-            });
-
-
-        }
-        function seleccionarTipoCliente(tipo){
-            $(".bTipoCliente").val(tipo);
-            $(".form-envio").submit();
-        }
-
-    </script>
+    {% if error_toast %}
+        {{ error_toast|raw }};
+    {% endif %}
+</script>
 {% endblock %}

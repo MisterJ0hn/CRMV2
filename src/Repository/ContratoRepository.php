@@ -46,6 +46,66 @@ class ContratoRepository extends ServiceEntityRepository
 
     }
     
+    /**
+     * Query para el listado de contratos consultor (prime / preferente / morosos).
+     * Devuelve un Query de Doctrine listo para KnpPaginator.
+     * Alias DQL: c=Contrato, a=Agenda, cu=Cuenta
+     */
+    public function findConsultorQuery($usuario=null, $empresa=null, $compania=null, $filtro=null, $otros=null)
+    {
+        $query = $this->createQueryBuilder('c');
+        $query->join('c.agenda', 'a');
+        $query->join('a.cuenta', 'cu');
+        $query->andWhere('a.status IN (7,14)');
+        $query->andWhere('c.isFinalizado = false OR c.isFinalizado IS NULL');
+
+        if (!is_null($empresa)) {
+            $query->andWhere('cu.empresa = ' . $empresa);
+        }
+        if (!is_null($usuario)) {
+            $query->andWhere('a.abogado = ' . $usuario);
+        }
+        if (!is_null($filtro)) {
+            $query->andWhere("(c.nombre LIKE '%$filtro%' OR c.telefono LIKE '%$filtro%' OR c.email LIKE '%$filtro%')");
+        }
+        if (!is_null($compania)) {
+            $query->andWhere('a.cuenta = ' . $compania);
+        }
+        if (!is_null($otros)) {
+            $query->andWhere($otros);
+        }
+
+        return $query->orderBy('c.id', 'DESC')->getQuery();
+    }
+
+    public function findIndexQuery($usuario=null, $empresa=null, $compania=null, $filtro=null, $agendador=null, $otros=null)
+    {
+        $query = $this->createQueryBuilder('c');
+        $query->join('c.agenda', 'a');
+        $query->join('a.cuenta', 'cu');
+
+        if (!is_null($empresa)) {
+            $query->andWhere('cu.empresa = ' . $empresa);
+        }
+        if (!is_null($usuario)) {
+            $query->andWhere('a.abogado = ' . $usuario);
+        }
+        if (!is_null($agendador)) {
+            $query->andWhere('a.agendador = ' . $agendador);
+        }
+        if (!is_null($filtro)) {
+            $query->andWhere("(c.nombre like '%$filtro%' or c.telefono like '%$filtro%' or c.email like '%$filtro%')");
+        }
+        if (!is_null($compania)) {
+            $query->andWhere('a.cuenta = ' . $compania);
+        }
+        if (!is_null($otros)) {
+            $query->andWhere($otros);
+        }
+
+        return $query->orderBy('c.id', 'DESC')->getQuery();
+    }
+
     public function findByPers($usuario=null,$empresa=null,$compania=null,$filtro=null,$agendador=null, $otros=null, $deuda = false)
     {
 
@@ -463,6 +523,38 @@ class ContratoRepository extends ServiceEntityRepository
             ->getResult()
         ;
     }
+    public function findAbogadoContratoStats($empresa=null, $compania=null, $dateInicio=null, $dateFin=null, $usuario=null)
+    {
+        $qb = $this->createQueryBuilder('c')
+            ->select(
+                'u.id as abogado_id',
+                'COUNT(DISTINCT c.id) as contratos',
+                'SUM(c.MontoContrato) as suma_monto',
+                'SUM(c.cuotas) as suma_cuotas',
+                'SUM(CASE WHEN IDENTITY(c.contratoEstadoSuscripcion) = 2 THEN 1 ELSE 0 END) as cierre_virtualpos',
+                'SUM(CASE WHEN c.cuotas = 1 THEN 1 ELSE 0 END) as pagos_totales_candidatos'
+            )
+            ->join('c.agenda', 'a')
+            ->join('a.abogado', 'u')
+            ->join('a.cuenta', 'cu')
+            ->andWhere('a.abogado IS NOT NULL')
+            ->andWhere("c.fechaCreacion BETWEEN '$dateInicio' AND '$dateFin 23:59:59'")
+            ->andWhere("a.status=7")
+            ->groupBy('u.id');
+
+        if (!is_null($empresa)) {
+            $qb->andWhere('cu.empresa = ' . $empresa);
+        }
+        if (!is_null($compania)) {
+            $qb->andWhere('a.cuenta = ' . $compania);
+        }
+        if (!is_null($usuario)) {
+            $qb->andWhere('a.abogado = ' . $usuario);
+        }
+
+        return $qb->getQuery()->getArrayResult();
+    }
+
     // /**
     //  * @return Contrato[] Returns an array of Contrato objects
     //  */

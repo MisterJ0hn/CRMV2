@@ -1,0 +1,74 @@
+<div class="card-body table-responsive p-0" style="height: 500px;">
+    <table class="table table-head-fixed text-nowrap table-striped table-sm">
+        <thead>
+            <tr>
+                <th>{{ knp_pagination_sortable(contratos, 'Folio', 'c.folio') }} {% if contratos.isSorted('c.folio') %}<i class="fas fa-sort"></i>{% endif %}</th>
+                <th>{{ knp_pagination_sortable(contratos, 'AgendaId', 'a.id') }} {% if contratos.isSorted('a.id') %}<i class="fas fa-sort"></i>{% endif %}</th>
+                <th>{{ knp_pagination_sortable(contratos, 'Grupo', 'c.grupo') }} {% if contratos.isSorted('c.grupo') %}<i class="fas fa-sort"></i>{% endif %}</th>
+                <th>Consultor</th>
+                <th>{{ knp_pagination_sortable(contratos, 'Cliente', 'c.nombre') }} {% if contratos.isSorted('c.nombre') %}<i class="fas fa-sort"></i>{% endif %}</th>
+                <th>{{ knp_pagination_sortable(contratos, 'Tramitador', 'c.tramitador') }} {% if contratos.isSorted('c.tramitador') %}<i class="fas fa-sort"></i>{% endif %}</th>
+                <th>{{ knp_pagination_sortable(contratos, 'Contrato/Anexo', 'c.fechaCreacion') }} {% if contratos.isSorted('c.fechaCreacion') %}<i class="fas fa-sort"></i>{% endif %}</th>
+                <th>U.Observación</th>
+                <th><i class="fas fa-traffic-light"></i></th>
+                <th><i class="far fa-credit-card text-success"></i></th>
+                <th><i class="fas fa-ellipsis-h ml-3"></i></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for contrato in contratos %}
+            <tr>
+                <td>{{ contrato.folio }}</td>
+                <td>{{ contrato.agenda.id }}</td>
+                <td>{{ contrato.grupo ? contrato.grupo.id : '' }}</td>
+                <td>{{ contrato.consultorNombre ?? '' }}</td>
+                <td>{{ contrato.nombre }}</td>
+                <td>{{ contrato.tramitador ? contrato.tramitador.nombre : '' }}</td>
+                <td>{{ contrato.fechaCreacionVista ? contrato.fechaCreacionVista|date('d-m-Y H:i') : contrato.fechaCreacion|date('d-m-Y H:i') }}</td>
+                <td>{{ contrato.fechaUltimaObservacion ? contrato.fechaUltimaObservacion|date('d-m-Y H:i') : '' }}</td>
+                <td>
+                    {% set pago = proximoPago(contrato.id) %}
+                    {% if pago %}
+                        <input type="hidden" class="pago" value="{{ pago|date('Y-m-d') }}">
+                        {{ semaforoContrato(pago|date('Y-m-d'))|raw }}
+                    {% endif %}
+                </td>
+                <td>
+                {% if contrato.aceptaSuscripcion == 1 %}
+                    {% if contrato.estadoSuscripcion != null %}
+                        {% if contrato.estadoSuscripcion == "ACTIVA" %}
+                            <i class="far fa-credit-card text-success" title='Suscripción Activa'></i>
+                        {% else %}
+                            <i class="far fa-credit-card text-danger" title='Suscripción Fallida'></i>
+                        {% endif %}
+                    {% else %}
+                        <i class="far fa-credit-card text-warning" title='Suscripción en proceso'></i>
+                    {% endif %}
+                {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn btn-sm text-white bg-dark">LT</a>
+                        <a href="{{ path('anexo_index', {'id': contrato.id}) }}" class="btn btn-info btn-sm"><i class="fas fa-file"></i></a>
+                        {% if is_granted('edit','contrato_consultor_reasignar') %}
+                        <a href="{{ path('contrato_consultor_reasignar', {'id': contrato.id}) }}" class="btn btn-sm bg-success"><i class="fas fa-exchange-alt"></i></a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="11">No hay contratos</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="card-footer clearfix">
+    <div class="navigation">
+        {{ knp_pagination_render(contratos,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
+            'position': 'centered',
+            'rounded': true,
+        }) }}
+    </div>
+</div>

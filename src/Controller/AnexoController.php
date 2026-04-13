@@ -304,12 +304,12 @@ class AnexoController extends AbstractController
                 $entityManager->flush();
             }
 
-            $submaterias=$request->request->get('hdSubMateria');
+           /* $submaterias=$request->request->get('hdSubMateria');
             $letra = $request->request->get('hdLetraCausa');
             $rol = $request->request->get('hdRolCausa');
             $anio = $request->request->get('hdAnioCausa');
             $caratulados=$request->request->get('hdCaratulado');
-            $hdjuzgados=$request->request->get('hdJuzgado');
+            $hdjuzgados=$request->request->get('hdJuzgado');*/
 
             //Suscripción crear o cancelar
             $cancelarSuscripcion = $request->request->get('chkCancelarSuscripcion');
@@ -337,15 +337,8 @@ class AnexoController extends AbstractController
                 $this->regenerarCuotasVirtualPos($contrato,$configuracion);
             }
 
-            $this->calularCuotas($contratoAnexo);
-            
-            //Recalculamos las cuotas en virtual pos
-            if($contrato->getEstadoSuscripcion()=="ACTIVA"){
-                $configuracion = $configuracionRepository->find(1);
-                $this->regenerarCuotasVirtualPos($contrato,$configuracion);
-            }
-
-            $countCausa=count($submaterias);
+  
+           /* $countCausa=count($submaterias);
             for ($i=0; $i < $countCausa ; $i++) { 
                 
                 $causa=new Causa();
@@ -375,7 +368,7 @@ class AnexoController extends AbstractController
                 $entityManager->persist($causa);
                 $entityManager->flush();
 
-            }
+            }*/
             
 
             $primeraCuotaVigente=$cuotaRepository->findOneByPrimeraVigente($contratoAnexo->getContrato()->getId());

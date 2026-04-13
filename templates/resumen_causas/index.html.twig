@@ -195,61 +195,7 @@
 
             </div>
         </div>
-        <div class="card-body p-0 table-responsive">
-            <table class="table table-head-fixed text-nowrap table-striped table-sm">
-                <thead>
-                    <tr>
-                        <th>{{ knp_pagination_sortable(listado, 'Materia', 'cuentaNombre') }} {% if listado.isSorted('cuentaNombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(listado, 'AgendaId', 'agendaId') }} {% if listado.isSorted('agendaId') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(listado, 'Folio', 'folio') }} {% if listado.isSorted('folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(listado, 'FechaCto', 'fechaCto') }} {% if listado.isSorted('fechaCto') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(listado, 'Cliente', 'cliente') }} {% if listado.isSorted('cliente') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(listado, 'Tramitador', 'tramitador') }} {% if listado.isSorted('tramitador') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(listado, 'Cerrador', 'cerrador') }} {% if listado.isSorted('cerrador') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>Activo</th>
-                        <th>Moroso</th>
-                        <th>VIP</th>
-                        <th>Rol</th>
-                        <th>{{ knp_pagination_sortable(listado, 'U.Observación', 'fechaRegistroObservacion') }} {% if listado.isSorted('fechaRegistroObservacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>C.Finalizada</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for causa in listado %}
-                        <tr>
-                            <td>{{ causa.cuentaNombre }}</td>
-                            <td>{{ causa.agendaId}}</td>
-                            <td>{{ causa.folio }}</td>
-                            <td>{{ causa.fechaCto?causa.fechaCto|date("Y-m-d"):"" }}</td>
-                            <td>{{ causa.cliente }}</td>
-                            <td>{{ causa.tramitador}}</td>
-                            <td>{{ causa.cerrador }}</td>
-                            <td align="center">{{ causa.activo?'<i class="fas fa-check text-success"></i>':'' }}</td>
-                            <td align="center">{{ causa.moroso ? '<i class="fas fa-stopwatch text-danger"></i>' : '' }}</td>
-                            <td>{{ getVip(causa.vip)|raw}}</td>
-                            <td>{{ causa.rol}}</td>
-                            <td>{{ causa.fechaRegistroObservacion?causa.fechaRegistroObservacion|date("Y-m-d"):""}}</td>
-                            <td>{{ causa.causaFinalizada}}</td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="10">No se encontraron causas.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-                </table>
-                </div>
-                <div class="card-footer clearfix">
-                    {# display navigation #}
-                <div class="navigation">
-                    {{ knp_pagination_render(listado,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
-                    'position': 'centered',
-                    'rounded': true,
-                    }) }}
-                </div>
-            </div>
-            </div>
-        </div>
+        
     </div>
 </section>
 

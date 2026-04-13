@@ -49,10 +49,12 @@ class VwCausasActivasFinalRepository extends ServiceEntityRepository
                 ->distinct(true);
                 break;
             case 'conRol':
-                $qb->andWhere('v.tieneRol = 1');
+                $qb->andWhere('v.tieneRol = 1')
+                ->andWhere('v.moroso = 0');
                 break;
             case 'sinRol':
-                $qb->andWhere('v.tieneRol = 0');
+                $qb->andWhere('v.tieneRol = 0')
+                ->andWhere('v.moroso = 0');
                 break;
             case 'finalizadas':
                 $qb->andWhere('v.causaFinalizada = 1');
@@ -101,10 +103,12 @@ class VwCausasActivasFinalRepository extends ServiceEntityRepository
                 ->distinct(true);
                 break;
             case 'conRol':
-                $qb->andWhere('v.tieneRol = 1');
+                $qb->andWhere('v.tieneRol = 1')
+                ->andWhere('v.moroso = 0');
                 break;
             case 'sinRol':
-                $qb->andWhere('v.tieneRol = 0');
+                $qb->andWhere('v.tieneRol = 0')
+                ->andWhere('v.moroso = 0');
                 break;
             case 'finalizadas':
                 $qb->andWhere('v.causaFinalizada = 1');

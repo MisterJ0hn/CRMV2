@@ -4,335 +4,92 @@
 
 {% block body %}
 <style>
-
 .contenedor-boton{
     position: relative;
     display: inline-flex;
     align-items: center;
 }
-
-/* menu oculto */
 .menu-botones{
     display: none;
     margin-right: 10px;
     white-space: nowrap;
 }
-
-/* botones horizontales */
 .menu-botones button{
     margin-right: 5px;
 }
-
+/* Skeleton */
+.skeleton-line {
+    background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s infinite;
+    border-radius: 4px;
+    height: 14px;
+    display: inline-block;
+}
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
 </style>
-    <form action="" method="get" class="form-envio">               
 
+    <form action="" method="get" class="form-envio">
         {{ include('/cuadrosBusquedas/busquedaContrato.html.twig', {'TipoFiltro':TipoFiltro}) }}
     </form>
 
-       
-    <div class="card">
-        <div class="card-header">
-            
-        </div>
-        <div class="card-body table-responsive p-0" style="height: 500px;">
-        
-            <table class="table table-head-fixed text-nowrap table-striped table-sm">
-                <thead>
-                    <tr>
-                        <th>{{ knp_pagination_sortable(contratos, 'Compañia', 'agenda.cuenta') }} {% if contratos.isSorted('agenda.cuenta') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(contratos, 'Folio', 'folio') }} {% if contratos.isSorted('folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(contratos, 'AgendaId', 'agenda.id') }} {% if contratos.isSorted('agenda.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(contratos, 'Cliente', 'nombre') }} {% if contratos.isSorted('nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(contratos, 'Agendador', 'agenda.agendador') }} {% if contratos.isSorted('agenda.agendador') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(contratos, 'Abogado', 'agenda.abogado') }} {% if contratos.isSorted('agenda.abogado') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(contratos, 'Tramitador', 'tramitador') }} {% if contratos.isSorted('tramitador') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(contratos, 'Sucursal', 'sucursal') }} {% if contratos.isSorted('sucursal') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        <th>{{ knp_pagination_sortable(contratos, 'Contrato/Anexo', 'fechaCreacion') }} {% if contratos.isSorted('fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                        
-                        <th class="pl-1"><img src="{{url_web}}/build/img/ultObs2_transparente.png" width="25px"></th>
-                        <!--<th><i class="fas fa-search text-info"></i></th>-->
-                        <th><i class="fas fa-traffic-light"></i></th>
-                        <th><i class="fas fa-star text-secondary"></i></th>
-                        <th><i class="far fa-credit-card text-success"></i></th>
-                        <th><i class="fas fa-ellipsis-h ml-1"></i></th>
-                        
-                    </tr>
-                </thead>
-                <tbody>
-                {% for contrato in contratos %}
-                    <tr>
-                        <td>{{contrato.agenda.cuenta.nombre}}</td>
-                        <td>{{ contrato.folio }}</td>
-                        <td>{{ contrato.agenda.id }}</td>
-                        <td>{{ contrato.nombre }}</td>
-                        <td>{{ contrato.agenda.agendador.nombre }}</td>
-                        <td>{{ contrato.agenda.abogado.nombre }}</td>
-                        <td>{{ contrato.tramitador ? contrato.tramitador.nombre : '' }}</td>
-                        <td>{{ contrato.sucursal}}</td>
-                        <td {% if contrato.vigenciaAnexo is null %}
-                                {% if contrato.vigenciaContrato == 0 %}
-                                    style="color:red;font-weight: bold;"
-                                {% endif %}
-                            {% else %}
-                                {% if contrato.vigenciaAnexo == 0 %}
-                                    style="color:red;font-weight: bold;"
-                                {% endif %}
-                            {% endif %}
-                        >{{ contrato.fechaCreacion|date('d-m-Y H:i') }}</td>
-                        <td>{{ contrato.diasUltObservacion?contrato.diasUltObservacion:0}}</td>
-                        <td>
-                            {% set pago = proximoPago(contrato.id) %}
-                            {% if pago %}
-                                <input type="hidden" class="pago" value="{{pago|date('Y-m-d')}}">
-                                {{semaforoContrato(pago|date('Y-m-d'))|raw}}
-                            {% endif %}
-                        </td>                       
-                        <td>
-                        {% if contrato.vip == 1 %}
-                     
-                            {{contrato.moroso==0?getVip(1)|raw:getVip(0)|raw}}
-                            
-                        {% endif %}
-                        </td>
-                        <td>
-                        {% if contrato.aceptaSuscripcion==1 %}
-                            
-                        
-                            {% if contrato.estadoSuscripcion != null %}
-                                {% if contrato.estadoSuscripcion == "ACTIVA" %}
-                                    <i class="far fa-credit-card text-success" title='Suscripción Activa'></i>
-                                {% else %}
-                                    <i class="far fa-credit-card text-danger" title='Suscripción Fallida'></i>
-                                {% endif %}
-                            {% else %}
-                                <i class="far fa-credit-card text-warning" title='Suscripción en proceso'></i>
-                            {% endif %}
-                        {% endif %}
-                        </td>
-                        <td>
-                        <div class="contenedor-boton">
-
-                        <!-- botones que aparecen -->
-                        <div class="menu-botones{{contrato.id}} menu-botones bg-white shadow rounded">
-                        <div class="btn-group btn-group-sm " role="group" aria-label="Basic example">
-                        {% if sesion.getSesion.usuarioTipo.id in [1,3,4,6,8,7] %}
-                        
-
-                        
-                            {% if sesion.getSesion.usuarioTipo.id in [1,8,3,11] %}
-                                {% for audio in contrato.contratoAudios %}
-                                {% set numero=random() %}
-
-                                        <div class="grAudio{{numero}}">
-                                            
-                                            <button type="button" class="btn btn-warning btn-sm btn{{numero}} " ><i class="fas fa-play"></i></button> 
-                                            <a href="#" class="btn btn-danger btn-sm btnCerrar{{numero}} " style="display:hidden"><i class="fas fa-trash-alt"></i></a>
-                                            
-                                        </div>
-                                        <audio class="audio{{numero}}" id="audio{{numero}}">
-                                            <source src="{{audio_contratos}}{{audio.url}}"  type="audio/mp3">
-                                        </audio>
-                                        <script>
-                                            var v{{numero}} = document.getElementById("audio{{numero}}");
-                                            v{{numero}}.pause();
-                                            $('btn{{numero}}').html('<i class="fas fa-play"></i>');
-                                            sound = false;
-                                            $(".btn{{numero}}").click(function(){
-                                                console.log({{numero}});
-                                                //v{{numero}}.play();
-                                                if (!sound) {
-                                                    v{{numero}}.play();
-                                                    $(this).html('<i class="fas fa-pause"></i>');
-                                                    sound = true;
-                                                } else {
-                                                    v{{numero}}.pause();
-                                                    $(this).html('<i class="fas fa-play"></i>');
-                                                    sound = false;
-                                                } 
-                                            });
-                                            $('.btnCerrar{{numero}}').hide();
-                                            $(".grAudio{{numero}}").hover(function(){
-                                                $('.btnCerrar{{numero}}').show();
-                                            },function() {
-                                                    $('.btnCerrar{{numero}}').hide();
-                                            });
-                                            $('.btnCerrar{{numero}}').click(function(){
-                                                var respuesta=confirm("Esta seguro de eliminar este Audio?");
-                                                if(respuesta){
-                                                    window.location.href="{{path('contrato_audio_delete',{'id':contrato.id}) }}";
-                                                }
-                                            });
-
-                                            
-                                        </script>
-                                        
-                                {% else %}
-                                    <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#exampleModal" data-contrato="{{contrato.id}}"><i class="fas fa-upload"></i></button>
-        
-                                {% endfor %}
-                                <a href="{{ path('contrato_cartera', {'id': contrato.id}) }}" type="button" class="btn btn-info btn-sm" ><i class="fas fa-briefcase"></i></a>
-                        
-                            {% endif %}
-
-                            {% if contrato.pdf is null %}
-                                <button type="button" class="btn btn-secondary btn-sm"><i class="fas fa-file-pdf"></i></button>
-                            {% else %}
-
-                                    <a href="{{url_web}}{{pdf_contrato}}{{contrato.pdf}}" class="btn btn-success btn-sm"><i class="fas fa-file-pdf"></i></a>
-                            {% endif %}
-                            <a href="{{ path('contrato_show', {'id': contrato.id}) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>
-                            <a href="{{ path('contrato_edit', {'id': contrato.id}) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
-                        
-                            {% if contrato.agenda.status.id == 14 %}
-                                    <a href="#" class="btn btn-warning btn-sm"><i class="fas fa-retweet"></i></a>
-
-                            {% else %}
-                                    <a href="{{ path('contrato_terminar', {'id': contrato.id}) }}" class="btn btn-danger btn-sm"><i class="fas fa-handshake-slash"></i></a>
-                                    <!--<a href="#" class="btn btn-danger btn-sm"><i class="fas fa-handshake-slash"></i></a>-->
-                                    
-                            {% endif %}
-                                <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn  btn-sm text-white bg-dark">LT</a>
-                                <a href="{{path('anexo_index',{'id':contrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos" ><i class="fas fa-file"></i></a>
-                                <a href="#" class="btn btn-secondary btn-sm" onclick="javascript:reasignarCerrador({{contrato.id}})"><i class="fas fa-retweet"></i></a>
-                        {% else %}
-                               
-                       
-
-                            {% if sesion.getSesion.usuarioTipo.id == 13 %}
-                                {% for audio in contrato.contratoAudios %}
-                                {% set numero=random() %}
-
-                                        <div class="grAudio{{numero}}">
-                                         
-                                            <button type="button" class="btn btn-warning btn-sm btn{{numero}} " ><i class="fas fa-play"></i></button> 
-                                            <a href="#" class="btn btn-danger btn-sm btnCerrar{{numero}} " style="display:hidden"><i class="fas fa-trash-alt"></i></a>
-                                            
-                                        </div>
-                                        <audio class="audio{{numero}}" id="audio{{numero}}">
-                                            <source src="{{audio_contratos}}{{audio.url}}"  type="audio/mp3">
-                                        </audio>
-                                        <script>
-                                            var v{{numero}} = document.getElementById("audio{{numero}}");
-                                            v{{numero}}.pause();
-                                            $('btn{{numero}}').html('<i class="fas fa-play"></i>');
-                                            sound = false;
-                                            $(".btn{{numero}}").click(function(){
-                                                console.log({{numero}});
-                                                //v{{numero}}.play();
-                                                if (!sound) {
-                                                    v{{numero}}.play();
-                                                    $(this).html('<i class="fas fa-pause"></i>');
-                                                    sound = true;
-                                                } else {
-                                                    v{{numero}}.pause();
-                                                    $(this).html('<i class="fas fa-play"></i>');
-                                                    sound = false;
-                                                } 
-                                            });
-                                            $('.btnCerrar{{numero}}').hide();
-                                            $(".grAudio{{numero}}").hover(function(){
-                                                $('.btnCerrar{{numero}}').show();
-                                            },function() {
-                                                   $('.btnCerrar{{numero}}').hide();
-                                            });
-                                            $('.btnCerrar{{numero}}').click(function(){
-                                                var respuesta=confirm("Esta seguro de eliminar este Audio?");
-                                                if(respuesta){
-                                                    window.location.href="{{path('contrato_audio_delete',{'id':contrato.id}) }}";
-                                                }
-                                            });
-
-                                            
-                                        </script>
-                                       
-                                {% else %}
-                                    <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#exampleModal" data-contrato="{{contrato.id}}"><i class="fas fa-upload"></i></button>
-        
-                                {% endfor %}
-                            {% endif %}
-                            {% if contrato.pdf is null %}
-                                <button type="button" class="btn btn-secondary btn-sm"><i class="far fa-file-pdf"></i></button>
-                            {% else %}
-
-                                <a href="{{url_web}}{{pdf_contrato}}{{contrato.pdf}}" class="btn btn-success btn-sm"><i class="fas fa-file-pdf"></i></a>
-                            {% endif %}
-                            
-                            <a href="{{ path('contrato_show', {'id': contrato.id}) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>
-                                
-                           
-                            {% if contrato.agenda.status.id == 14 %}
-                                <a href="#" class="btn btn-warning btn-sm"><i class="fas fa-retweet"></i></a>
-
-                            {% else %}
-                                <a href="{{ path('contrato_terminar', {'id': contrato.id}) }}" class="btn btn-danger btn-sm"><i class="fas fa-handshake-slash"></i></a>
-                                <!--<a href="#" class="btn btn-danger btn-sm"><i class="fas fa-handshake-slash"></i></a>-->
-                                
-                            {% endif %}
-                            <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn  btn-sm text-white bg-dark">LT</a>
-                                
-                            <a href="{{path('anexo_index',{'id':contrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos" ><i class="fas fa-file"></i></a>
-                            <a href="#" class="btn btn-secondary btn-sm" onclick="javascript:reasignarCerrador({{contrato.id}})"><i class="fas fa-retweet"></i></a>
-                        
-                        {% endif %}
-                        </div>
-                        </div>
-       
-                            
-                            <button type="button" class="text-primary btnPrincipal{{contrato.id}}" onClick="javascript:expandir{{contrato.id}}()"><i class="fas fa-eject icono-botones-{{contrato.id}}" ></i></button>
-                        <script>
-                            abierto{{contrato.id}}=0;
-                            function expandir{{contrato.id}}(){
-                                $(".menu-botones{{contrato.id}}").animate({
-                                        width:"toggle",
-                                        opacity:"toggle"
-                                    },200);
-                                if(abierto{{contrato.id}} == 0){
-                                    abierto{{contrato.id}}=1;
-                                    $(".icono-botones-{{contrato.id}}").removeClass("fa-reject");
-                                    $(".icono-botones-{{contrato.id}}").addClass("fa-window-close");   
-                                    $(".btnPrincipal{{contrato.id}}").removeClass("text-primary");
-                                    $(".btnPrincipal{{contrato.id}}").addClass("text-danger");
-                                    console.log("paso cerrar");                                 
-                                }else{
-                                    abierto{{contrato.id}}=0;
-                                    $(".icono-botones-{{contrato.id}}").addClass("fa-reject");
-                                    $(".icono-botones-{{contrato.id}}").removeClass("fa-window-close");  
-                                    $(".btnPrincipal{{contrato.id}}").addClass("text-primary");
-                                    $(".btnPrincipal{{contrato.id}}").removeClass("text-danger");
-                                    console.log("paso abrir");                                  
-                                }
-                                console.log(abierto{{contrato.id}});
-                            }
-                        </script>
-                        </div>
-                    </td>
-                        
-                                    
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="16">No hay contratos</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <div class="card-footer">
+    <div id="resultado">
+        <div class="card">
+            <div class="card-header"></div>
+            <div class="card-body table-responsive p-0" style="height:500px;">
+                <table class="table table-head-fixed text-nowrap table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th><span class="skeleton-line" style="width:70px"></span></th>
+                            <th><span class="skeleton-line" style="width:50px"></span></th>
+                            <th><span class="skeleton-line" style="width:60px"></span></th>
+                            <th><span class="skeleton-line" style="width:90px"></span></th>
+                            <th><span class="skeleton-line" style="width:70px"></span></th>
+                            <th><span class="skeleton-line" style="width:70px"></span></th>
+                            <th><span class="skeleton-line" style="width:70px"></span></th>
+                            <th><span class="skeleton-line" style="width:60px"></span></th>
+                            <th><span class="skeleton-line" style="width:80px"></span></th>
+                            <th><span class="skeleton-line" style="width:20px"></span></th>
+                            <th><span class="skeleton-line" style="width:20px"></span></th>
+                            <th><span class="skeleton-line" style="width:20px"></span></th>
+                            <th><span class="skeleton-line" style="width:20px"></span></th>
+                            <th><span class="skeleton-line" style="width:20px"></span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in 1..12 %}
+                        <tr>
+                            <td><span class="skeleton-line" style="width:{{ random([60,80,70]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([40,55,50]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([30,45,40]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([80,110,100]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([60,90,75]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([60,90,75]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([50,80,65]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([50,70,60]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([70,90,80]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:20px"></span></td>
+                            <td><span class="skeleton-line" style="width:20px"></span></td>
+                            <td></td>
+                            <td></td>
+                            <td><span class="skeleton-line" style="width:24px"></span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
             <div class="card-footer clearfix">
-                {# display navigation #}
-           <div class="navigation">
-               {{ knp_pagination_render(contratos,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
-               'position': 'centered',
-               'rounded': true,
-               }) }}
-           </div>
-       </div>
-            
+                <div class="navigation text-center">
+                    <span class="skeleton-line" style="width:220px; height:32px; border-radius:6px;"></span>
+                </div>
+            </div>
         </div>
     </div>
 
-
-<!-- Modal -->
+<!-- Modal Audio Upload -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -360,27 +117,6 @@
   </div>
 </div>
 
- <!-- reproducir audio -->
-<div class="modal fade" id="repAudio" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="exampleModalLabel">Reproducir Audio</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-           
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary">Save changes</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- Modal Reasignar -->
 <div class="modal fade" id="reasignarModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -392,19 +128,106 @@
         </button>
       </div>
       <div class="modal-body">
-            
-            <div class="reasignarModalBody">
-                
-            </div>
-            
+            <div class="reasignarModalBody"></div>
       </div>
     </div>
   </div>
 </div>
 
     <script>
+        var _filtrosActuales = '';
+
+        function skeletonHTML() {
+            var filas = '';
+            var anchos = [[60,80,70],[40,55,50],[30,45,40],[80,110,100],[60,90,75],[60,90,75],[50,80,65],[50,70,60],[70,90,80]];
+            for (var i = 0; i < 12; i++) {
+                filas += '<tr>';
+                anchos.forEach(function(w) {
+                    filas += '<td><span class="skeleton-line" style="width:' + w[i % w.length] + 'px"></span></td>';
+                });
+                filas += '<td><span class="skeleton-line" style="width:20px"></span></td>';
+                filas += '<td><span class="skeleton-line" style="width:20px"></span></td>';
+                filas += '<td><span class="skeleton-line" style="width:20px"></span></td><td><span class="skeleton-line" style="width:20px"></span></td>';
+                filas += '<td><span class="skeleton-line" style="width:24px"></span></td>';
+                filas += '</tr>';
+            }
+            return '<div class="card">' +
+                '<div class="card-header"></div>' +
+                '<div class="card-body table-responsive p-0" style="height:500px;">' +
+                '<table class="table table-head-fixed text-nowrap table-striped table-sm">' +
+                '<thead><tr>' +
+                '<th>Compañia</th>' +
+                '<th>Folio</th>' +
+                '<th>AgendaId</th>' +
+                '<th>Cliente</th>' +
+                '<th>Agendador</th>' +
+                '<th>Abogado</th>' +
+                '<th>Tramitador</th>' +
+                '<th>Sucursal</th>' +
+                '<th>Contrato/Anexo</th>' +
+                '<th><img src="{{url_web}}/build/img/ultObs2_transparente.png" width="25px"></th>' +
+                '<th><i class="fas fa-traffic-light"></i></th>' +
+                '<th><i class="fas fa-star text-secondary"></i></th>' +
+                '<th><i class="far fa-credit-card text-success"></i></th>' +
+                '<th><i class="fas fa-ellipsis-h ml-1"></i></th>' +
+                '</tr></thead>' +
+                '<tbody>' + filas + '</tbody>' +
+                '</table></div>' +
+                '<div class="card-footer clearfix"><div class="navigation text-center">' +
+                '<span class="skeleton-line" style="width:220px;height:32px;border-radius:6px;"></span>' +
+                '</div></div></div>';
+
+            
+                    
+        }
+
+        function cargarContratos(url) {
+            $('#resultado').html(skeletonHTML());
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    $('#resultado').html(data.html);
+                     $(".btn-busqueda").prop('disabled',false);
+                },
+                error: function() {
+                    $('#resultado').html('<div class="alert alert-danger m-3">Error al cargar los datos.</div>');
+                     $(".btn-busqueda").prop('disabled',false);
+                }
+            });
+
+           
+        }
+
+        // Carga inicial al abrir la página
+        $(document).ready(function() {
+            _filtrosActuales = '';
+            cargarContratos('/contrato/obtenerContenido');
+        });
+
+        // Interceptar submit del formulario de búsqueda
+        $(".form-envio").on("submit", function(e) {
+            e.preventDefault();
+            _filtrosActuales = $(this).serialize();
+            cargarContratos('/contrato/obtenerContenido?' + _filtrosActuales);
+           
+        });
+
+        // Interceptar clics en paginación y ordenamiento dentro del resultado
+        $(document).on('click', '#resultado a.page-link, #resultado th a', function(e) {
+            e.preventDefault();
+            var url = $(this).attr('href');
+            if (url && url !== '#') {
+                // Preservar filtros actuales si la URL no los tiene
+                if (_filtrosActuales && url.indexOf('bFiltro') === -1 && url.indexOf('bFolio') === -1) {
+                    url += (url.indexOf('?') === -1 ? '?' : '&') + _filtrosActuales;
+                }
+                cargarContratos(url);
+            }
+        });
+
         $('#bFecha').daterangepicker({
-        
             "drops": "down",
             "startDate":"{{dateInicio}}",
             "endDate": "{{dateFin}}",
@@ -414,114 +237,44 @@
                 "cancelLabel": "Cancel",
             }
         }, function(start, end, label) {
-        console.log('New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD') + ' (predefined range: ' + label + ')');
-        
-        });
-        $(".bFolio").change(function(){
-            $(".bFiltro").val('');
-        });
-        $(".bFiltro").change(function(){
-            $(".bFolio").val('');
-        });
-        $(".bFecha").change(function(){
-            $(".bFolio").val('');
+            console.log('New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
         });
 
-       $('#exampleModal').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget) // Button that triggered the modal
-            var contrato = button.data('contrato') // Extract info from data-* attributes
-            // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-            // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-            var modal = $(this)
-            
-            modal.find('#hdContrato').val(contrato)
-        })
+        $(".bFolio").change(function(){ $(".bFiltro").val(''); });
+        $(".bFiltro").change(function(){ $(".bFolio").val(''); });
+        $(".bFecha").change(function(){ $(".bFolio").val(''); });
 
-        
-        const cargarSonido = function (fuente) {
-            const sonido = document.createElement("audio");
-            sonido.src = fuente;
-            sonido.setAttribute("preload", "auto");
-            sonido.setAttribute("controls", "none");
-            sonido.style.display = "none"; // <-- oculto
-            document.body.appendChild(sonido);
-            return sonido;
-        };
-
-        $('#modalAnexos').on('show.bs.modal', function (event) {
-            var button = $(event.relatedTarget) // Button that triggered the modal
-            var contrato = button.data('contrato') // Extract info from data-* attributes
-            // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-            // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
-            var modal = $(this)
-            
-            modal.find('#hdContrato').val(contrato)
-
-            
-
+        $('#exampleModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var contrato = button.data('contrato');
+            $(this).find('#hdContrato').val(contrato);
         });
 
-        function modalAnexo(contrato){
-            $.ajax({
-                url:"/contrato/"+contrato+"/anexos",
-                type: "post",
-                dataType: "html",
-                cache: false,
-                contentType: false,
-                processData: false,
-                async: true,
-                beforeSend: function(){
-                    $(".bodyAnexos").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>'); 
-                },
-                success:function(data){
-                    $(".bodyAnexos").html(data);
-                }
-
-            });
-        }
-            
-        $(".btn-export-excel").on("click",function(){
-            $(".form-envio").attr("action","/contrato/export_excel");
-            $(".form-envio").submit();
-            $("button").prop('disabled',false);
-
-        });
-         $(".btn-buscar").on("click",function(){
-            $(".form-envio").attr("action","/contrato");
-            $(".form-envio").submit();
-            $("button").prop('disabled',false);
-
+        $(".btn-export-excel").on("click", function() {
+            $(".form-envio").attr("action", "/contrato/export_excel");
+            document.querySelector('.form-envio').submit();
         });
 
         function reasignarCerrador(contratoId){
             $.ajax({
-                url:"/contrato/"+contratoId+"/reasignar",
+                url: "/contrato/" + contratoId + "/reasignar",
                 type: "get",
                 dataType: "html",
                 cache: false,
                 contentType: false,
                 processData: false,
                 async: true,
-                beforeSend: function(){
-                    
-                },
-                success:function(data){
+                success: function(data) {
                     $(".reasignarModalBody").html(data);
                     $("#reasignarModal").modal('show');
-
                 },
                 statusCode: {
                     403: function() {
-                        $(".reasignarModalBody").html("<p> Acceso Denegado</p>");
+                        $(".reasignarModalBody").html("<p>Acceso Denegado</p>");
                         $("#reasignarModal").modal('show');
                     }
-
                 }
-
             });
-
-
         }
-
     </script>
 {% endblock %}

@@ -119,133 +119,182 @@ class ContratoController extends AbstractController
     /**
      * @Route("/", name="contrato_index", methods={"GET","POST"})
      */
-    public function index(VwContratoRepository $contratoRepository,PaginatorInterface $paginator,ModuloPerRepository $moduloPerRepository,Request $request,CuentaRepository $cuentaRepository): Response
+    public function index(ModuloPerRepository $moduloPerRepository, Request $request, CuentaRepository $cuentaRepository): Response
     {
         $this->denyAccessUnlessGranted('view','contrato');
-        $user=$this->getUser();
-        $pagina=$moduloPerRepository->findOneByName('contrato',$user->getEmpresaActual());
-        $filtro=null;
-        $error='';
-        $error_toast="";
-        $otros="";
-        $folio="";
-        $request->getSession()->set("origen_anexo",null);
-        if(null !== $request->query->get('error_toast')){
-            $error_toast=$request->query->get('error_toast');
+        $user = $this->getUser();
+        $pagina = $moduloPerRepository->findOneByName('contrato', $user->getEmpresaActual());
+        $request->getSession()->set("origen_anexo", null);
+
+        $error_toast = '';
+        if (null !== $request->query->get('error_toast')) {
+            $error_toast = $request->query->get('error_toast');
         }
-        $compania=null;
-        if(null !== $request->query->get('bFolio') && $request->query->get('bFolio')!=''){
-            $folio=$request->query->get('bFolio');
-            $otros=" (c.folioContrato= '$folio' or c.agenda = '$folio') ";
 
-            $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
-            $dateFin=date('Y-m-d');
-            $fecha=$otros. " and a.status in (7,14)";
-
-        }else{
-            if(null !== $request->query->get('bFiltro') && $request->query->get('bFiltro')!=''){
-                $filtro=$request->query->get('bFiltro');
-                $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
-                $dateFin=date('Y-m-d');
-                $fecha=$otros. " a.status in (7,14)";
-            }else{
-                if(null !== $request->query->get('bCompania') && $request->query->get('bCompania')!=0){
-                    $compania=$request->query->get('bCompania');
-                }
-                if(null !== $request->query->get('bFecha')){
-                    $aux_fecha=explode(" - ",$request->query->get('bFecha'));
-                    $dateInicio=$aux_fecha[0];
-                    $dateFin=$aux_fecha[1];
-                }else{
-                    //$dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*7);
-                    $dateInicio=date('Y-m-d');
-                    
-                    $dateFin=date('Y-m-d');
-                }
-                $fecha="c.fechaCreacion between '$dateInicio' and '$dateFin 23:59:59' and a.status in (7,14)" ;
-            }
-        }
-      
-        switch($user->getUsuarioTipo()->getId()){
-            case 3:
-            case 4:
-            case 1:
-            case 8:
-            case 11:
-                $query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha);
-                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
-                break;
-            case 13:
-            case 10:
-                $companias=$cuentaRepository->findByPers($user->getId());
-                $listCompanias='';
-
-                $i=0;
-                foreach($companias as $compania_loop){
-                    
-                    if($i>0){
-                        $listCompanias.=',';
-                    }
-                    $listCompanias.=$compania_loop->getId();
-                    $i++;
-                }
-                $fecha.=" and a.cuenta in ($listCompanias) ";
-                $query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha);
-                break;
-            case 7:
-                $carteras;
-                foreach($user->getUsuarioCarteras() as $usuarioCartera){
-                    $carteras[]=$usuarioCartera->getCartera()->getId();
-                }
-                if(count($carteras)>0){
-                    $fecha.=" and c.cartera in (".implode(",",$carteras).") ";
-                }else{
-                    $fecha.=" and c.cartera is null ";
-                }
-
-                $query=$contratoRepository->findByPers(null,null,$compania,$filtro,null,$fecha);
-                $companias=$cuentaRepository->findByPers($user->getId());
-                break;
-            case 12://Cobradores
-                $lotes;
-                foreach($user->getUsuarioLotes() as $usuarioLote){
-                    $lotes[]=$usuarioLote->getLote()->getId();
-                }
-                if(count($lotes)>0){
-                    $fecha.=" and c.idLote in (".implode(",",$lotes).") ";
-                }else{
-                    $fecha.=" and c.idLote is null ";
-                }
-                //$fecha.=" and c.idLote in (".implode(",",$lotes).") ";
-                $query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha);
-                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+        switch ($user->getUsuarioTipo()->getId()) {
+            case 3: case 4: case 1: case 8: case 11: case 12:
+                $companias = $cuentaRepository->findByPers(null, $user->getEmpresaActual());
                 break;
             default:
-                $query=$contratoRepository->findByPers($user->getId(),null,$compania,$filtro,null,$fecha);
-                $companias=$cuentaRepository->findByPers($user->getId());
-                
-            break;
+                $companias = $cuentaRepository->findByPers($user->getId());
+                break;
         }
-        //$companias=$cuentaRepository->findByPers($user->getId());
-        //$query=$contratoRepository->findAll();
-        $contratos=$paginator->paginate(
-            $query, /* query NOT result */
-            $request->query->getInt('page', 1), /*page number*/
-            20 /*limit per page*/,
-            array('defaultSortFieldName' => 'id', 'defaultSortDirection' => 'desc'));
+
         return $this->render('contrato/index.html.twig', [
-            'contratos' => $contratos,
-            'bFiltro'=>$filtro,
-            'bFolio'=>$folio,
-            'companias'=>$companias,
-            'bCompania'=>$compania,
-            'dateInicio'=>$dateInicio,
-            'dateFin'=>$dateFin,
-            'pagina'=>$pagina->getNombre(),
-            'error'=>$error,
-            'error_toast'=>$error_toast,
-            'TipoFiltro'=>'Contrato'
+            'bFiltro'     => '',
+            'bFolio'      => '',
+            'companias'   => $companias,
+            'bCompania'   => null,
+            'dateInicio'  => date('Y-m-d'),
+            'dateFin'     => date('Y-m-d'),
+            'pagina'      => $pagina->getNombre(),
+            'error'       => '',
+            'error_toast' => $error_toast,
+            'TipoFiltro'  => 'Contrato'
         ]);
+    }
+
+    /**
+     * @Route("/obtenerContenido", name="contrato_obtener_contenido", methods={"GET"})
+     */
+    public function obtenerContenido(ContratoRepository $contratoRepository, PaginatorInterface $paginator, Request $request, CuentaRepository $cuentaRepository): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('view','contrato');
+
+        try {
+            $user     = $this->getUser();
+            $filtro   = null;
+            $folio    = "";
+            $compania = null;
+
+            if (null !== $request->query->get('bFolio') && $request->query->get('bFolio') != '') {
+                $folio      = $request->query->get('bFolio');
+                $dateInicio = date('Y-m-d', mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
+                $dateFin    = date('Y-m-d');
+                $fecha      = "(c.folio = '$folio' OR a.id = '$folio') AND a.status IN (7,14)";
+            } elseif (null !== $request->query->get('bFiltro') && $request->query->get('bFiltro') != '') {
+                $filtro     = $request->query->get('bFiltro');
+                $dateInicio = date('Y-m-d', mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
+                $dateFin    = date('Y-m-d');
+                $fecha      = "a.status IN (7,14)";
+            } else {
+                if (null !== $request->query->get('bCompania') && $request->query->get('bCompania') != 0) {
+                    $compania = $request->query->get('bCompania');
+                }
+                if (null !== $request->query->get('bFecha')) {
+                    $aux_fecha  = explode(" - ", $request->query->get('bFecha'));
+                    $dateInicio = $aux_fecha[0];
+                    $dateFin    = $aux_fecha[1];
+                } else {
+                    $dateInicio = date('Y-m-d');
+                    $dateFin    = date('Y-m-d');
+                }
+                // Incluye contratos creados en el rango Y contratos con anexos creados en el rango
+                $fecha = "(c.fechaCreacion BETWEEN '$dateInicio' AND '$dateFin 23:59:59'
+                    OR EXISTS(SELECT ca FROM App\\Entity\\ContratoAnexo ca WHERE ca.contrato = c AND ca.fechaCreacion BETWEEN '$dateInicio' AND '$dateFin 23:59:59')
+                ) AND a.status IN (7,14)";
+            }
+
+            switch ($user->getUsuarioTipo()->getId()) {
+                case 3: case 4: case 1: case 8: case 11:
+                    $query = $contratoRepository->findIndexQuery(null, $user->getEmpresaActual(), $compania, $filtro, null, $fecha);
+                    break;
+                case 13: case 10:
+                    $companias     = $cuentaRepository->findByPers($user->getId());
+                    $listIds = [];
+                    foreach ($companias as $c) { $listIds[] = $c->getId(); }
+                    $listCompanias = implode(',', $listIds);
+                    if ($listCompanias) {
+                        $fecha .= " AND a.cuenta IN ($listCompanias)";
+                    }
+                    $query = $contratoRepository->findIndexQuery(null, $user->getEmpresaActual(), $compania, $filtro, null, $fecha);
+                    break;
+                case 7:
+                    $carteras = [];
+                    foreach ($user->getUsuarioCarteras() as $uc) { $carteras[] = $uc->getCartera()->getId(); }
+                    $fecha .= count($carteras) > 0
+                        ? " AND c.cartera IN (" . implode(",", $carteras) . ")"
+                        : " AND c.cartera IS NULL";
+                    $query = $contratoRepository->findIndexQuery(null, null, $compania, $filtro, null, $fecha);
+                    break;
+                case 12:
+                    $lotes = [];
+                    foreach ($user->getUsuarioLotes() as $ul) { $lotes[] = $ul->getLote()->getId(); }
+                    $fecha .= count($lotes) > 0
+                        ? " AND c.idLote IN (" . implode(",", $lotes) . ")"
+                        : " AND c.idLote IS NULL";
+                    $query = $contratoRepository->findIndexQuery(null, $user->getEmpresaActual(), $compania, $filtro, null, $fecha);
+                    break;
+                default:
+                    $query = $contratoRepository->findIndexQuery($user->getId(), null, $compania, $filtro, null, $fecha);
+                    break;
+            }
+
+            $contratos = $paginator->paginate(
+                $query,
+                $request->query->getInt('page', 1),
+                20,
+                ['defaultSortFieldName' => 'c.id', 'defaultSortDirection' => 'desc']
+            );
+
+            // Enriquecer los 20 registros con campos calculados (sin tocar la vista completa)
+            $items = $contratos->getItems();
+            if (!empty($items)) {
+                $idsList = implode(',', array_map(fn($c) => $c->getId(), $items));
+                try {
+                    $conn = $this->getDoctrine()->getConnection();
+                    $sql = "
+                        SELECT
+                            c.id,
+                            COALESCE(TO_DAYS(NOW()) - TO_DAYS(vuolt.fecha_registro), 0) AS dias_ult_observacion,
+                            CASE WHEN TIMESTAMPDIFF(MONTH, c.fecha_creacion, NOW()) <= c.vigencia THEN 1 ELSE 0 END AS vigencia_contrato,
+                            CASE
+                                WHEN ca.id IS NULL THEN NULL
+                                WHEN TIMESTAMPDIFF(MONTH, cax.fecha_creacion, NOW()) <= cax.vigencia THEN 1
+                                ELSE 0
+                            END AS vigencia_anexo,
+                            CASE WHEN vm.folio IS NOT NULL OR vr.folio IS NOT NULL OR vu.folio IS NOT NULL THEN 1 ELSE 0 END AS vip,
+                            CASE WHEN cm.contrato_id IS NOT NULL THEN 1 ELSE 0 END AS moroso,
+                            COALESCE(ca.fecha_creacion, c.fecha_creacion) AS fecha_creacion_vista,
+                            COALESCE(concat(ca.id,'-',c.folio,'-',ca.folio),c.folio) AS folio_vista
+                        FROM contrato c
+                        LEFT JOIN vista_contrato_anexo_max ca ON ca.contrato_id = c.id
+                        LEFT JOIN contrato_anexo cax ON cax.id = ca.id
+                        LEFT JOIN vw_ult_observacion_linea_tiempo vuolt ON vuolt.contrato_id = c.id
+                        LEFT JOIN vw_vip_mayor_2mm vm ON vm.contrato_id = c.id
+                        LEFT JOIN vw_vip_referidos vr ON vr.contrato_id = c.id
+                        LEFT JOIN vw_vip_una_cuota vu ON vu.contrato_id = c.id
+                        LEFT JOIN vw_clientes_morosos cm ON cm.contrato_id = c.id
+                        WHERE c.id IN ($idsList)
+                    ";
+                    $rows      = $conn->fetchAllAssociative($sql);
+                    $rowsById  = array_column($rows, null, 'id');
+
+                    foreach ($items as $contrato) {
+                        $row = $rowsById[$contrato->getId()] ?? null;
+                        if ($row) {
+                            $contrato->setDiasUltObservacion((int)$row['dias_ult_observacion']);
+                            $contrato->setVigenciaContrato((int)$row['vigencia_contrato']);
+                            $contrato->setVigenciaAnexo($row['vigencia_anexo'] !== null ? (int)$row['vigencia_anexo'] : null);
+                            $contrato->setVip((int)$row['vip']);
+                            $contrato->setMoroso((int)$row['moroso']);
+                            $contrato->setFolioContrato($row['folio_vista']);
+                            if ($row['fecha_creacion_vista']) {
+                                $contrato->setFechaCreacion(new \DateTime($row['fecha_creacion_vista']));
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    // Si falla el enriquecimiento, continuar con valores por defecto (0/null)
+                }
+            }
+
+            $html = $this->renderView('contrato/_tabla.html.twig', ['contratos' => $contratos]);
+            return new JsonResponse(['html' => $html]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(['html' => '<div class="alert alert-danger m-3"><strong>Error:</strong> ' . htmlspecialchars($e->getMessage()) . '</div>']);
+        }
     }
 
      /**

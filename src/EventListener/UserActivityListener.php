@@ -47,7 +47,7 @@ class UserActivityListener implements EventSubscriberInterface
      */
     public function onKernelResponse(ResponseEvent $event): void
     {
-        if (!$event->isMainRequest()) {
+        if (!$event->isMasterRequest()) {
             return;
         }
 
@@ -64,11 +64,14 @@ class UserActivityListener implements EventSubscriberInterface
         if (!in_array($metodo, ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'])) {
             return;
         }
-
-        // Aquí la sesión está activa → sin errores de headers
-        $token   = $this->tokenStorage->getToken();
-        $usuario = $token ? $token->getUser() : null;
-
+        try{
+            // Aquí la sesión está activa → sin errores de headers
+            $token   = $this->tokenStorage->getToken();
+            $usuario = $token ? $token->getUser() : null;
+        }catch(\Exception $e){
+            // En caso de error (ej: sesión no iniciada), simplemente no logueamos
+            return;
+        }
         if (!$usuario instanceof Usuario) {
             return;
         }
@@ -98,7 +101,7 @@ class UserActivityListener implements EventSubscriberInterface
         if ($this->pendingLog === null) {
             return;
         }
-
+        try{
         $log = new UserActivityLog();
         $log->setUsuario($this->pendingLog['usuario']);
         $log->setMetodo($this->pendingLog['metodo']);
@@ -110,7 +113,9 @@ class UserActivityListener implements EventSubscriberInterface
 
         $this->em->persist($log);
         $this->em->flush();
-
+        }catch(\Exception $e){
+            // En caso de error al guardar el log, simplemente lo ignoramos para no afectar al usuario
+        }
         $this->pendingLog = null;
     }
 }

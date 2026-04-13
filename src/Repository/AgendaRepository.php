@@ -672,6 +672,86 @@ class AgendaRepository extends ServiceEntityRepository
 
     }
 
+    public function findByCampaniaReporteResumen($empresa=null, $compania=null, $filtro=null, $fecha=null)
+    {
+        $query = $this->createQueryBuilder('a');
+        $query->select([
+            'a.campania as campania',
+            'COUNT(a.id) as total',
+            'SUM(CASE WHEN a.fechaAsignado IS NOT NULL THEN 1 ELSE 0 END) as agendado',
+            'SUM(CASE WHEN a.status = 7 THEN 1 ELSE 0 END) as contrata',
+            'SUM(CASE WHEN a.status = 7 THEN con.MontoContrato ELSE 0 END) as monto',
+        ]);
+        $query->leftJoin('a.contrato', 'con');
+        $query->andWhere('a.canal IS NULL');
+
+        if (!is_null($empresa)) {
+            $query->join('a.cuenta', 'c');
+            $query->andWhere('c.empresa = :empresa')
+                  ->setParameter('empresa', $empresa);
+        }
+
+        if (!is_null($compania)) {
+            $query->andWhere('a.cuenta = :compania')
+                  ->setParameter('compania', $compania);
+        }
+
+        if (!is_null($filtro)) {
+            $query->andWhere('a.campania LIKE :filtro')
+                  ->setParameter('filtro', '%' . $filtro . '%');
+        }
+
+        if (!is_null($fecha)) {
+            $query->andWhere($fecha);
+        }
+
+        $query->groupBy('a.campania');
+
+        return $query->getQuery()->getResult();
+    }
+
+    public function findCargaManualReporteResumen($empresa=null, $compania=null, $fecha=null)
+    {
+        $query = $this->createQueryBuilder('a');
+        $query->select([
+            'COUNT(a.id) as total',
+            'SUM(CASE WHEN a.fechaAsignado IS NOT NULL THEN 1 ELSE 0 END) as agendado',
+            'SUM(CASE WHEN a.status = 7 THEN 1 ELSE 0 END) as contrata',
+            'SUM(CASE WHEN a.status = 7 THEN con.MontoContrato ELSE 0 END) as monto',
+        ]);
+        $query->leftJoin('a.contrato', 'con');
+        $query->andWhere('a.canal IS NOT NULL');
+
+        if (!is_null($empresa)) {
+            $query->join('a.cuenta', 'c');
+            $query->andWhere('c.empresa = :empresa')
+                  ->setParameter('empresa', $empresa);
+        }
+
+        if (!is_null($compania)) {
+            $query->andWhere('a.cuenta = :compania')
+                  ->setParameter('compania', $compania);
+        }
+
+        if (!is_null($fecha)) {
+            $query->andWhere($fecha);
+        }
+
+        $result = $query->getQuery()->getOneOrNullResult();
+
+        if ($result && $result['total'] > 0) {
+            return [
+                'campania'  => 'carga manual',
+                'total'     => $result['total'],
+                'agendado'  => $result['agendado'] ?? 0,
+                'contrata'  => $result['contrata'] ?? 0,
+                'monto'     => $result['monto'] ?? 0,
+            ];
+        }
+
+        return null;
+    }
+
     public function findByAgendReporteMontoContrato($usuario=null,$empresa=null,$compania=null,$status=null, $filtro=null,$esAbogado=null, $otros=null)
     {
 
@@ -957,6 +1037,39 @@ class AgendaRepository extends ServiceEntityRepository
         ;
 
     }
+    public function findAbogadoStats($empresa=null, $compania=null, $filtro=null, $dateInicio=null, $dateFin=null, $usuario=null)
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->select(
+                'u.id as abogado_id',
+                'u.nombre as abogado_nombre',
+                'COUNT(a.id) as total_agendado',
+                'SUM(CASE WHEN a.status IN (3,8,9) THEN 1 ELSE 0 END) as asesorias_efectivas',
+                'SUM(CASE WHEN a.status = 8 THEN 1 ELSE 0 END) as no_contrata',
+                'SUM(CASE WHEN a.status IN (13,15) THEN 1 ELSE 0 END) as desistidos'
+            )
+            ->join('a.abogado', 'u')
+            ->join('a.cuenta', 'c')
+            ->andWhere('a.abogado IS NOT NULL')
+            ->andWhere("a.fechaAsignado BETWEEN '$dateInicio' AND '$dateFin 23:59:59'")
+            ->groupBy('u.id');
+
+        if (!is_null($empresa)) {
+            $qb->andWhere('c.empresa = ' . $empresa);
+        }
+        if (!is_null($compania)) {
+            $qb->andWhere('a.cuenta = ' . $compania);
+        }
+        if (!is_null($filtro)) {
+            $qb->andWhere("u.nombre LIKE '%$filtro%'");
+        }
+        if (!is_null($usuario)) {
+            $qb->andWhere('a.abogado = ' . $usuario);
+        }
+
+        return $qb->getQuery()->getArrayResult();
+    }
+
     // /**
     //  * @return Agenda[] Returns an array of Agenda objects
     //  */

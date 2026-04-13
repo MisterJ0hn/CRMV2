@@ -59,22 +59,31 @@
 					
 				</div>
 				<div class="col-sm-6 col-md-3">
+					<small class="text-muted">Equipo *</small>
+					<select name="cboEquipo" class="form-control equipo" data-placeholder="Selecciona un Equipo" style="width: 100%;" required>
+						<option></option>
+						{% for equipo in equipo_trabajo %}
+							<option value="{{equipo.id}}" 
+							{% if equipo_default_id is defined %}
+								{% if equipo_default_id == equipo.id %}
+									selected
+								{% endif %}
+							{% endif %}
+							>{{equipo.nombre}}</option>
+						{% endfor %}
+						
+					</select>
+				</div>
+				<div class="col-sm-6 col-md-3">
 					<small class="text-muted">Lotes *</small>
-					<select name="cboLotes[]" class="select3" multiple="multiple" data-placeholder="Selecciona Lotes" style="width: 100%;" required>
+					<select name="cboLotes[]" class="select3 lotes" multiple="multiple" data-placeholder="Selecciona Lotes" style="width: 100%;" required>
 						<option></option>
 						
 						{% for lote in lotes %}
 							<option value="{{lote.id}}"
 							>{{lote.nombre}}</option>
 						{% endfor %}
-						{% for usuarioLote in usuario.usuarioLotes %}
-							<option value="{{usuarioLote.lote.id}}"
-								
-									selected
-								
-							>{{usuarioLote.lote.nombre}}</option>
-							
-						{% endfor %}
+						
 					</select>
 				</div>
 				
@@ -134,7 +143,59 @@
 			//Initialize Select2 Elements
 			$('.select2').select2();
 			$('.select3').select2();
-			
+			if($(".equipo").val()!=""){
+				seleccionarLotes();
+				obtenerLotesDisponibles($(".equipo").val());
+			}
 		});
+		$(".equipo").on("change",function(){
+			obtenerLotesDisponibles($(this).val());
+		});
+		function obtenerLotesDisponibles(equipoId){
+			$.ajax({
+					method: "POST",
+					url: "/lotes/"+equipoId+"/por_equipos"
+				}).done(function( data ) {
+					$('.lotes').find('option:not(:first)').remove();
+					{% if equipo_default_id is defined %}
+						
+									
+						
+						if({{equipo_default_id}}==equipoId){
+							seleccionarLotes();
+						}
+					{% endif %}
+					// data es un JSON con los lotes del equipo
+					$.each(data, function(index, lote) {
+						$('.lotes').append(
+							$('<option>', {
+								value: lote.id,
+								text: lote.nombre
+							})
+						);
+					});
+					$('.lotes').trigger('change');
+				});
+		}
+		function seleccionarLotes(){
+
+
+			
+	        
+			// Agregar las opciones con selected
+			{% for usuarioLote in usuario.usuarioLotes %}
+				$('.lotes').append(
+					$('<option>', {
+						value: '{{usuarioLote.lote.id}}',
+						text: '{{usuarioLote.lote.nombre}}',
+						selected: true
+					})
+				);
+			{% endfor %}
+    
+			// Actualizar Select2 si está inicializado
+			$('.lotes').trigger('change');
+		}
+
 	</script>
 {{ form_end(form) }}

@@ -1,7 +1,7 @@
 {{ form_start(form,{'attr':{'id':'frmResuelto'}}) }}
-            {{form_row(form.motivo,{'label':false,'attr':{'class':'form-control cuotas number','required':true,'style':'visibility:hidden'}})}}
-            <input type="hidden" id="hdSoloObservacion" name="hdSoloObservacion" value="0">
-            <input type="hidden" id="hdRechazada" name="hdRechazada" value="0">
+        {{form_row(form.motivo,{'label':false,'attr':{'class':'form-control cuotas number','required':true,'style':'visibility:hidden'}})}}
+        <input type="hidden" id="hdSoloObservacion" name="hdSoloObservacion" value="0">
+        <input type="hidden" id="hdRechazada" name="hdRechazada" value="0">
         <div class="row">
             <div class="col-sm-6 col-md-3">
                 <small class="text-muted">Destino</small><br>
@@ -26,42 +26,25 @@
                 <small class="text-muted">F. Ult. Gestión</small><br>
                 <label></label>
             </div>
-            {% if usuarioIdActual != usuarioIdOrigenTicket   %}
-             
+            {% if usuarioIdActual != usuarioIdOrigenTicket  or perfilIdActual == 1  %}
              <div class="col-sm-12 col-md-12">
                 <h4>Comentario</h4>
-                
                 <input type="text" class="form-control txtObservacion" name="txtObservacion" size=500 required>
                  <small class="text-muted">max 500 caract.</small><br><br>
             </div>
-
             <div class="col-sm-12 col-md-12">
-                
-                    
-                
                 <button class="btn btn-primary">Resuelto</button> 
                 <button type="button" class="btn btn-secondary btn-observacion">Grabar Observación</button> 
                 <button type="button" class="btn btn-danger btn-rechazar" {% if rechazado %}
                     hidden
                 {% endif %}>Rechazar</button>
                 <button type="button" class="btn btn-info" data-toggle="modal" data-target="#card-reasignar">Reasignar</button>
-                
             </div>
-            
             {% elseif usuarioIdActual == usuarioIdEncargadoTicket and usuarioIdActual == usuarioIdOrigenTicket %}
-
-
                 <div class="col-sm-12 col-md-12">
-                    
-                        
-                    
-                    
                     <button type="button" class="btn btn-info" data-toggle="modal" data-target="#card-reasignar">Reasignar</button>
-                    
-                </div>
-
+                </div>                      
             {% endif %}
-
         </div>
 {{ form_end(form) }}
 

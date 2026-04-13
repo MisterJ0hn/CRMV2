@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Usuario;
 use App\Form\ChangePasswordFormType;
 use App\Form\ResetPasswordRequestFormType;
+use App\Service\PasswordService;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -76,7 +77,7 @@ class ResetPasswordController extends AbstractController
      *
      * @Route("/reset/{token}", name="app_reset_password")
      */
-    public function reset(Request $request, UserPasswordEncoderInterface $passwordEncoder, string $token = null): Response
+    public function reset(Request $request, UserPasswordEncoderInterface $passwordEncoder, PasswordService $passwordService, string $token = null): Response
     {
         if ($token) {
             // We store the token in session and remove it from the URL, to avoid the URL being
@@ -107,17 +108,22 @@ class ResetPasswordController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $plainPassword = $form->get('plainPassword')->getData();
+
+            // Verificar historial de contraseñas
+            if ($passwordService->yaFueUsada($user, $plainPassword)) {
+                $limite = $passwordService->getHistorialLimite();
+                $this->addFlash('reset_password_error', "No puedes reutilizar alguna de tus últimas {$limite} contraseñas.");
+                return $this->render('reset_password/reset.html.twig', [
+                    'resetForm' => $form->createView(),
+                ]);
+            }
+
             // A password reset token should be used only once, remove it.
             $this->resetPasswordHelper->removeResetRequest($token);
 
-            // Encode the plain password, and set it.
-            $encodedPassword = $passwordEncoder->encodePassword(
-                $user,
-                $form->get('plainPassword')->getData()
-            );
-
-            $user->setPassword($encodedPassword);
-            $this->getDoctrine()->getManager()->flush();
+            // Aplicar nueva contraseña, guardar historial y renovar expiración.
+            $passwordService->aplicarNuevoPassword($user, $plainPassword);
 
             // The session is cleaned up after the password has been changed.
             $this->cleanSessionAfterReset();

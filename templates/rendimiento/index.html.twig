@@ -1,0 +1,195 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="row">
+    <div class="col-12">
+        <div class="card card-primary">
+            <div class="card-header">
+                <h3 class="card-title">Estado de salud del servidor</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="info-box mb-3">
+                            <span class="info-box-icon bg-info elevation-1"><i class="fas fa-microchip"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">CPU</span>
+                                <span class="info-box-number" id="rendimiento-cpu-load">Carga: {{ cpu.load }}</span>
+                                <span class="info-box-number" id="rendimiento-cpu-cores">Núcleos: {{ cpu.cores }}</span>
+                                <span class="info-box-text" id="rendimiento-cpu-description">{{ cpu.description }}</span>
+                                
+                                <span class="info-box-text" id="rendimiento-uptime">Uptime: {{ uptime.uptime }} / Boot: {{ uptime.boot }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-box mb-3">
+                            <span class="info-box-icon bg-success elevation-1"><i class="fas fa-memory"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Memoria</span>
+                                <span class="info-box-number" id="rendimiento-memory-used">Usada: {{ memory.used }}</span>
+                                <span class="info-box-number" id="rendimiento-memory-free">Libre: {{ memory.free }}</span>
+                                <span class="info-box-text" id="rendimiento-memory-total">Total: {{ memory.total }} ({{ memory.percent }}%)</span>
+                               <span>&nbsp;
+                               </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="info-box mb-3">
+                            <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-hdd"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">Disco</span>
+                                <span class="info-box-number" id="rendimiento-disk-used">Usado: {{ disk.used }}</span>
+                                <span class="info-box-number" id="rendimiento-disk-free">Libre: {{ disk.free }}</span>
+                                <span class="info-box-text" id="rendimiento-disk-total">Total: {{ disk.total }} ({{ disk.percent }}%)</span>
+                                <span class="info-box-text" id="rendimiento-disk-path">Ruta: {{ disk.path }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card card-outline card-info">
+    <div class="card-header">
+      <h3 class="card-title">Detalle CPU</h3>
+
+      <div class="card-tools">
+        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
+        </button>
+        <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+    <div class="card-body">
+       <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 50%;">Núcleo</th>
+                        <th style="width: 50%;">Uso</th>
+                    </tr>
+                </thead>
+                <tbody id="rendimiento-cpu-cores-detail">
+                    {% for core in cpu.cores_detail %}
+                        <tr>
+                            <td>{{ core.core }}</td>
+                            <td>{{ core.usage }}%</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="2">No disponible</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+<!-- /.card-body -->
+</div>
+<div class="card card-outline card-success">
+    <div class="card-header">
+      <h3 class="card-title">Detalle memoria</h3>
+
+      <div class="card-tools">
+        <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i>
+        </button>
+        <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+      </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">PID</th>
+                        <th style="width: 50%;">Proceso</th>
+                        <th style="width: 30%;">Memoria</th>
+                    </tr>
+                </thead>
+                <tbody id="rendimiento-memory-processes">
+                    {% for process in memory.top_processes %}
+                        <tr>
+                            <td>{{ process.pid }}</td>
+                            <td>{{ process.command }}</td>
+                            <td>{{ process.mem }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="3">No disponible</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+<!-- /.card-body -->
+</div>
+<script>
+    function updateRendimiento(data) {
+        document.getElementById('rendimiento-cpu-load').textContent = 'Carga: ' + data.cpu.load;
+        document.getElementById('rendimiento-cpu-cores').textContent = 'Núcleos: ' + data.cpu.cores;
+        document.getElementById('rendimiento-cpu-description').textContent = data.cpu.description;
+        document.getElementById('rendimiento-uptime').textContent = 'Uptime: ' + data.uptime.uptime + ' / Boot: ' + data.uptime.boot;
+
+        var cpuCoreRows = '<tr><td colspan="2">No disponible</td></tr>';
+        if (Array.isArray(data.cpu.cores_detail) && data.cpu.cores_detail.length) {
+            cpuCoreRows = data.cpu.cores_detail.map(function (core) {
+                return '<tr><td>' + core.core + '</td><td>' + core.usage + '%</td></tr>';
+            }).join('');
+        }
+        document.getElementById('rendimiento-cpu-cores-detail').innerHTML = cpuCoreRows;
+
+        document.getElementById('rendimiento-memory-used').textContent = 'Usada: ' + data.memory.used;
+        document.getElementById('rendimiento-memory-free').textContent = 'Libre: ' + data.memory.free;
+        document.getElementById('rendimiento-memory-total').textContent = 'Total: ' + data.memory.total + ' (' + data.memory.percent + '%)';
+
+        var memoryProcessRows = '<tr><td colspan="3">No disponible</td></tr>';
+        if (Array.isArray(data.memory.top_processes) && data.memory.top_processes.length) {
+            memoryProcessRows = data.memory.top_processes.map(function (process) {
+                return '<tr><td>' + process.pid + '</td><td>' + process.command + '</td><td>' + process.mem + '</td></tr>';
+            }).join('');
+        }
+        document.getElementById('rendimiento-memory-processes').innerHTML = memoryProcessRows;
+
+        document.getElementById('rendimiento-disk-used').textContent = 'Usado: ' + data.disk.used;
+        document.getElementById('rendimiento-disk-free').textContent = 'Libre: ' + data.disk.free;
+        document.getElementById('rendimiento-disk-total').textContent = 'Total: ' + data.disk.total + ' (' + data.disk.percent + '%)';
+        document.getElementById('rendimiento-disk-path').textContent = 'Ruta: ' + data.disk.path;
+    }
+
+    function fetchRendimiento() {
+        fetch('{{ path('rendimiento_data') }}', {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function(response) {
+                if (!response.ok) {
+                    throw new Error('Error al obtener datos de rendimiento');
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                updateRendimiento(json);
+            })
+            .catch(function(error) {
+                console.error(error);
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+            fetchRendimiento();
+            setInterval(fetchRendimiento, 5000);
+
+            document.getElementById('rendimiento-cpu-toggle').addEventListener('click', function () {
+                var detail = document.getElementById('rendimiento-cpu-detail');
+                detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+            });
+
+            document.getElementById('rendimiento-memory-toggle').addEventListener('click', function () {
+                var detail = document.getElementById('rendimiento-memory-detail');
+                detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+</script>
+{% endblock %}

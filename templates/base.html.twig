@@ -263,7 +263,28 @@ scratch. This page gets rid of all links and provides the needed markup only.
 
             <script type="text/javascript">
                 $(".ocultar-campo").hide();
+
+                function validarFortalezaPassword(pwd) {
+                    if (pwd.length < 8)           return 'La contraseña debe tener al menos 8 caracteres.';
+                    if (!/[A-Z]/.test(pwd))        return 'La contraseña debe contener al menos una mayúscula.';
+                    if (!/\d/.test(pwd))           return 'La contraseña debe contener al menos un número.';
+                    if (!/[^a-zA-Z0-9]/.test(pwd)) return 'La contraseña debe contener al menos un carácter especial.';
+                    return null;
+                }
+
                 $( "form" ).submit(function( event ) {
+                    // Validar campos de password de formularios de usuario (excluye login)
+                    var $pwdFields = $(this).find('input[name="usuario[password]"], input[name="usuario[passwordAnt]"]').filter(function(){ return $(this).val() !== ''; });
+                    var error = null;
+                    $pwdFields.each(function() {
+                        error = validarFortalezaPassword($(this).val());
+                        return error === null; // continuar si no hay error
+                    });
+                    if (error !== null) {
+                        event.preventDefault();
+                        Swal.fire({ icon: 'error', title: 'Contraseña inválida', text: error });
+                        return false;
+                    }
                     $("button").prop('disabled',true);
                 });
                 $(function() {
@@ -605,15 +626,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
   <!-- /.control-sidebar -->
 
   <!-- Main Footer -->
-  <footer class="main-footer">
-    <!-- To the right -->
-    <div class="float-right d-none d-sm-inline">
-      Anything you want
-    </div>
-    <!-- Default to the left -->
-    <strong>Copyright &copy; 2014-2019 <a href="https://adminlte.io">AdminLTE.io</a>.</strong> All rights reserved.
-  </footer>
-</div>
+  </div>
 <!-- ./wrapper -->
 
 

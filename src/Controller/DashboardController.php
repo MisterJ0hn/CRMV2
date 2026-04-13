@@ -17,8 +17,10 @@ class DashboardController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_REMEMBERED');
         //$this->denyAccessUnlessGranted('view','dashboard');
         $user=$this->getUser();
-        return $this->render('dashboard/index.html.twig', [
+
+        return $this->redirectToRoute('mensaje_calendario');
+        /*return $this->render('dashboard/index.html.twig', [
             'controller_name' => 'DashboardController',
-        ]);
+        ]);*/
     }
 }

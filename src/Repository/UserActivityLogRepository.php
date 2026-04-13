@@ -19,16 +19,18 @@ class UserActivityLogRepository extends ServiceEntityRepository
         parent::__construct($registry, UserActivityLog::class);
     }
 
-    public function findByFiltros(?int $usuarioId, ?string $desde, ?string $hasta, ?string $modulo): array
+    public function findByFiltros(?int $usuarioId, ?string $desde, ?string $hasta, ?string $modulo, ?int $perfilId = null): \Doctrine\ORM\Query
     {
         $qb = $this->createQueryBuilder('l')
             ->leftJoin('l.usuario', 'u')
-            ->addSelect('u')
-            ->orderBy('l.fechaRegistro', 'DESC');
+            ->addSelect('u');
 
         if ($usuarioId) {
             $qb->andWhere('l.usuario = :uid')
                ->setParameter('uid', $usuarioId);
+        } elseif ($perfilId) {
+            $qb->andWhere('u.usuarioTipo = :tid')
+               ->setParameter('tid', $perfilId);
         }
 
         if ($desde) {
@@ -46,7 +48,7 @@ class UserActivityLogRepository extends ServiceEntityRepository
                ->setParameter('modulo', '%' . $modulo . '%');
         }
 
-        return $qb->setMaxResults(500)->getQuery()->getResult();
+        return $qb->orderBy('l.fechaRegistro', 'DESC')->getQuery();
     }
 
     public function findUltimossinGeo($usuario, int $limit = 5): array

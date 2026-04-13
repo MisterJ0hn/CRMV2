@@ -211,7 +211,33 @@
                                             data-toggle="modal"
                                             data-target="#modalDetalleCivil"><i class="fas fa-eye"></i></button>
                                         {% elseif causa.estadoConsultaPjud =='Consultando' %}
-                                        <a href="" class="btn btn-sm btn-info"><i class="fas fa-sync-alt fa-spin"></i></a>
+
+                                        <div class="btn-pjud">
+                                        
+                                        </div>
+                                        <script>
+                                            const intervalo{{causa.id}} = setInterval(() => {
+                                                $.ajax({
+                                                    url: "{{ path('pjud_movimientos_validar_scraping', {'id': causa.id}) }}",
+                                                    method: 'GET',
+                                                    success: function(data) {
+                                                        response = data;
+                                                        if(response.estadoConsulta=='Ok'){
+                                                            $(".btn-pjud").html('<button class="btn btn-sm btn-info btn-ver-causa" onclick="abrirModalDetalleCivil({{causa.id}});"><i class="fas fa-eye"></i></button>');
+                                                            clearInterval(intervalo{{causa.id}});
+                                                        }
+                                                        if(response.estadoConsulta=='Consultando'){
+                                                            $(".btn-pjud").html('<a href="" class="btn btn-sm btn-info"><i class="fas fa-sync-alt fa-spin"></i></a>');
+                                                        }
+                                                        if(response.estadoConsulta=='Error'){
+                                                            $(".btn-pjud").html('<a href="#" class="btn btn-sm btn-secondary" onclick="generar_scrapping({{causa.id}});"><i class="fas fa-gavel"></i></a>');
+                                                        }
+                                                    },error: function(data) {
+                                                       Toast.fire({icon: 'error',title: data.mensaje});
+                                                    }
+                                                });
+                                            }, 5000); // Recarga la página después de 5 segundos
+                                        </script>
                                         {% else %}
                                         <a href="#" class="btn btn-sm btn-secondary" onclick="generar_scrapping({{causa.id}});"><i class="fas fa-gavel"></i></a>
                                         {% endif %}
@@ -339,13 +365,21 @@
           <div class="col-md-4"><strong>Tribunal:</strong> <span id="m_tribunal">-</span></div>
         </div>
         <div class="row">
-            <div class="col-md-3 btn-demanda">
+            <div class="col-md-3 ">
+                <label>Texto Demanda:</label>
+                <div class="btn-demanda"></div>
             </div>
-            <div class="col-md-3 btn-anexo">
+            <div class="col-md-3">
+                <label>Anexos de la causa:</label>
+                <div class="btn-anexo"></div>
             </div>
-            <div class="col-md-3 btn-certificado">
+            <div class="col-md-3">
+                <label>Certificado de Envío:</label>
+                <div class="btn-certificado"></div>
             </div>
-            <div class="col-md-3 btn-ebook">
+            <div class="col-md-3">
+                <label>E-book:</label>
+                 <div class="btn-ebook"></div>
             </div>
              
 
@@ -721,6 +755,7 @@ document.addEventListener('DOMContentLoaded', function() {
          
             const tr = this.closest('tr');
             const id = tr.dataset.id;
+            console.log('tr id:', id);
             if (id) {
                 buscarCausa(id);
             }
@@ -728,6 +763,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+function abrirModalDetalleCivil(causaId) {
+    buscarCausa(causaId);
+    $('#modalDetalleCivil').modal('show');
+}
 // Variables globales para filtrado
 let todosLosMovimientos = [];
 let movimientosActuales = [];
@@ -742,7 +781,7 @@ async function buscarCausa(causaId) {
     const respuesta = await res.json();
     const tbody = document.querySelector('#tablaHistoria tbody');
     tbody.innerHTML = '';
-    console.log('respuesta:', respuesta);
+    console.log("buscarCausa: " + ritActual);
     if(respuesta.error){
         $("#modalDetalleCivil").modal('hide');
         alert(respuesta.error);
@@ -806,9 +845,9 @@ async function buscarCausa(causaId) {
 
 
         }
-
+        console.log("buscarCausa: " + ritActual);
         filtrarPorCuaderno(causaId);
-    
+        console.log("buscarCausa despues de filtrar cuaderno: " + ritActual);
 
         const tbodyInformacionReceptor = document.querySelector('#tablaInformacionReceptor tbody');
         tbodyInformacionReceptor.innerHTML = '';
@@ -864,6 +903,7 @@ async function buscarCausa(causaId) {
 }
 
 function filtrarPorCuaderno(causaId=0) {
+    console.log("filtrarPorCuaderno: " + ritActual);
    if(causaId===0){
        causaId=ritActual;
    }
@@ -905,10 +945,10 @@ function renderizarMovimientos() {
 
     const tbody = document.querySelector('#tablaHistoria tbody');
     tbody.innerHTML = '';
-
-    const ritParts = ritActual.split('-');
+    console.log("renderizarMovimientos: " + ritActual);
+    /*const ritParts = ritActual.split('-');
     const rolNum = ritParts[1];
-    const anio = ritParts[2];
+    const anio = ritParts[2];*/
 
     movimientosActuales.historial.forEach(mov => {
         

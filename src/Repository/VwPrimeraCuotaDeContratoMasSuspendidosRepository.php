@@ -2,7 +2,6 @@
 
 namespace App\Repository;
 
-use App\Entity\Configuracion;
 use App\Entity\VwPrimeraCuotaDeContratoMasSuspendidos;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -29,5 +28,34 @@ class VwPrimeraCuotaDeContratoMasSuspendidosRepository extends ServiceEntityRepo
         return $query->getQuery()
             ->getResult();
 
+    }
+
+    public function findAbogadoPrimeraCuota($empresa=null, $compania=null, $dateInicio=null, $dateFin=null, $usuario=null)
+    {
+        $qb = $this->createQueryBuilder('vpc')
+            ->select(
+                'u.id as abogado_id',
+                'SUM(CASE WHEN vpc.numero = 1 AND date(vpc.fechaPago) = date(vpc.fechaVencimiento) THEN 1 ELSE 0 END) as pagos_primera_cuota',
+                'SUM(CASE WHEN vpc.numero = 1 AND con.cuotas = 1 AND vpc.pagado > 0 THEN 1 ELSE 0 END) as pagos_totales'
+            )
+            ->join('vpc.contrato', 'con')
+            ->join('con.agenda', 'a')
+            ->join('a.abogado', 'u')
+            ->join('a.cuenta', 'cu')
+            ->andWhere('a.abogado IS NOT NULL')
+            ->andWhere("con.fechaCreacion BETWEEN '$dateInicio' AND '$dateFin 23:59:59'")
+            ->groupBy('u.id');
+
+        if (!is_null($empresa)) {
+            $qb->andWhere('cu.empresa = ' . $empresa);
+        }
+        if (!is_null($compania)) {
+            $qb->andWhere('a.cuenta = ' . $compania);
+        }
+        if (!is_null($usuario)) {
+            $qb->andWhere('a.abogado = ' . $usuario);
+        }
+
+        return $qb->getQuery()->getArrayResult();
     }
 }

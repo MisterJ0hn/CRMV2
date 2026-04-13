@@ -77,16 +77,12 @@ class VwResumenCausasRepository extends ServiceEntityRepository
                      SUM(v.clientesAlDiaVIP) as clientesAlDiaVIP, 
                      SUM(v.causasActivasConRol) as causasActivasConRol, 
                      SUM(v.causasActivasSinRol) as causasActivasSinRol, 
-                     SUM(v.causasActivasFinalizadas) as causasActivasFinalizadas,
-                     v.fechaActualizacion as fechaActualizacion');
+                     SUM(v.causasActivasFinalizadas) as causasActivasFinalizadas
+                    ');
         if(!is_null($cuentaId)){
             $query->where('v.cuentaId in ('.$cuentaId.')');    
         
         }
-        
-        
-
-
         return $query->getQuery()
         ->getResult();
     }
@@ -95,12 +91,51 @@ class VwResumenCausasRepository extends ServiceEntityRepository
     {
         $query= $this->createQueryBuilder('v');
         if(!is_null($cuentaId)){
-            $query->where('v.cuentaId in ('.$cuentaId.')');    
+            $query->where('v.cuentaId in ('.$cuentaId.')');
         }
 
         return $query->getQuery()
         ->setMaxResults(1)
         ->getOneOrNullResult();
+    }
+
+    /**
+     * Retorna el resumen agregado y la fecha de actualización en una sola query.
+     * Reemplaza el uso combinado de findGroupByTodo() + fechaActualizacion().
+     *
+     * @return array{0: array{causasActivas: int, causasAlDia: int, clientesActivos: int,
+     *               clientesAlDia: int, clientesMorosos: int, clientesActivosVIP: int,
+     *               clientesAlDiaVIP: int, causasActivasConRol: int, causasActivasSinRol: int,
+     *               causasActivasFinalizadas: int, fechaActualizacion: \DateTime|null}}
+     */
+    public function findResumenConFecha(?string $cuentaId = null): array
+    {
+        $qb = $this->createQueryBuilder('v')
+            ->select('
+                SUM(v.causasActivas) as causasActivas,
+                SUM(v.causasAlDia) as causasAlDia,
+                SUM(v.clientesActivos) as clientesActivos,
+                SUM(v.ClientesAlDia) as clientesAlDia,
+                SUM(v.clientesMorosos) as clientesMorosos,
+                SUM(v.clientesActivosVIP) as clientesActivosVIP,
+                SUM(v.clientesAlDiaVIP) as clientesAlDiaVIP,
+                SUM(v.causasActivasConRol) as causasActivasConRol,
+                SUM(v.causasActivasSinRol) as causasActivasSinRol,
+                SUM(v.causasActivasFinalizadas) as causasActivasFinalizadas,
+                MAX(v.fechaActualizacion) as fechaActualizacion
+            ');
+
+        if (!is_null($cuentaId)) {
+            $qb->where('v.cuentaId in (' . $cuentaId . ')');
+        }
+
+        $result = $qb->getQuery()->getArrayResult();
+
+        if (!empty($result[0]['fechaActualizacion']) && is_string($result[0]['fechaActualizacion'])) {
+            $result[0]['fechaActualizacion'] = new \DateTime($result[0]['fechaActualizacion']);
+        }
+
+        return $result;
     }
 
 }

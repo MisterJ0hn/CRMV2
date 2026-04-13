@@ -6,6 +6,7 @@ use App\Entity\UsuarioCategoria;
 use App\Entity\Empresa;
 use App\Entity\UsuarioCuenta;
 use App\Entity\Cuenta;
+use App\Entity\EquipoTrabajoUsuario;
 use App\Entity\UsuarioStatus;
 use App\Entity\UsuarioLote;
 use App\Entity\Privilegio;
@@ -20,6 +21,8 @@ use App\Repository\LotesRepository;
 use App\Repository\UsuarioTipoDocumentoRepository;
 use App\Repository\UsuarioNoDisponibleRepository;
 use App\Repository\ConfiguracionRepository;
+use App\Repository\EquipoTrabajoRepository;
+use App\Repository\EquipoTrabajoUsuarioRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -76,7 +79,9 @@ class CobradoresController extends AbstractController
                         PrivilegioRepository $privilegioRepository,
                         LotesRepository $lotesRepository,
                         ConfiguracionRepository $configuracionRepository,
-                        UsuarioTipoDocumentoRepository $tipoDocumento): Response
+                        UsuarioTipoDocumentoRepository $tipoDocumento,
+                        EquipoTrabajoRepository $equipoTrabajoRepository,
+                        EquipoTrabajoUsuarioRepository $equipoTrabajoUsuarioRepository): Response
     {
         $this->denyAccessUnlessGranted('create','cobradores');
         $user=$this->getUser();
@@ -127,16 +132,30 @@ class CobradoresController extends AbstractController
            
             $usuarioCuenta=new UsuarioCuenta();
             $usuario->setTipoDocumento($tipoDocumento->find($request->request->get('cboTipoDocumento')));
-
+            
             
             $usuario->setFechaNacimiento(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_nacimiento')))));
             $usuario->setFechaActivacion(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_ingreso')))));
-
+            
            /* $status=$this->getDoctrine()->getRepository(UsuarioStatus::class)->find($request->request->get('cboStatues'));
             $usuario->setStatus($status);*/
             $entityManager->persist($usuario);
             $entityManager->flush();
-
+            
+            $equipo = $equipoTrabajoRepository->find($request->request->get('cboEquipo'));
+            
+            if($equipo){
+                $equipoTrabajoUsuarios = $equipoTrabajoUsuarioRepository->findBy(['usuario'=>$usuario->getId()]);
+                foreach($equipoTrabajoUsuarios as $equipoTrabajoUsuario){
+                    $entityManager->remove($equipoTrabajoUsuario);
+                    $entityManager->flush();
+                }
+                $equipoTrabajoUsuario=new EquipoTrabajoUsuario();
+                $equipoTrabajoUsuario->setUsuario($usuario);
+                $equipoTrabajoUsuario->setEquipoTrabajo($equipo);
+                $entityManager->persist($equipoTrabajoUsuario);
+                $entityManager->flush();
+            }
             $getcuentas=$_POST['cboEmpresa'];
          
             foreach($getcuentas as $getcuenta){
@@ -161,7 +180,7 @@ class CobradoresController extends AbstractController
                 $usuarioLote=new UsuarioLote();            
                 $usuarioLote->setUsuario($usuario);
                 $usuarioLote->setLote($lotesRepository->find($lote));
-
+                $usuarioLote->setEquipoTrabajo($equipo);
                 $entityManager->persist($usuarioLote);
                 $entityManager->flush();
             }
@@ -169,7 +188,6 @@ class CobradoresController extends AbstractController
             foreach($privilegioTipousuarios as $privilegioTipousuario){
                 $privilegio=$privilegioRepository->findBy(["moduloPer"=>$privilegioTipousuario->getModuloPer()->getId(),"usuario"=>$usuario->getId()]);
                 if(!$privilegio){
-    
                     $privilegioNew=new Privilegio();
                     $privilegioNew->setUsuario($usuario);
                     $privilegioNew->setModuloPer($privilegioTipousuario->getModuloPer());
@@ -178,7 +196,6 @@ class CobradoresController extends AbstractController
                     $entityManager = $this->getDoctrine()->getManager();
                     $entityManager->persist($privilegioNew);
                     $entityManager->flush();
-    
                 }
             }
    
@@ -191,9 +208,10 @@ class CobradoresController extends AbstractController
             'form' => $form->createView(),
             'pagina'=>$pagina->getNombre(),
             'cuentas'=>$cuentas,
-            'lotes'=>$lotesRepository->findHabilitados(),
+            'lotes'=>[],
             'statues'=>$statues,
             'tipo_documentos'=>$tipoDocumento->findAll(),
+            'equipo_trabajo'=>$equipoTrabajoRepository->findAll()
         ]);
     }
 
@@ -222,7 +240,10 @@ class CobradoresController extends AbstractController
                         UserPasswordEncoderInterface $encoder,
                         LotesRepository $lotesRepository,
                         ConfiguracionRepository $configuracionRepository,
-                        UsuarioNoDisponibleRepository $usuarioNoDisponibleRepository): Response
+                        UsuarioNoDisponibleRepository $usuarioNoDisponibleRepository,
+                        EquipoTrabajoRepository $equipoTrabajoRepository,
+                        EquipoTrabajoUsuarioRepository $equipoTrabajoUsuarioRepository
+                        ): Response
     {
         $this->denyAccessUnlessGranted('edit','cobradores');
         $user=$this->getUser();
@@ -230,7 +251,11 @@ class CobradoresController extends AbstractController
         $pagina=$moduloPerRepository->findOneByName('cobradores',$user->getEmpresaActual());
         $empresa=$this->getDoctrine()->getRepository(Empresa::class)->find($user->getEmpresaActual());
         $usuarioCuenta=$this->getDoctrine()->getRepository(UsuarioCuenta::class)->findOneBy(['usuario'=>$usuario->getId()]);
-   
+         $equipo_default_id=null;
+        $equipo_default = $equipoTrabajoUsuarioRepository->findOneBy(['usuario'=>$usuario->getId()]);
+        if($equipo_default){
+            $equipo_default_id = $equipo_default->getEquipoTrabajo()->getId();
+        }
         
         $cuentas=$empresa->getCuentas();
 
@@ -283,6 +308,21 @@ class CobradoresController extends AbstractController
                 $usuario->removeUsuarioCuenta($usuarioCuenta);
             }
 
+            
+            $equipo = $equipoTrabajoRepository->find($request->request->get('cboEquipo'));
+            
+            if($equipo){
+                $equipoTrabajoUsuarios = $equipoTrabajoUsuarioRepository->findBy(['usuario'=>$usuario->getId()]);
+                foreach($equipoTrabajoUsuarios as $equipoTrabajoUsuario){
+                    $entityManager->remove($equipoTrabajoUsuario);
+                    $entityManager->flush();
+                }
+                $equipoTrabajoUsuario=new EquipoTrabajoUsuario();
+                $equipoTrabajoUsuario->setUsuario($usuario);
+                $equipoTrabajoUsuario->setEquipoTrabajo($equipo);
+                $entityManager->persist($equipoTrabajoUsuario);
+                $entityManager->flush();
+            }
 
             $usuarioLotes=$usuario->getUsuarioLotes();
             foreach($usuarioLotes as $usuarioLote){
@@ -298,7 +338,7 @@ class CobradoresController extends AbstractController
                 $usuarioLote=new UsuarioLote();            
                 $usuarioLote->setUsuario($usuario);
                 $usuarioLote->setLote($lotesRepository->find($lote));
-
+                $usuarioLote->setEquipoTrabajo($equipo);
                 $entityManager->persist($usuarioLote);
                 $entityManager->flush();
             }
@@ -330,13 +370,15 @@ class CobradoresController extends AbstractController
             'form' => $form->createView(),
             'pagina'=>$pagina->getNombre(),
             'cuentas'=>$cuentas,
-            'lotes'=>$lotesRepository->findHabilitados(),
+            'lotes'=>$lotesRepository->findHabilitados($equipo_default_id),
             'statues'=>$statues,
             'id_cuenta'=>$usuarioCuenta->getCuenta()->getId(),
             'cuentas_sel'=>$usuario->getUsuarioCuentas(),
             'tipo_documentos'=>$tipoDocumento->findAll(),
             'hora_inicio'=>$horaInicio,
-            'hora_fin'=>$horaFin
+            'hora_fin'=>$horaFin,
+            'equipo_trabajo'=>$equipoTrabajoRepository->findAll(),
+            'equipo_default_id'=>$equipo_default_id
             
         ]);
     }
@@ -355,7 +397,7 @@ class CobradoresController extends AbstractController
 
         return $this->redirectToRoute('cobradores_index');
     }
-
+    
     /**
      * @Route("/{id}", name="cobradores_delete", methods={"DELETE"})
      */

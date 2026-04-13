@@ -3,6 +3,24 @@
 {% block title %}Log de Actividad de Usuarios{% endblock %}
 
 {% block body %}
+<style>
+    .skeleton-row td {
+        padding: 0.5rem 0.75rem;
+    }
+    .skeleton-cell {
+        background: linear-gradient(90deg, #e9ecef 25%, #dee2e6 50%, #e9ecef 75%);
+        background-size: 200% 100%;
+        animation: skeleton-shimmer 1.4s infinite;
+        border-radius: 4px;
+        display: inline-block;
+        height: 16px;
+    }
+    @keyframes skeleton-shimmer {
+        0%   { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
+    }
+</style>
+
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
@@ -33,7 +51,7 @@
             </div>
         </div>
         <div class="card-body">
-            <form method="GET" action="{{ path('user_activity_log_index') }}" id="filtroForm">
+            <form id="filtroForm">
                 <div class="row">
 
                     {# Fecha Desde #}
@@ -41,7 +59,7 @@
                         <div class="form-group">
                             <label>Desde</label>
                             <input type="date" class="form-control" name="desde"
-                                   value="{{ filtros.desde }}">
+                                   value="{{ "now"|date("Y-m-d") }}">
                         </div>
                     </div>
 
@@ -50,20 +68,32 @@
                         <div class="form-group">
                             <label>Hasta</label>
                             <input type="date" class="form-control" name="hasta"
-                                   value="{{ filtros.hasta }}">
+                                   value="{{ "now"|date("Y-m-d") }}">
                         </div>
                     </div>
 
-                    {# Usuario (Select2 con búsqueda) #}
-                    <div class="col-md-4">
+                    {# Perfil de usuario #}
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label>Perfil</label>
+                            <select class="form-control select2" name="perfil" id="selectPerfil" style="width:100%">
+                                <option value="">-- Todos --</option>
+                                {% for p in perfiles %}
+                                    <option value="{{ p.id }}">{{ p.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    {# Usuario #}
+                    <div class="col-md-3">
                         <div class="form-group">
                             <label>Usuario</label>
-                            <select class="form-control select2" name="usuario" id="selectUsuario"
-                                    style="width:100%">
+                            <select class="form-control" name="usuario" id="selectUsuario" style="width:100%">
                                 <option value="">-- Todos --</option>
                                 {% for u in usuarios %}
                                     <option value="{{ u.id }}"
-                                        {% if filtros.usuario == u.id %}selected{% endif %}>
+                                            data-perfil="{{ u.usuarioTipo ? u.usuarioTipo.id : '' }}">
                                         {{ u.nombre }} ({{ u.username }})
                                     </option>
                                 {% endfor %}
@@ -72,17 +102,13 @@
                     </div>
 
                     {# Módulo #}
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="form-group">
                             <label>Módulo</label>
-                            <select class="form-control select2" name="modulo" id="selectModulo"
-                                    style="width:100%">
+                            <select class="form-control select2" name="modulo" id="selectModulo" style="width:100%">
                                 <option value="">-- Todos --</option>
                                 {% for m in modulos %}
-                                    <option value="{{ m }}"
-                                        {% if filtros.modulo == m %}selected{% endif %}>
-                                        {{ m }}
-                                    </option>
+                                    <option value="{{ m }}">{{ m }}</option>
                                 {% endfor %}
                             </select>
                         </div>
@@ -105,9 +131,9 @@
     {# ── Resultados ── #}
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">
+            <h3 class="card-title" id="tituloResultados">
                 <i class="fas fa-list mr-1"></i>
-                Registros encontrados: <strong>{{ logs|length }}</strong>
+                <span id="contadorRegistros">Cargando...</span>
             </h3>
         </div>
         <div class="card-body p-0">
@@ -124,94 +150,24 @@
                         <th>Ubicación</th>
                     </tr>
                 </thead>
-                <tbody>
-                {% for log in logs %}
-                    <tr>
-                        <td class="text-nowrap">
-                            {{ log.fechaRegistro|date('Y-m-d H:i:s') }}
-                        </td>
-                        <td>
-                            {% if log.usuario %}
-                                <span class="badge badge-secondary">{{ log.usuario.username }}</span>
-                                {{ log.usuario.nombre }}
-                            {% else %}
-                                <span class="text-muted">—</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% set metodo = log.metodo %}
-                            {% if metodo == 'GET' %}
-                                <span class="badge badge-info">GET</span>
-                            {% elseif metodo == 'POST' %}
-                                <span class="badge badge-success">POST</span>
-                            {% elseif metodo == 'PUT' or metodo == 'PATCH' %}
-                                <span class="badge badge-warning">{{ metodo }}</span>
-                            {% elseif metodo == 'DELETE' %}
-                                <span class="badge badge-danger">DELETE</span>
-                            {% else %}
-                                <span class="badge badge-light">{{ metodo }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-break" style="max-width:260px">
-                            <small>{{ log.ruta }}</small>
-                        </td>
-                        <td>
-                            {% if log.controlador %}
-                                {% set modLabel = log.controlador|split('\\')|last|split('::')|first|replace({'Controller':''}) %}
-                                <span class="badge badge-primary">{{ modLabel }}</span>
-                                <small class="text-muted">
-                                    {{ log.controlador|split('::')|last}}
-                                </small>
-                            {% else %}
-                                <span class="text-muted">—</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-center">
-                            {% set code = log.statusCode %}
-                            {% if code >= 200 and code < 300 %}
-                                <span class="badge badge-success">{{ code }}</span>
-                            {% elseif code >= 300 and code < 400 %}
-                                <span class="badge badge-info">{{ code }}</span>
-                            {% elseif code >= 400 and code < 500 %}
-                                <span class="badge badge-warning">{{ code }}</span>
-                            {% elseif code >= 500 %}
-                                <span class="badge badge-danger">{{ code }}</span>
-                            {% else %}
-                                <span class="badge badge-secondary">{{ code }}</span>
-                            {% endif %}
-                        </td>
-                        <td><small>{{ log.ip }}</small></td>
-                        <td>
-                            {% if log.latitud and log.longitud %}
-                                <a href="https://www.google.com/maps?q={{ log.latitud }},{{ log.longitud }}"
-                                   target="_blank" rel="noopener"
-                                   title="{{ log.latitud }}, {{ log.longitud }}">
-                                    <i class="fas fa-map-marker-alt text-danger mr-1"></i>
-                                    {% if log.ciudad %}{{ log.ciudad }}{% endif %}
-                                    {% if log.pais %}<small class="text-muted">({{ log.pais }})</small>{% endif %}
-                                </a>
-                            {% else %}
-                                <span class="text-muted">—</span>
-                            {% endif %}
-                        </td>
+
+                {# Skeleton inicial #}
+                <tbody id="logsBody">
+                    {% for i in 1..8 %}
+                    <tr class="skeleton-row">
+                        <td><span class="skeleton-cell" style="width:110px"></span></td>
+                        <td><span class="skeleton-cell" style="width:{{ 80 + (i * 13) % 60 }}px"></span></td>
+                        <td><span class="skeleton-cell" style="width:40px"></span></td>
+                        <td><span class="skeleton-cell" style="width:{{ 120 + (i * 23) % 80 }}px"></span></td>
+                        <td><span class="skeleton-cell" style="width:70px"></span></td>
+                        <td><span class="skeleton-cell" style="width:35px"></span></td>
+                        <td><span class="skeleton-cell" style="width:80px"></span></td>
+                        <td><span class="skeleton-cell" style="width:60px"></span></td>
                     </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-3">
-                            <i class="fas fa-inbox mr-1"></i> Sin registros para los filtros seleccionados.
-                        </td>
-                    </tr>
-                {% endfor %}
+                    {% endfor %}
                 </tbody>
+                <tfoot id="logsPagination"></tfoot>
             </table>
-        </div>
-        <div class="card-footer">
-            <div class="navigation">
-                {{ knp_pagination_render(logs,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
-                'position': 'centered',
-                'rounded': true,
-                }) }}
-            </div>
         </div>
     </div>
 
@@ -220,14 +176,135 @@
 
 <script>
 $(function () {
-    $('#selectUsuario, #selectModulo').select2({
+    var dataUrl = '{{ path("user_activity_log_data") }}';
+
+    var s2opts = {
         theme: 'bootstrap4',
-        placeholder: '-- Seleccione --',
+        placeholder: '-- Todos --',
         allowClear: true,
         language: {
-            noResults: function () { return 'Sin resultados'; },
-            searching: function () { return 'Buscando...'; }
+            noResults:  function () { return 'Sin resultados'; },
+            searching:  function () { return 'Buscando...'; }
         }
+    };
+
+    // Todos los usuarios para filtrado por perfil
+    var allUsers = [];
+    $('#selectUsuario option[value!=""]').each(function () {
+        allUsers.push({ id: $(this).val(), text: $(this).text(), perfil: $(this).data('perfil') });
+    });
+
+    function buildUsuarioSelect(perfilId, selectedId) {
+        if ($('#selectUsuario').data('select2')) {
+            $('#selectUsuario').select2('destroy');
+        }
+        $('#selectUsuario').empty().append('<option value="">-- Todos --</option>');
+        $.each(allUsers, function (_, u) {
+            if (!perfilId || String(u.perfil) === String(perfilId)) {
+                var opt = $('<option>', { value: u.id, text: u.text });
+                if (selectedId && String(u.id) === String(selectedId)) {
+                    opt.prop('selected', true);
+                }
+                $('#selectUsuario').append(opt);
+            }
+        });
+        $('#selectUsuario').select2(s2opts);
+    }
+
+    buildUsuarioSelect('', '');
+    $('#selectPerfil, #selectModulo').select2(s2opts);
+
+    $('#selectPerfil').on('change', function () {
+        buildUsuarioSelect($(this).val(), null);
+    });
+
+    // ── Skeleton ──
+    function showSkeleton() {
+        var rows = '';
+        for (var i = 1; i <= 8; i++) {
+            rows += '<tr class="skeleton-row">' +
+                '<td><span class="skeleton-cell" style="width:110px"></span></td>' +
+                '<td><span class="skeleton-cell" style="width:' + (80 + (i * 13) % 60) + 'px"></span></td>' +
+                '<td><span class="skeleton-cell" style="width:40px"></span></td>' +
+                '<td><span class="skeleton-cell" style="width:' + (120 + (i * 23) % 80) + 'px"></span></td>' +
+                '<td><span class="skeleton-cell" style="width:70px"></span></td>' +
+                '<td><span class="skeleton-cell" style="width:35px"></span></td>' +
+                '<td><span class="skeleton-cell" style="width:80px"></span></td>' +
+                '<td><span class="skeleton-cell" style="width:60px"></span></td>' +
+                '</tr>';
+        }
+        $('#logsBody').html(rows);
+        $('#logsPagination').empty();
+        $('#contadorRegistros').html('Cargando...');
+    }
+
+    // ── Cargar datos ──
+    function cargarDatos(params) {
+        showSkeleton();
+
+        $.get(dataUrl, params)
+            .done(function (html) {
+                var $parsed   = $(html);
+                var $tbody    = $parsed.filter('tbody');
+                var $tfoot    = $parsed.filter('tfoot');
+
+                $('#logsBody').replaceWith($tbody);
+                $('#logsPagination').replaceWith($tfoot);
+
+                // Actualizar contador
+                var total = $tfoot.find('strong').first().text();
+                if (total) {
+                    $('#contadorRegistros').html('Registros encontrados: <strong>' + total + '</strong>');
+                } else {
+                    var filas = $tbody.find('tr').length;
+                    $('#contadorRegistros').html('Registros encontrados: <strong>' + filas + '</strong>');
+                }
+
+                // Vincular clics de paginación
+                bindPaginacionAjax();
+            })
+            .fail(function () {
+                $('#logsBody').html('<tr><td colspan="8" class="text-center text-danger py-3">' +
+                    '<i class="fas fa-exclamation-triangle mr-1"></i> Error al cargar los datos.</td></tr>');
+                $('#contadorRegistros').text('Error al cargar');
+            });
+        
+        
+    }
+
+    function bindPaginacionAjax() {
+        $('#logsPagination').find('a.page-link').on('click', function (e) {
+            e.preventDefault();
+            var href   = $(this).attr('href');
+            var params = {};
+            var query  = href.split('?')[1] || '';
+            query.split('&').forEach(function (pair) {
+                var kv = pair.split('=');
+                if (kv[0]) params[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1] || '');
+            });
+            // Combinar con filtros actuales del form
+            var formParams = {};
+            $('#filtroForm').serializeArray().forEach(function (f) { formParams[f.name] = f.value; });
+            cargarDatos($.extend({}, formParams, { page: params.page || 1 }));
+            $('html, body').animate({ scrollTop: $('#tablaLogs').offset().top - 20 }, 300);
+        });
+    }
+
+    // ── Submit del form ──
+    $('#filtroForm').on('submit', function (e) {
+        e.preventDefault();
+        var params = {};
+        $(this).serializeArray().forEach(function (f) { params[f.name] = f.value; });
+        params.page = 1;
+        cargarDatos(params);
+        $(".btn-block").prop("disabled",false);
+    });
+
+    // Carga inicial con fecha de hoy
+    cargarDatos({
+        desde: $('[name="desde"]').val(),
+        hasta: $('[name="hasta"]').val(),
+        page:  1
     });
 });
 </script>

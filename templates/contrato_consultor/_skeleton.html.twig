@@ -1,0 +1,15 @@
+{% set cols = [9, 6, 5, 10, 14, 10, 9, 9, 3, 3, 5] %}
+<div class="card-body p-0">
+    <div class="skeleton-header">
+        {% for w in cols %}
+            <div class="skeleton-cell" style="width:{{ w }}%"></div>
+        {% endfor %}
+    </div>
+    {% for i in 1..12 %}
+    <div class="skeleton-row">
+        {% for w in cols %}
+            <div class="skeleton-cell" style="width:{{ w }}%"></div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>

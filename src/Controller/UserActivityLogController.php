@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Repository\UserActivityLogRepository;
 use App\Repository\UsuarioRepository;
+use App\Repository\UsuarioTipoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,39 +22,59 @@ class UserActivityLogController extends AbstractController
      * @Route("/", name="user_activity_log_index", methods={"GET","POST"})
      */
     public function index(
-        Request $request,
         UserActivityLogRepository $logRepository,
         UsuarioRepository $usuarioRepository,
+        UsuarioTipoRepository $usuarioTipoRepository
+    ): Response {
+        $this->denyAccessUnlessGranted('view', 'Actividad_Usuarios');
+
+        $usuarios = $usuarioRepository->findBy(['estado' => true, 'usuarioTipo' => [1,2,3,4,5,6,7,10,11,12,13]], ['nombre' => 'ASC']);
+        $perfiles = $usuarioTipoRepository->findBy(['id' => [1,2,3,4,5,6,7,10,11,12,13]], ['nombre' => 'ASC']);
+        $modulos  = $logRepository->getModulosDistintos();
+
+        return $this->render('user_activity_log/index.html.twig', [
+            'usuarios' => $usuarios,
+            'perfiles' => $perfiles,
+            'modulos'  => $modulos,
+        ]);
+    }
+
+    /**
+     * @Route("/data", name="user_activity_log_data", methods={"GET"})
+     */
+    public function data(
+        Request $request,
+        UserActivityLogRepository $logRepository,
         PaginatorInterface $paginator
     ): Response {
-       $filtros = [
-            'desde'    => $request->query->get('desde', date('Y-m-d')),
-            'hasta'    => $request->query->get('hasta', date('Y-m-d')),
-            'usuario'  => $request->query->get('usuario'),
-            'modulo'   => $request->query->get('modulo'),
+        $this->denyAccessUnlessGranted('view', 'Actividad_Usuarios');
+
+        $filtros = [
+            'desde'   => $request->query->get('desde', date('Y-m-d')),
+            'hasta'   => $request->query->get('hasta', date('Y-m-d')),
+            'usuario' => $request->query->get('usuario'),
+            'modulo'  => $request->query->get('modulo'),
+            'perfil'  => $request->query->get('perfil'),
         ];
 
-         $query    = $logRepository->findByFiltros(
+        $query = $logRepository->findByFiltros(
             $filtros['usuario'] ? (int) $filtros['usuario'] : null,
             $filtros['desde'],
             $filtros['hasta'],
-            $filtros['modulo']
+            $filtros['modulo'],
+            $filtros['perfil'] ? (int) $filtros['perfil'] : null
         );
-       
-        $usuarios = $usuarioRepository->findBy(['estado' => true, 'usuarioTipo'=>[1,2,3,4,5,6,7,8,10,11,12,13]], ['nombre' => 'ASC']);
-        $modulos  = $logRepository->getModulosDistintos();
 
-         $logs=$paginator->paginate(
-            $query, /* query NOT result */
-            $request->query->getInt('page', 1), /*page number*/
-            10 /*limit per page*/,
-            array('defaultSortFieldName' => 'fechaRegistro', 'defaultSortDirection' => 'desc'));
-      
-        return $this->render('user_activity_log/index.html.twig', [
-            'logs'     => $logs,
-            'usuarios' => $usuarios,
-            'modulos'  => $modulos,
-            'filtros'  => $filtros,
+        $logs = $paginator->paginate(
+            $query,
+            $request->query->getInt('page', 1),
+            20,
+            ['defaultSortFieldName' => 'l.fechaRegistro', 'defaultSortDirection' => 'desc']
+        );
+
+        return $this->render('user_activity_log/_tabla.html.twig', [
+            'logs'    => $logs,
+            'filtros' => $filtros,
         ]);
     }
 

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Repository\UsuarioRepository;
 use App\Repository\ModuloPerRepository;
+use App\Service\PasswordService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
@@ -62,25 +63,37 @@ class MisDatosController extends AbstractController
      /**
      * @Route("/password", name="mis_datos_password", methods={"GET","POST"})
      */
-    public function password(UsuarioRepository $usuarioRepository, Request $request,UserPasswordEncoderInterface $encoder): Response
+    public function password(UsuarioRepository $usuarioRepository, Request $request, UserPasswordEncoderInterface $encoder, PasswordService $passwordService): Response
     {
         $this->denyAccessUnlessGranted('edit','mis_datos');
         $u=$this->getUser();
         $usuario=$usuarioRepository->find($u->getId());
 
-        
         $password=$request->request->get('password');
-        $encoded=$encoder->encodePassword($usuario,$password);
-        $usuario->setPassword($encoded);
 
-        $entityManager = $this->getDoctrine()->getManager();
+        if (!preg_match('/^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/', $password)) {
+            $error="<div class='alert alert-danger alert-dismissible fade show' role='alert'>
+            <strong>Error</strong> La contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un carácter especial.
+            <button type='button' class='close' data-dismiss='alert' aria-label='Close'>
+            <span aria-hidden='true'>&times;</span></button></div>";
+            return $this->render('mis_datos/index.html.twig', ['misdatos' => $usuario, 'error' => $error]);
+        }
 
-        $entityManager->persist($usuario);
-        $entityManager->flush();
+        if ($passwordService->yaFueUsada($usuario, $password)) {
+            $limite = $passwordService->getHistorialLimite();
+            $error="<div class='alert alert-danger alert-dismissible fade show' role='alert'>
+            <strong>Error</strong> No puedes reutilizar alguna de tus últimas {$limite} contraseñas.
+            <button type='button' class='close' data-dismiss='alert' aria-label='Close'>
+            <span aria-hidden='true'>&times;</span></button></div>";
+            return $this->render('mis_datos/index.html.twig', ['misdatos' => $usuario, 'error' => $error]);
+        }
+
+        $passwordService->aplicarNuevoPassword($usuario, $password);
+
         $error="<div class='alert alert-success alert-dismissible fade show' role='alert'>
-        <strong>Exito</strong> Password modificada!!!
+        <strong>Éxito</strong> Contraseña modificada. Caduca en {$passwordService->getDiasExpiracion()} días.
         <button type='button' class='close' data-dismiss='alert' aria-label='Close'>
         <span aria-hidden='true'>&times;</span></button></div>";
-        return $this->render('mis_datos/index.html.twig', ['misdatos' => $usuario,'error'=>$error]);
+        return $this->render('mis_datos/index.html.twig', ['misdatos' => $usuario, 'error' => $error]);
     }
 }

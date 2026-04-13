@@ -391,9 +391,17 @@ class Usuario implements UserInterface
      */
     private $passwordEncriptacion;
 
-    
-    
-    
+    /**
+     * Fecha en que caduca la contraseña. NULL = sin caducidad configurada.
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $passwordExpiracion;
+
+    /**
+     * @ORM\OneToMany(targetEntity=PasswordHistorial::class, mappedBy="usuario", orphanRemoval=true)
+     */
+    private $passwordHistorials;
+
     public function __construct()
     {
         $this->usuarioCuentas = new ArrayCollection();
@@ -421,6 +429,7 @@ class Usuario implements UserInterface
         $this->usuarioGrupos = new ArrayCollection();
         $this->encuestas = new ArrayCollection();
         $this->estrategiaJuridicaReporteArchivos = new ArrayCollection();
+        $this->passwordHistorials = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -1800,6 +1809,32 @@ class Usuario implements UserInterface
         return $this;
     }
 
-    
-    
+    public function getPasswordExpiracion(): ?\DateTimeInterface
+    {
+        return $this->passwordExpiracion;
+    }
+
+    public function setPasswordExpiracion(?\DateTimeInterface $passwordExpiracion): self
+    {
+        $this->passwordExpiracion = $passwordExpiracion;
+
+        return $this;
+    }
+
+    public function isPasswordExpirado(): bool
+    {
+        if ($this->passwordExpiracion === null) {
+            return false;
+        }
+
+        return $this->passwordExpiracion < new \DateTime();
+    }
+
+    /**
+     * @return \Doctrine\Common\Collections\Collection|PasswordHistorial[]
+     */
+    public function getPasswordHistorials(): \Doctrine\Common\Collections\Collection
+    {
+        return $this->passwordHistorials;
+    }
 }

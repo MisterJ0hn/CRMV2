@@ -211,6 +211,14 @@ class CobranzaController extends AbstractController
                 }else{
                     $fecha.="$and co.idLote is null ";
                 }
+                $equiposVencimiento = [];
+                foreach($equipoTrabajoUsuario->getEquipoTrabajo()->getEquipoTrabajoVencimientos() as $equipoTrabajoVencimiento){
+                    $equiposVencimiento[] = $equipoTrabajoVencimiento->getVencimiento()->getId();
+                }
+
+                $fecha .= count($equiposVencimiento) > 0
+                    ? " and c.vencimiento in (" . implode(",", $equiposVencimiento) . ") "
+                    : " and c.vencimiento is null ";
                 $mostrarVencimientoSeleccionado="SI";
                 $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha,true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
@@ -1367,7 +1375,7 @@ class CobranzaController extends AbstractController
             $contrato->setQMov($qmov);
 
             $contrato->setFechaUltimaGestion(new \DateTime(date('Y-m-d')));
-            $contrato->setUltimaFuncion($cobranza->getRespuesta()->getNombre());
+            $contrato->setUltimaFuncion($cobranza->getRespuesta()?$cobranza->getRespuesta()->getNombre():$cobranza->getFuncion()->getNombre());
             $contrato->setFechaCompromiso($cobranza->getFechaCompromiso());
             
             $entityManager->persist($contrato);

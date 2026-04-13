@@ -1,0 +1,231 @@
+<div class="card">
+    <div class="card-header"></div>
+    <div class="card-body table-responsive p-0" style="height: 500px;">
+        <table class="table table-head-fixed text-nowrap table-striped table-sm">
+            <thead>
+                <tr>
+                    <th>{{ knp_pagination_sortable(contratos, 'Compañia', 'agenda.cuenta') }} {% if contratos.isSorted('agenda.cuenta') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Folio', 'folioContrato') }} {% if contratos.isSorted('folioContrato') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'AgendaId', 'agenda.id') }} {% if contratos.isSorted('agenda.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Cliente', 'nombre') }} {% if contratos.isSorted('nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Agendador', 'agenda.agendador') }} {% if contratos.isSorted('agenda.agendador') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Abogado', 'agenda.abogado') }} {% if contratos.isSorted('agenda.abogado') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Tramitador', 'tramitador') }} {% if contratos.isSorted('tramitador') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Sucursal', 'sucursal') }} {% if contratos.isSorted('sucursal') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Contrato/Anexo', 'fechaCreacion') }} {% if contratos.isSorted('fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th class="pl-1"><img src="{{url_web}}/build/img/ultObs2_transparente.png" width="25px"></th>
+                    <th><i class="fas fa-traffic-light"></i></th>
+                    <th><i class="fas fa-star text-secondary"></i></th>
+                    <th><i class="far fa-credit-card text-success"></i></th>
+                    <th><i class="fas fa-ellipsis-h ml-1"></i></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for contrato in contratos %}
+                <tr>
+                    <td>{{contrato.agenda.cuenta.nombre}}</td>
+                    <td>{{ contrato.folioContrato }}</td>
+                    <td>{{ contrato.agenda.id }}</td>
+                    <td>{{ contrato.nombre }}</td>
+                    <td>{{ contrato.agenda.agendador.nombre }}</td>
+                    <td>{{ contrato.agenda.abogado.nombre }}</td>
+                    <td>{{ contrato.tramitador ? contrato.tramitador.nombre : '' }}</td>
+                    <td>{{ contrato.sucursal}}</td>
+                    <td {% if contrato.vigenciaAnexo is null %}
+                            {% if contrato.vigenciaContrato == 0 %}
+                                style="color:red;font-weight: bold;"
+                            {% endif %}
+                        {% else %}
+                            {% if contrato.vigenciaAnexo == 0 %}
+                                style="color:red;font-weight: bold;"
+                            {% endif %}
+                        {% endif %}
+                    >{{ contrato.fechaCreacion|date('d-m-Y H:i') }}</td>
+                    <td>{{ contrato.diasUltObservacion?contrato.diasUltObservacion:0}}</td>
+                    <td>
+                        {% set pago = proximoPago(contrato.id) %}
+                        {% if pago %}
+                            <input type="hidden" class="pago" value="{{pago|date('Y-m-d')}}">
+                            {{semaforoContrato(pago|date('Y-m-d'))|raw}}
+                        {% endif %}
+                    </td>
+                    <td>
+                    {% if contrato.vip == 1 %}
+                        {{contrato.moroso==0?getVip(1)|raw:getVip(0)|raw}}
+                    {% endif %}
+                    </td>
+                    <td>
+                    {% if contrato.aceptaSuscripcion==1 %}
+                        {% if contrato.estadoSuscripcion != null %}
+                            {% if contrato.estadoSuscripcion == "ACTIVA" %}
+                                <i class="far fa-credit-card text-success" title='Suscripción Activa'></i>
+                            {% else %}
+                                <i class="far fa-credit-card text-danger" title='Suscripción Fallida'></i>
+                            {% endif %}
+                        {% else %}
+                            <i class="far fa-credit-card text-warning" title='Suscripción en proceso'></i>
+                        {% endif %}
+                    {% endif %}
+                    </td>
+                    <td>
+                    <div class="contenedor-boton">
+                        <div class="menu-botones{{contrato.id}} menu-botones bg-white shadow rounded">
+                        <div class="btn-group btn-group-sm" role="group">
+                        {% if sesion.getSesion.usuarioTipo.id in [1,3,4,6,8,7] %}
+                            {% if sesion.getSesion.usuarioTipo.id in [1,8,3,11] %}
+                                {% for audio in contrato.contratoAudios %}
+                                {% set numero=random() %}
+                                    <div class="grAudio{{numero}}">
+                                        <button type="button" class="btn btn-warning btn-sm btn{{numero}}"><i class="fas fa-play"></i></button>
+                                        <a href="#" class="btn btn-danger btn-sm btnCerrar{{numero}}" style="display:hidden"><i class="fas fa-trash-alt"></i></a>
+                                    </div>
+                                    <audio class="audio{{numero}}" id="audio{{numero}}">
+                                        <source src="{{audio_contratos}}{{audio.url}}" type="audio/mp3">
+                                    </audio>
+                                    <script>
+                                        var v{{numero}} = document.getElementById("audio{{numero}}");
+                                        v{{numero}}.pause();
+                                        $('btn{{numero}}').html('<i class="fas fa-play"></i>');
+                                        sound = false;
+                                        $(".btn{{numero}}").click(function(){
+                                            if (!sound) {
+                                                v{{numero}}.play();
+                                                $(this).html('<i class="fas fa-pause"></i>');
+                                                sound = true;
+                                            } else {
+                                                v{{numero}}.pause();
+                                                $(this).html('<i class="fas fa-play"></i>');
+                                                sound = false;
+                                            }
+                                        });
+                                        $('.btnCerrar{{numero}}').hide();
+                                        $(".grAudio{{numero}}").hover(function(){
+                                            $('.btnCerrar{{numero}}').show();
+                                        },function() {
+                                            $('.btnCerrar{{numero}}').hide();
+                                        });
+                                        $('.btnCerrar{{numero}}').click(function(){
+                                            var respuesta=confirm("Esta seguro de eliminar este Audio?");
+                                            if(respuesta){
+                                                window.location.href="{{path('contrato_audio_delete',{'id':contrato.id}) }}";
+                                            }
+                                        });
+                                    </script>
+                                {% else %}
+                                    <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#exampleModal" data-contrato="{{contrato.id}}"><i class="fas fa-upload"></i></button>
+                                {% endfor %}
+                                <a href="{{ path('contrato_cartera', {'id': contrato.id}) }}" type="button" class="btn btn-info btn-sm"><i class="fas fa-briefcase"></i></a>
+                            {% endif %}
+                            {% if contrato.pdf is null %}
+                                <button type="button" class="btn btn-secondary btn-sm"><i class="fas fa-file-pdf"></i></button>
+                            {% else %}
+                                <a href="{{url_web}}{{pdf_contrato}}{{contrato.pdf}}" class="btn btn-success btn-sm"><i class="fas fa-file-pdf"></i></a>
+                            {% endif %}
+                            <a href="{{ path('contrato_show', {'id': contrato.id}) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>
+                            <a href="{{ path('contrato_edit', {'id': contrato.id}) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
+                            {% if contrato.agenda.status.id == 14 %}
+                                <a href="#" class="btn btn-warning btn-sm"><i class="fas fa-retweet"></i></a>
+                            {% else %}
+                                <a href="{{ path('contrato_terminar', {'id': contrato.id}) }}" class="btn btn-danger btn-sm"><i class="fas fa-handshake-slash"></i></a>
+                            {% endif %}
+                            <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn btn-sm text-white bg-dark">LT</a>
+                            <a href="{{path('anexo_index',{'id':contrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos"><i class="fas fa-file"></i></a>
+                            <a href="#" class="btn btn-secondary btn-sm" onclick="javascript:reasignarCerrador({{contrato.id}})"><i class="fas fa-retweet"></i></a>
+                        {% elseif sesion.getSesion.usuarioTipo.id == 12 %}
+                               
+                            <a href="{{path('anexo_index',{'id':contrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos" ><i class="fas fa-file"></i></a>
+                        {% else %}
+                            {% if sesion.getSesion.usuarioTipo.id == 13 %}
+                                {% for audio in contrato.contratoAudios %}
+                                {% set numero=random() %}
+                                    <div class="grAudio{{numero}}">
+                                        <button type="button" class="btn btn-warning btn-sm btn{{numero}}"><i class="fas fa-play"></i></button>
+                                        <a href="#" class="btn btn-danger btn-sm btnCerrar{{numero}}" style="display:hidden"><i class="fas fa-trash-alt"></i></a>
+                                    </div>
+                                    <audio class="audio{{numero}}" id="audio{{numero}}">
+                                        <source src="{{audio_contratos}}{{audio.url}}" type="audio/mp3">
+                                    </audio>
+                                    <script>
+                                        var v{{numero}} = document.getElementById("audio{{numero}}");
+                                        v{{numero}}.pause();
+                                        $('btn{{numero}}').html('<i class="fas fa-play"></i>');
+                                        sound = false;
+                                        $(".btn{{numero}}").click(function(){
+                                            if (!sound) {
+                                                v{{numero}}.play();
+                                                $(this).html('<i class="fas fa-pause"></i>');
+                                                sound = true;
+                                            } else {
+                                                v{{numero}}.pause();
+                                                $(this).html('<i class="fas fa-play"></i>');
+                                                sound = false;
+                                            }
+                                        });
+                                        $('.btnCerrar{{numero}}').hide();
+                                        $(".grAudio{{numero}}").hover(function(){
+                                            $('.btnCerrar{{numero}}').show();
+                                        },function() {
+                                            $('.btnCerrar{{numero}}').hide();
+                                        });
+                                        $('.btnCerrar{{numero}}').click(function(){
+                                            var respuesta=confirm("Esta seguro de eliminar este Audio?");
+                                            if(respuesta){
+                                                window.location.href="{{path('contrato_audio_delete',{'id':contrato.id}) }}";
+                                            }
+                                        });
+                                    </script>
+                                {% else %}
+                                    <button type="button" class="btn btn-warning btn-sm" data-toggle="modal" data-target="#exampleModal" data-contrato="{{contrato.id}}"><i class="fas fa-upload"></i></button>
+                                {% endfor %}
+                            {% endif %}
+                            {% if contrato.pdf is null %}
+                                <button type="button" class="btn btn-secondary btn-sm"><i class="far fa-file-pdf"></i></button>
+                            {% else %}
+                                <a href="{{url_web}}{{pdf_contrato}}{{contrato.pdf}}" class="btn btn-success btn-sm"><i class="fas fa-file-pdf"></i></a>
+                            {% endif %}
+                            <a href="{{ path('contrato_show', {'id': contrato.id}) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>
+                            {% if contrato.agenda.status.id == 14 %}
+                                <a href="#" class="btn btn-warning btn-sm"><i class="fas fa-retweet"></i></a>
+                            {% else %}
+                                <a href="{{ path('contrato_terminar', {'id': contrato.id}) }}" class="btn btn-danger btn-sm"><i class="fas fa-handshake-slash"></i></a>
+                            {% endif %}
+                            <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn btn-sm text-white bg-dark">LT</a>
+                            <a href="{{path('anexo_index',{'id':contrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos"><i class="fas fa-file"></i></a>
+                            <a href="#" class="btn btn-secondary btn-sm" onclick="javascript:reasignarCerrador({{contrato.id}})"><i class="fas fa-retweet"></i></a>
+                        {% endif %}
+                        </div>
+                        </div>
+                        <button type="button" class="text-primary btnPrincipal{{contrato.id}}" onClick="javascript:expandir{{contrato.id}}()"><i class="fas fa-eject icono-botones-{{contrato.id}}"></i></button>
+                        <script>
+                            abierto{{contrato.id}}=0;
+                            function expandir{{contrato.id}}(){
+                                $(".menu-botones{{contrato.id}}").animate({width:"toggle",opacity:"toggle"},200);
+                                if(abierto{{contrato.id}} == 0){
+                                    abierto{{contrato.id}}=1;
+                                    $(".icono-botones-{{contrato.id}}").removeClass("fa-reject").addClass("fa-window-close");
+                                    $(".btnPrincipal{{contrato.id}}").removeClass("text-primary").addClass("text-danger");
+                                }else{
+                                    abierto{{contrato.id}}=0;
+                                    $(".icono-botones-{{contrato.id}}").addClass("fa-reject").removeClass("fa-window-close");
+                                    $(".btnPrincipal{{contrato.id}}").addClass("text-primary").removeClass("text-danger");
+                                }
+                            }
+                        </script>
+                    </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr><td colspan="14">No hay contratos</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer clearfix">
+        <div class="navigation">
+            {{ knp_pagination_render(contratos,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
+            'position': 'centered',
+            'rounded': true,
+            }) }}
+        </div>
+    </div>
+</div>

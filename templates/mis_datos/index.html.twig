@@ -90,9 +90,17 @@
                         <div class="col-md-6 col-sm-12">
                             <small class="text-muted" for="inputNombre">Repetir Password</small>
                             <input type="password" class="form-control" name="rePassword" id="rePassword" aria-describedby="nombreHelp" value="" required>
-                            
                         </div>
-                        <div class="mx-auto"><button type="submit" class="btn btn-primary">Cambiar Password</button></div>
+                        <div class="col-12 mt-2">
+                            <small class="text-muted">Requisitos de la contraseña:</small>
+                            <ul class="list-unstyled mt-1" id="requisitos-password" style="font-size:0.8rem;">
+                                <li id="req-len" class="text-danger"><i class="fas fa-times"></i> Mínimo 8 caracteres</li>
+                                <li id="req-upper" class="text-danger"><i class="fas fa-times"></i> Al menos una mayúscula</li>
+                                <li id="req-num" class="text-danger"><i class="fas fa-times"></i> Al menos un número</li>
+                                <li id="req-special" class="text-danger"><i class="fas fa-times"></i> Al menos un carácter especial (!@#$%...)</li>
+                            </ul>
+                        </div>
+                        <div class="mx-auto"><button type="submit" class="btn btn-primary ">Cambiar Password</button></div>
                     </div>
                 </form>
             </div>
@@ -101,23 +109,55 @@
 </div>
 
 <script>
-    function validaPassword(){
+    function checkRequisito(id, cumple) {
+        var el = document.getElementById(id);
+        if (cumple) {
+            el.className = 'text-success';
+            el.querySelector('i').className = 'fas fa-check';
+        } else {
+            el.className = 'text-danger';
+            el.querySelector('i').className = 'fas fa-times';
+        }
+       
+    }
 
-        if($("#password").val()==""){
-            
+    $('#password').on('input', function() {
+        var val = $(this).val();
+        checkRequisito('req-len',     val.length >= 8);
+        checkRequisito('req-upper',   /[A-Z]/.test(val));
+        checkRequisito('req-num',     /\d/.test(val));
+        checkRequisito('req-special', /[^a-zA-Z0-9]/.test(val));
+        $("button").prop('disabled', false);
+    });
+
+    function validaPassword(){
+        var pwd = $("#password").val();
+        if (pwd === "") {
             return false;
         }
-        if($("#password").val()!=$("#rePassword").val()){
-            $("#error").html(
-               "<div class='alert alert-danger alert-dismissible fade show' role='alert'>"+
-               "<strong>Error</strong> Los passwords deben ser iguales!!!"+
-               "<button type='button' class='close' data-dismiss='alert' aria-label='Close'>"+
-               "<span aria-hidden='true'>&times;</span></button></div>"
-            );
+        if (pwd.length < 8) {
+            $("#error").html("<div class='alert alert-danger alert-dismissible fade show' role='alert'><strong>Error</strong> La contraseña debe tener al menos 8 caracteres.<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button></div>");
+            return false;
+        }
+        if (!/[A-Z]/.test(pwd)) {
+            $("#error").html("<div class='alert alert-danger alert-dismissible fade show' role='alert'><strong>Error</strong> La contraseña debe contener al menos una mayúscula.<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button></div>");
+            return false;
+        }
+        if (!/\d/.test(pwd)) {
+            $("#error").html("<div class='alert alert-danger alert-dismissible fade show' role='alert'><strong>Error</strong> La contraseña debe contener al menos un número.<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button></div>");
+            return false;
+        }
+        if (!/[^a-zA-Z0-9]/.test(pwd)) {
+            $("#error").html("<div class='alert alert-danger alert-dismissible fade show' role='alert'><strong>Error</strong> La contraseña debe contener al menos un carácter especial.<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button></div>");
+            return false;
+        }
+        if (pwd !== $("#rePassword").val()) {
+            $("#error").html("<div class='alert alert-danger alert-dismissible fade show' role='alert'><strong>Error</strong> Los passwords deben ser iguales.<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button></div>");
             return false;
         }
         return true;
     }
+
 </script>
 
 {% endblock %}

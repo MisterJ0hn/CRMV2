@@ -44,15 +44,11 @@ class ResumenCausasController extends AbstractController
             $bTipoCuenta=$request->query->get('bTipoCuenta');
         }
        
-        $resumen = $vwResumenCausasRepository->findGroupByTodo($companias);
-         $resumenCausa=$vwResumenCausasRepository->fechaActualizacion($companias);
-         $fechaActualizacion=null;
-         if($resumenCausa){
-            $fechaActualizacion=$resumenCausa->getFechaActualizacion();
-        }
-        
+        $resumen = $vwResumenCausasRepository->findResumenConFecha($companias);
+        $fechaActualizacion = $resumen[0]['fechaActualizacion'] ?? null;
+
 /*
-        
+
         switch ($bTipoCuenta) {
             case 'alDia':
                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
@@ -124,11 +120,8 @@ class ResumenCausasController extends AbstractController
             $bTipoCuenta=$request->query->get('bTipoCuenta');
         }
        
-        $resumen = $vwResumenCausasRepository->findGroupByTodo($companias);
-        $resumenCausa=$vwResumenCausasRepository->fechaActualizacion($companias);
-        
+        $resumen = $vwResumenCausasRepository->findResumenConFecha($companias);
 
-        
         /*switch ($bTipoCuenta) {
             case 'alDia':
                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
@@ -167,12 +160,8 @@ class ResumenCausasController extends AbstractController
             20 ,
             array('defaultSortFieldName' => 'id', 'defaultSortDirection' => 'desc'));
            
-            $fechaActualizacion=null;
+        $fechaActualizacion = $resumen[0]['fechaActualizacion'] ?? null;
 
-        if($resumenCausa){
-            $fechaActualizacion=$resumenCausa->getFechaActualizacion();
-        }
-        
         return $this->render('resumen_causas/index.html.twig', [
             'pagina' => 'Resumen Causas Civil',
             'resumen'=>$resumen,
@@ -206,12 +195,8 @@ class ResumenCausasController extends AbstractController
             $bTipoCuenta=$request->query->get('bTipoCuenta');
         }
        
-        $resumen = $vwResumenCausasRepository->findGroupByTodo($companias);
-         $resumenCausa=$vwResumenCausasRepository->fechaActualizacion($companias);
-         $fechaActualizacion=null;
-         if($resumenCausa){
-            $fechaActualizacion=$resumenCausa->getFechaActualizacion();
-        }
+        $resumen = $vwResumenCausasRepository->findResumenConFecha($companias);
+        $fechaActualizacion = $resumen[0]['fechaActualizacion'] ?? null;
 
         /*
         switch ($bTipoCuenta) {
@@ -436,13 +421,14 @@ class ResumenCausasController extends AbstractController
         $sheet = $spreadSheet->getActiveSheet();
         $i=2;
         foreach($queryresumen as $causa){
-            if($bTipoCuenta=="clientesActivosVIP" || $bTipoCuenta=="clientesAlDiaVIP" || $bTipoCuenta=="clientesActivos"){
+             $rolrit="";
+            if($bTipoCuenta=="clientesActivosVIP" || $bTipoCuenta=="clientesAlDiaVIP" || $bTipoCuenta=="clientesActivos" || $bTipoCuenta=="clientesAlDia" || $bTipoCuenta=="clientesMorosos"){
                  $rolrit="";
             }else{
-                if($causa->getCausa()->getLetra()!=null && $causa->getCausa()->getRol()!=null && $causa->getCausa()->getAnio()!=null){
-                    $rolrit=$causa->getCausa()->getLetra()."-".$causa->getCausa()->getRol()."-".$causa->getCausa()->getAnio();
-                }else{
-                    $rolrit="";
+                if($causa->getCausa()){
+                    if($causa->getCausa()->getLetra()!=null && $causa->getCausa()->getRol()!=null && $causa->getCausa()->getAnio()!=null){
+                        $rolrit=$causa->getCausa()->getLetra()."-".$causa->getCausa()->getRol()."-".$causa->getCausa()->getAnio();
+                    }
                 }
             }
             $sheet->setCellValue('A'.$i, $causa->getCuentaNombre());
@@ -455,7 +441,13 @@ class ResumenCausasController extends AbstractController
             $sheet->setCellValue('H'.$i, $causa->getMoroso());
             $sheet->setCellValue('I'.$i, $causa->getVip());
             $sheet->setCellValue('J'.$i, $rolrit);
-            $sheet->setCellValue('K'.$i, $causa->getRol());
+            if($bTipoCuenta=="clientesActivosVIP" || $bTipoCuenta=="clientesAlDiaVIP" || $bTipoCuenta=="clientesActivos" || $bTipoCuenta=="clientesAlDia" || $bTipoCuenta=="clientesMorosos"){
+              $sheet->setCellValue('K'.$i, "");
+                
+            }else{
+               
+                $sheet->setCellValue('K'.$i, $causa->getCausa()->getIdCausa());
+            }
            // $sheet->setCellValue('L'.$i, $causa->getFechaRegistroObservacion()?$causa->getFechaRegistroObservacion():"");
             $sheet->setCellValue('L'.$i, $causa->getCausaFinalizada());
             if($bTipoCuenta=="clientesActivosVIP" || $bTipoCuenta=="clientesAlDiaVIP"){

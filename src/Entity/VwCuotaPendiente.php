@@ -83,8 +83,17 @@ class VwCuotaPendiente
     /**
      * @ORM\ManyToOne(targetEntity=Vencimiento::class)
      */
-    private $vencimientoId;
+    private $vencimiento;
 
+    /**
+     * @ORM\Column(type="string", length=50,nullable=true)
+     */
+    private $equipoTrabajo;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Usuario::class)
+     */
+    private $cobrador;
     public function __construct()
     {
         $this->pagoCuotas = new ArrayCollection();
@@ -257,17 +266,35 @@ class VwCuotaPendiente
 
         return $this;
     }
-    public function getVencimientoId(): ?string
-    {
-        return $this->vencimientoId;
-    }
 
-    public function setVencimientoId(?string $vencimientoId): self
+    public function getVencimiento(): ?Vencimiento
     {
-        $this->vencimientoId = $vencimientoId;
+        return $this->vencimiento;
+    }
+    public function setVencimiento(?Vencimiento $vencimiento): self
+    {
+        $this->vencimiento = $vencimiento;
 
         return $this;
     }
+    public function getEquipoTrabajo(): ?string
+    {
+        return $this->equipoTrabajo;
+    }
+    public function setEquipoTrabajo(?string $equipoTrabajo): self
+    {
+        $this->equipoTrabajo = $equipoTrabajo;
 
-    
+        return $this;
+    }
+    public function getCobrador(): ?Usuario
+    {
+        return $this->cobrador;
+    }
+    public function setCobrador(?Usuario $cobrador): self
+    {
+        $this->cobrador = $cobrador;
+
+        return $this;
+    }
 }

@@ -95,10 +95,12 @@ class VwClientesActivosFinalRepository extends ServiceEntityRepository
                 break;
             case 'clientesActivosVIP':
                 $qb->andWhere('v.vip = 1')
+                
                 ->distinct(true);
                 break;
             case 'clientesAlDiaVIP':
                 $qb->andWhere('v.moroso = 0')
+                ->andWhere('v.causaFinalizada = 0')
                 ->andWhere('v.vip = 1')
                 ->distinct(true);
                 break;

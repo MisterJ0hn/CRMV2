@@ -16,7 +16,7 @@ class VencimientoType extends AbstractType
             ->add('valMax')
             ->add('color')
             ->add('icono')
-            ->add('empresa')
+            
         ;
     }
 

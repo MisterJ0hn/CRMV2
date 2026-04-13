@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 use App\Repository\ContratoRepository;
+use App\Repository\VwPrimeraCuotaDeContratoMasSuspendidosRepository;
 use App\Repository\InfAgendadosRepository;
 use App\Repository\UsuarioRepository;
 use Knp\Component\Pager\PaginatorInterface;
@@ -190,7 +191,8 @@ class ReporteController extends AbstractController
      */
     public function abogado(AgendaRepository $agendaRepository,
                             CuentaRepository $cuentaRepository,
-                            PaginatorInterface $paginator,
+                            ContratoRepository $contratoRepository,
+                            VwPrimeraCuotaDeContratoMasSuspendidosRepository $primeraCuotaRepository,
                             Request $request,
                             ModuloPerRepository $moduloPerRepository): Response
     {
@@ -200,11 +202,7 @@ class ReporteController extends AbstractController
 
         $filtro=null;
         $compania=null;
-        $fecha=null;
-        $statues='5';
-        $statuesgroup='4,5,7,6,8,12,13,14,15';
-        $status=null;
-        $tipo_fecha=1;
+
         if(null !== $request->query->get('bFiltro') && trim($request->query->get('bFiltro'))!=''){
             $filtro=$request->query->get('bFiltro');
         }
@@ -216,121 +214,84 @@ class ReporteController extends AbstractController
             $aux_fecha=explode(" - ",$request->query->get('bFecha'));
             $dateInicio=$aux_fecha[0];
             $dateFin=$aux_fecha[1];
-            $statues=$statuesgroup;
         }else{
             $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
             $dateFin=date('Y-m-d');
+        }
 
-        }
-        if(null !== $request->query->get('bTipofecha') ){
-            $tipo_fecha=$request->query->get('bTipofecha');
-        }
-        switch($tipo_fecha){
-            case 0:
-                $fecha="a.fechaCarga between '$dateInicio' and '$dateFin 23:59:59'" ;
-                $fechaAsignado="a.fechaAsignado between '$dateInicio' and '$dateFin 23:59:59'" ;
-                break;
-            case 1:
-                $fecha="a.fechaAsignado between '$dateInicio' and '$dateFin 23:59:59'" ;
-                $fechaAsignado="a.fechaAsignado between '$dateInicio' and '$dateFin 23:59:59'" ;
-                break;
-            case 2:
-                $fecha="a.fechaContrato between '$dateInicio' and '$dateFin 23:59:59'" ;
-                $fechaAsignado="a.fechaAsignado between '$dateInicio' and '$dateFin 23:59:59'" ;
-                break;
-            default:
-                $fecha="a.fechaCarga between '$dateInicio' and '$dateFin 23:59:59'" ;
-                break;
-        }
-       // $fecha="a.fechaAsignado between '$dateInicio' and '$dateFin 23:59:59'" ;
-        
-        
-        //$queryresumen=$agendaRepository->findByAgendGroup(null,$user->getEmpresaActual(),$compania,$statuesgroup,$filtro,null,$fecha);   
         switch($user->getUsuarioTipo()->getId()){
             case 3:
             case 1:
             case 4:
-                $query=$agendaRepository->findByAgendReporte(null,$user->getEmpresaActual(),$compania,$statuesgroup,$filtro,1,$fecha);   
+                $usuarioFiltro=null;
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
             break;
             default:
-                $query=$agendaRepository->findByAgendReporte($user->getId(),$user->getEmpresaActual(),$compania,$statuesgroup,$filtro,1,$fecha);   
+                $usuarioFiltro=$user->getId();
                 $companias=$cuentaRepository->findByPers($user->getId());
             break;
         }
-        $datos=array();
-        foreach($query as $total){
-            $cantAgendado=0;
-            $cantNoCalifica=0;
-            $cantNoContrata=0;
-            $cantNoResponde=0;
-            $cantContrata=0;
-            $cantRatificaTermino=0;
-            $cantDesconoceoDesiste=0;
-            $monto=0;
-            $agenda=$total[0];
-            //$valor=$agenda.valor;
 
-            //$agendados=$agendaRepository->findByAgendReporte($agenda->getAbogado()->getId(),$user->getEmpresaActual(),$compania,'5,15,13,8,7',$filtro,1,$fecha);
-            $agendados=$agendaRepository->findByAgendReporte($agenda->getAbogado()->getId(),$user->getEmpresaActual(),$compania,'5',$filtro,1,$fecha);
-            foreach($agendados as $agendado){
-                $cantAgendado=$agendado['valor'];
-            }
-            $nocalifican=$agendaRepository->findByAgendReporte($agenda->getAbogado()->getId(),$user->getEmpresaActual(),$compania,'6',$filtro,1,$fecha);
-            foreach($nocalifican as $nocalifica){
-                $cantNoCalifica=$nocalifica['valor'];
-            }
-            $nocontratan=$agendaRepository->findByAgendReporte($agenda->getAbogado()->getId(),$user->getEmpresaActual(),$compania,'8',$filtro,1,$fecha);
-            foreach($nocontratan as $nocontrata){
-                $cantNoContrata=$nocontrata['valor'];
-            }
-            $contratan=$agendaRepository->findByAgendReporte($agenda->getAbogado()->getId(),$user->getEmpresaActual(),$compania,'7,14',$filtro,1,$fecha);
-            foreach($contratan as $contrata){
-                $cantContrata=$contrata['valor'];
-                $monto=$contrata['monto'];
-            }
-            $ratificantermino=$agendaRepository->findByAgendReporte($agenda->getAbogado()->getId(),$user->getEmpresaActual(),$compania,'15',$filtro,1,$fecha);
-            foreach($ratificantermino as $ratificatermino){
-                $cantRatificaTermino=$ratificatermino['valor'];
-            }
-            $noresponden=$agendaRepository->findByAgendReporte($agenda->getAbogado()->getId(),$user->getEmpresaActual(),$compania,'4',$filtro,1,$fecha);
-            foreach($noresponden as $noresponde){
-                $cantNoResponde=$noresponde['valor'];
-            }
-            $desconoceodesisten=$agendaRepository->findByAgendReporte($agenda->getAbogado()->getId(),$user->getEmpresaActual(),$compania,'13',$filtro,1,$fecha);
-            foreach($desconoceodesisten as $desconoceodesiste){
-                $cantDesconoceoDesiste=$desconoceodesiste['valor'];
-            }
+        // Agenda stats: total agendado, asesorías efectivas, no contrata, desistidos (filtro por fechaAsignado)
+        $agendaStats = $agendaRepository->findAbogadoStats(
+            $user->getEmpresaActual(), $compania, $filtro, $dateInicio, $dateFin, $usuarioFiltro
+        );
 
-          
-            $datos[]=array(
-                
-                "abogado_id"=>$agenda->getAbogado()->getId(),
-                "abogado_nombre"=>$agenda->getAbogado()->getNombre(),
-                "total"=>$total['valor'],
-                "agendado"=>$cantAgendado,
-                "nocalifica"=>$cantNoCalifica,
-                "nocontrata"=>$cantNoContrata,
-                "contrata"=>$cantContrata,
-                "ratificatermino"=>$cantRatificaTermino,
-                "noresponde"=>$cantNoResponde,
-                'desconoceodesiste'=>$cantDesconoceoDesiste,
-                'monto'=>$monto
-            );
+        // Contrato stats: contratos, honorarios, cuotas, virtualpos, pagos_totales (filtro por fechaCreacion)
+        $contratoStats = $contratoRepository->findAbogadoContratoStats(
+            $user->getEmpresaActual(), $compania, $dateInicio, $dateFin, $usuarioFiltro
+        );
 
+        // Primera cuota stats: pagos_primera_cuota, pagos_totales (filtro por fechaCreacion contrato)
+        $primeraCuotaStats = $primeraCuotaRepository->findAbogadoPrimeraCuota(
+            $user->getEmpresaActual(), $compania, $dateInicio, $dateFin, $usuarioFiltro
+        );
+
+        // Indexar por abogado_id para merge eficiente
+        $contratoMap = [];
+        foreach ($contratoStats as $s) {
+            $contratoMap[$s['abogado_id']] = $s;
         }
-        
+        $cuotaMap = [];
+        foreach ($primeraCuotaStats as $s) {
+            $cuotaMap[$s['abogado_id']] = $s;
+        }
+
+        $datos = [];
+        foreach ($agendaStats as $agenda) {
+            $abogadoId = $agenda['abogado_id'];
+            $contrato  = $contratoMap[$abogadoId] ?? [];
+            $cuota     = $cuotaMap[$abogadoId]    ?? [];
+
+            $contratos  = (int)($contrato['contratos']  ?? 0);
+            $sumaMonto  = (float)($contrato['suma_monto'] ?? 0);
+            $sumaCuotas = (int)($contrato['suma_cuotas'] ?? 0);
+            echo $agenda['abogado_id'].",";
+            $datos[] = [
+                'abogado_id'         => $abogadoId,
+                'abogado_nombre'     => $agenda['abogado_nombre'],
+                'total_agendado'     => (int)$agenda['total_agendado'],
+                'asesorias_efectivas'=> (int)$agenda['asesorias_efectivas'],
+                'contratos'          => $contratos,
+                'no_contrata'        => (int)$agenda['no_contrata'],
+                'desistidos'         => (int)$agenda['desistidos'],
+                'cierre_virtualpos'  => (int)($contrato['cierre_virtualpos'] ?? 0),
+                'honorarios_promedio'=> $contratos > 0 ? round($sumaMonto / $contratos) : 0,
+                'pagos_primera_cuota'=> (int)($cuota['pagos_primera_cuota'] ?? 0),
+                'cuotas_promedio'    => $contratos > 0 ? round($sumaCuotas / $contratos, 1) : 0,
+                'pagos_totales'      => (int)($cuota['pagos_totales'] ?? 0),
+            ];
+        }
+
         return $this->render('reporte/reporte_abogado.html.twig', [
             'controller_name' => 'ReporteController',
-            'pagina'=>$pagina->getNombre(),
-            'reportes'=>$datos,
-            'bFiltro'=>$filtro,
-            'companias'=>$companias,
-            'bCompania'=>$compania,
-            'dateInicio'=>$dateInicio,
-            'dateFin'=>$dateFin,
-            'tipoFecha'=>$tipo_fecha,
-
+            'pagina'          => $pagina->getNombre(),
+            'reportes'        => $datos,
+            'bFiltro'         => $filtro,
+            'companias'       => $companias,
+            'bCompania'       => $compania,
+            'dateInicio'      => $dateInicio,
+            'dateFin'         => $dateFin,
         ]);
     }
 
@@ -400,51 +361,39 @@ class ReporteController extends AbstractController
                 break;
         }
        // $fecha="a.fechaAsignado between '$dateInicio' and '$dateFin 23:59:59'" ;
-        
-        
-        //$queryresumen=$agendaRepository->findByAgendGroup(null,$user->getEmpresaActual(),$compania,$statuesgroup,$filtro,null,$fecha);   
+
         switch($user->getUsuarioTipo()->getId()){
             case 3:
             case 1:
             case 4:
-                $query=$agendaRepository->findByCampaniaReporte(null,$user->getEmpresaActual(),$compania,$statuesgroup,$filtro,0,$fecha);   
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
             break;
             default:
-                $query=$agendaRepository->findByCampaniaReporte($user->getId(),$user->getEmpresaActual(),$compania,$statuesgroup,$filtro,0,$fecha);   
                 $companias=$cuentaRepository->findByPers($user->getId());
             break;
         }
+
+        $resumen=$agendaRepository->findByCampaniaReporteResumen($user->getEmpresaActual(),$compania,$filtro,$fecha);
+        $cargaManual=$agendaRepository->findCargaManualReporteResumen($user->getEmpresaActual(),$compania,$fecha);
+
         $datos=array();
-        foreach($query as $total){
-            $cantAgendado=0;
-            $cantContrata=0;
-            $monto=0;
-            $agenda=$total[0];
-            //$valor=$agenda.valor;
-            
-            $agendados=$agendaRepository->findByCampaniaReporte(null,$user->getEmpresaActual(),$compania,5,null,0,$fecha,$agenda->getCampania());
-            foreach($agendados as $agendado){
-                $cantAgendado=$agendado['valor'];
-            }
-           
-            $contratan=$agendaRepository->findByCampaniaReporte(null,$user->getEmpresaActual(),$compania,'7',null,0,$fecha,$agenda->getCampania());
-            foreach($contratan as $contrata){
-                $cantContrata=$contrata['valor'];
-                $monto=$contrata['monto'];
-            }
-
-          
+        foreach($resumen as $row){
             $datos[]=array(
-                
-               
-                "campania_nombre"=>$agenda->getCampania(),
-                "total"=>$total['valor'],
-                "agendado"=>$cantAgendado,
-                "contrata"=>$cantContrata,
-                'monto'=>$monto
+                "campania_nombre"=>$row['campania'],
+                "total"=>$row['total'],
+                "agendado"=>$row['agendado'],
+                "contrata"=>$row['contrata'],
+                'monto'=>$row['monto']
             );
-
+        }
+        if(!is_null($cargaManual)){
+            $datos[]=array(
+                "campania_nombre"=>$cargaManual['campania'],
+                "total"=>$cargaManual['total'],
+                "agendado"=>$cargaManual['agendado'],
+                "contrata"=>$cargaManual['contrata'],
+                'monto'=>$cargaManual['monto']
+            );
         }
         
         return $this->render('reporte/reporte_campania.html.twig', [
@@ -478,7 +427,7 @@ class ReporteController extends AbstractController
         $compania=null;
         $fecha=null;
         $statues='5';
-        $statuesgroup='7,14,13,12,15';
+        $statuesgroup='1,2,3,4,5,6,7,8,9,10,11,12,13,14,15';
         $status=null;
         $tipo_fecha=2;
         if(null !== $request->query->get('bFiltro') && trim($request->query->get('bFiltro'))!=''){

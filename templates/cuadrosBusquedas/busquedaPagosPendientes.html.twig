@@ -1,0 +1,56 @@
+<div class="card">
+        <div class="card-header">
+            Filtro
+        </div>
+        <div class="card-body">
+            
+            <div class="row">
+                <div class="col-sm-12 col-md-3">
+                <label>Compañia</label>
+                    <select name="bCompania" class="form-control">
+                        <option value="0">Todos</option>
+                        {% for compania in companias %}
+                            <option value="{{compania.id}}"
+                            {% if bCompania==compania.id %}
+                                selected
+                            {% endif %}
+                            >{{compania.nombre}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-sm-12 col-md-2">
+                <label>AgendaId/Folio</label>
+                        <input type="text" class="form-control bFolio" name="bFolio"  placeholder="" value="{{bFolio}}">
+                </div>
+                <div class="col-sm-12 col-md-2">
+                <label>Rut</label>
+                        <input type="text" class="form-control bRut format-rut" name="bRut"  placeholder="" value="{{bRut}}">
+                </div>
+                 <div class="col-sm-12 col-md-2">
+                 <label>Nombre/Teléfono</label>
+                        <input type="text" class="form-control bFiltro" name="bFiltro" placeholder="" value="">
+                </div>               
+                <div class="col-sm-12 col-md-2">
+                    <label>RangoFecha</label>
+                    <input type="text" class="form-control" name="bFecha" id="bFecha"  value="">
+                </div>                              
+                <div class="col-sm-12 col-md-1">
+                    <button class="btn btn-primary btn-busqueda" style="margin-top: 30px;"><i class="fas fa-search"></i></button>
+                </div>
+           
+            </div>
+            
+        </div>  
+        
+    </div>
+
+    <script>
+        $(".format-rut").inputmask({
+            mask:"9{1,2}.9{3}.9{3}-(9|k|K)",
+            casing: 'upper',
+            clearIncomplete: false,
+            numericInput: true,
+            positionCaretOnClick: 'none'
+        });
+    </script>

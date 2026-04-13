@@ -97,6 +97,45 @@ class VwContratoRepository extends ServiceEntityRepository
         ;
     }
 
+    public function findByPersQuery($usuario=null,$empresa=null,$compania=null,$filtro=null,$agendador=null, $otros=null, $status=null)
+    {
+        $query=$this->createQueryBuilder('c');
+        $query->join('c.agenda','a');
+        $query->join('a.cuenta','cu');
+        $query->leftJoin('c.estadoEncuesta','e');
+
+        if(!is_null($empresa)){
+            $query->andWhere('cu.empresa = '.$empresa);
+        }
+        if(!is_null($usuario)){
+            $query->andWhere('a.abogado = '.$usuario);
+        }
+        if(!is_null($agendador)){
+            $query->andWhere('a.agendador = '.$agendador);
+        }
+        if(!is_null($filtro)){
+            $query->andWhere("(c.nombre like '%$filtro%' or c.telefono like '%$filtro%' or c.email like '%$filtro%')");
+        }
+        if(!is_null($compania)){
+            $query->andWhere('a.cuenta = '.$compania);
+        }
+        if(!is_null($otros)){
+            $query->andWhere($otros);
+        }
+        if(!is_null($status)){
+            if($status==0){
+                $query->andWhere('c.FechaEncuesta is not null');
+            }
+            if($status==1){
+                $query->andWhere('c.FechaGestion is not null');
+            }
+        }
+        return $query
+            ->orderBy('c.id', 'DESC')
+            ->getQuery()
+        ;
+    }
+
     /**
       * @return Contrato[] Retorna un array de Agenda objects sin contrato creado
     */

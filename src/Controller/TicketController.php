@@ -21,6 +21,7 @@ use App\Repository\UsuarioCuentaRepository;
 use App\Repository\UsuarioGrupoRepository;
 use App\Repository\UsuarioRepository;
 use App\Repository\UsuarioTipoRepository;
+use App\Repository\EquipoTrabajoUsuarioRepository;
 use App\Repository\VwCuotaPendienteRepository;
 use Doctrine\ORM\EntityRepository;
 use Knp\Component\Pager\PaginatorInterface;
@@ -217,16 +218,19 @@ class TicketController extends AbstractController
             
             $contrato=$contratoRepository->findOneBy(['folio'=>$folio]);
             $ticket=$ticketRepository->findAbierto($folio);
-            $usuarioGrupo = $usuarioGrupoRepository->findOneBy(['grupo'=>$contrato->getGrupo()]);
-            if($usuarioGrupo->getUsuario() != null){
-                $usuarioReporte=$usuarioGrupo->getUsuario()->getNombre();
-            }else{
-                $error='<div class="alert alert-danger alert-dismissible">
-                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                <h5><i class="icon fas fa-ban"></i> Error!!</h5>
-                   No hay usuario asignado al grupo ('.$contrato->getGrupo().')de este contrato
-                 </div>';
-                 $contrato = null;
+            if($contrato){
+                $usuarioGrupo = $usuarioGrupoRepository->findOneBy(['grupo'=>$contrato->getGrupo()]);
+
+                if($usuarioGrupo->getUsuario() != null){
+                    $usuarioReporte=$usuarioGrupo->getUsuario()->getNombre();
+                }else{
+                    $error='<div class="alert alert-danger alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                    <h5><i class="icon fas fa-ban"></i> Error!!</h5>
+                    No hay usuario asignado al grupo ('.$contrato->getGrupo().')de este contrato
+                    </div>';
+                    $contrato = null;
+                }
             }
       
             if($ticket){
@@ -479,7 +483,7 @@ class TicketController extends AbstractController
             $rechazado = true;
         }
          
-        echo "Hbilitar confirmar: ".$habilitarConfirmar;
+        
         return $this->render('ticket/gestion.html.twig', [
             'ticket' => $ticket,
             'ticketTipo'=>$ticket->getTicketTipo(),
@@ -492,7 +496,8 @@ class TicketController extends AbstractController
             'habilitarConfirmar'=>$habilitarConfirmar,
             'usuarioIdActual'=>$usuarioActual->getId(),
             'usuarioIdOrigenTicket'=>$ticket->getOrigen()->getId(),
-            'usuarioIdEncargadoTicket'=>$ticket->getEncargado()->getId()
+            'usuarioIdEncargadoTicket'=>$ticket->getEncargado()->getId(),
+            'perfilIdActual'=>$usuarioActual->getUsuarioTipo()->getId(),
             
         ]);
     }
@@ -665,15 +670,13 @@ class TicketController extends AbstractController
      /**
      * @Route("/{id}/usuarios", name="app_ticket_show", methods={"GET"})
      */
-    public function usuarios(Request $request, 
-                            Contrato $contrato, 
-                            UsuarioRepository $usuarioRepository, 
+    public function usuarios(Request $request,
+                            Contrato $contrato,
+                            UsuarioRepository $usuarioRepository,
                             UsuarioTipoRepository $usuarioTipoRepository,
-                            VwCuotaPendienteRepository $vwCuotaPendienteRepository ): Response
+                            EquipoTrabajoUsuarioRepository $equipoTrabajoUsuarioRepository): Response
     {
         $usuario_id=0;
-
-        
 
         if($request->query->get('perfil_id')==0){
             $usuarios=$usuarioRepository->findBy(['usuarioTipo'=>[2,3,4,5,6,7,10,12,13],'estado'=>1]);
@@ -688,18 +691,10 @@ class TicketController extends AbstractController
                     $usuario_id=$contrato->getAgenda()->getAbogado()->getId();
                     break;
                 case 12://cobrador
-
-                    $cuotaPendiente = $vwCuotaPendienteRepository->find($contrato->getId());
-
-                    if($cuotaPendiente){
-                        $usuario_id = $cuotaPendiente->getCobrador()->getId();
-                    }else{
-                        foreach ($contrato->getIdLote()->getUsuarioLotes() as $usuario) {
-                            $usuario_id = $usuario->getUsuario()->getId();
-                        }
+                    $cobradorId = $equipoTrabajoUsuarioRepository->findCobradorByContrato($contrato->getId());
+                    if ($cobradorId) {
+                        $usuario_id = $cobradorId;
                     }
-                   
-                    
                     break;
                 case 7:
                     $usuario_id=$contrato->getTramitador()->getId();

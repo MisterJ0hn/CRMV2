@@ -1848,5 +1848,45 @@ class Contrato
 
         return $this;
     }
- 
+
+    // --- Propiedades virtuales calculadas (no mapeadas a BD) ---
+    private ?int $diasUltObservacion = null;
+    private ?int $vigenciaContrato = null;
+    private ?int $vigenciaAnexo = null;
+    private ?int $vip = null;
+    private ?int $moroso = null;
+    private ?string $folioContrato = null;
+
+    // --- Propiedades virtuales consultor ---
+    private ?string $consultorNombre = null;
+    private ?\DateTimeInterface $fechaCreacionVista = null;
+    private ?\DateTimeInterface $fechaUltimaObservacion = null;
+
+    public function getDiasUltObservacion(): ?int { return $this->diasUltObservacion; }
+    public function setDiasUltObservacion(?int $v): self { $this->diasUltObservacion = $v; return $this; }
+
+    public function getVigenciaContrato(): ?int { return $this->vigenciaContrato; }
+    public function setVigenciaContrato(?int $v): self { $this->vigenciaContrato = $v; return $this; }
+
+    public function getVigenciaAnexo(): ?int { return $this->vigenciaAnexo; }
+    public function setVigenciaAnexo(?int $v): self { $this->vigenciaAnexo = $v; return $this; }
+
+    public function getVip(): ?int { return $this->vip; }
+    public function setVip(?int $v): self { $this->vip = $v; return $this; }
+
+    public function getMoroso(): ?int { return $this->moroso; }
+    public function setMoroso(?int $v): self { $this->moroso = $v; return $this; }
+
+    public function getFolioContrato(): ?string { return $this->folioContrato; }
+    public function setFolioContrato(?string $v): self { $this->folioContrato = $v; return $this; }
+
+    public function getConsultorNombre(): ?string { return $this->consultorNombre; }
+    public function setConsultorNombre(?string $v): self { $this->consultorNombre = $v; return $this; }
+
+    public function getFechaCreacionVista(): ?\DateTimeInterface { return $this->fechaCreacionVista; }
+    public function setFechaCreacionVista(?\DateTimeInterface $v): self { $this->fechaCreacionVista = $v; return $this; }
+
+    public function getFechaUltimaObservacion(): ?\DateTimeInterface { return $this->fechaUltimaObservacion; }
+    public function setFechaUltimaObservacion(?\DateTimeInterface $v): self { $this->fechaUltimaObservacion = $v; return $this; }
+
 }

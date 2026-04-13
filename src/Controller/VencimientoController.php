@@ -32,7 +32,9 @@ class VencimientoController extends AbstractController
      */
     public function new(Request $request): Response
     {
+        $user = $this->getUser();
         $vencimiento = new Vencimiento();
+        $vencimiento->setEmpresa($user->getEmpresaActual());
         $form = $this->createForm(VencimientoType::class, $vencimiento);
         $form->handleRequest($request);
 
@@ -65,9 +67,16 @@ class VencimientoController extends AbstractController
      */
     public function edit(Request $request, Vencimiento $vencimiento): Response
     {
+        $user = $this->getUser();
+
+        echo "empresaActual: ".$user->getEmpresaActual();
+        if($vencimiento->getEmpresa()->getId() !== $user->getEmpresaActual()){
+            throw $this->createAccessDeniedException("No tienes permiso para editar este vencimiento");
+        }
         $form = $this->createForm(VencimientoType::class, $vencimiento);
         $form->add('monto_max');
         $form->add('solo_por_admin',CheckboxType::class,["required"=>false]);
+        
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

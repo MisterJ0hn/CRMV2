@@ -19,7 +19,7 @@ class VwCuotaConEquipoRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, VwCuotaConEquipo::class);
     }
-    public function findVencimiento($usuario=null,$empresa=null,$compania=null,$filtro=null,$tipoUsuario=null,$vigente=true, $otros=null,$conrestriccion=true,$esCobranza=false,$segmento=null){
+    public function findVencimiento($usuario=null,$empresa=null,$compania=null,$filtro=null,$tipoUsuario=null,$vigente=true, $otros=null,$conrestriccion=true,$esCobranza=false,$segmento=null, $rut=null){
         
          /**JRM: 2025-11-13 - Se agrega función de si la deuda es menor a la deuda minima, 
         *devuelva la fecha de la siguiente cuota
@@ -85,6 +85,10 @@ class VwCuotaConEquipoRepository extends ServiceEntityRepository
          ;
 
         }
+        if(!is_null($rut)){
+            $query->andWhere("co.rut = '$rut'");
+        }
+
         $query->orderBy("co.fechaCreacion","Desc");
         $query->groupBy('c.contrato');
 

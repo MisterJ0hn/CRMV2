@@ -387,5 +387,19 @@ class PjudMovimientosController extends AbstractController
             return $this->json(["exito"=>false,"mensaje"=>$e->getMessage()],500);
         }
     }
+
+    /**
+     * @Route("/{id}/validar_scraping", name="pjud_movimientos_validar_scraping" , methods={"GET","POST"})
+     */
+    public function validarScraping(Causa $causa, PjudCausaRepository $pjudCausaRepository):JsonResponse
+    {
+        try{
+            
+            $estadoConsulta = $causa->getEstadoConsultaPjud();
+            return $this->json(['estadoConsulta'=>$estadoConsulta],200);
+        }catch(Exception $e){
+            return $this->json(["exito"=>false,"mensaje"=>$e->getMessage()],500);
+        }
+    }
     
 }

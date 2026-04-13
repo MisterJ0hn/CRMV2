@@ -53,6 +53,7 @@ class PagoController extends AbstractController
         $compania=null;
         $otros='';
         $fecha=null;
+        $rut=null;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
         if(null !== $request->query->get('bFolio') && $request->query->get('bFolio')!=''){
             $folio=$request->query->get('bFolio');
             $otros=" (co.folio= $folio or co.agenda = $folio)";
@@ -77,6 +78,9 @@ class PagoController extends AbstractController
                 $dateFin=date('Y-m-d');
 
             }
+            if(null !== $request->query->get('bRut') && $request->query->get('bRut')!=''){
+                $rut=$request->query->get('bRut');
+            }
             $fecha="c.fechaPago between '$dateInicio' and '$dateFin 23:59:59' ";
         }
       
@@ -86,26 +90,26 @@ class PagoController extends AbstractController
             case 4:
             case 8:
             case 12:
-                $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha);
-                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
+                $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha,false,null,null,$rut);
+                                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             case 7://tramitador
-                $query=$cuotaRepository->findVencimiento($user->getId(),null,null,$filtro,7,true,$fecha);
+                $query=$cuotaRepository->findVencimiento($user->getId(),null,null,$filtro,7,true,$fecha,false,null,null,$rut);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             case 6: //abogado
-                $query=$cuotaRepository->findVencimiento($user->getId(),null,null,$filtro,6,true,$fecha);
+                $query=$cuotaRepository->findVencimiento($user->getId(),null,null,$filtro,6,true,$fecha,false,null,null,$rut);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             case 11://Administrativo
                 //$query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha,true);
-                $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha);
+                $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha,false,null,null,$rut);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
             break;
             
             default:
                 //$query=$contratoRepository->findByPers(null,null,$compania,$filtro,null,$fecha,true);
-                $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha);
+                $query=$cuotaRepository->findVencimiento(null,null,null,$filtro,null,true,$fecha,false,null,null,$rut);
                 $companias=$cuentaRepository->findByPers(null);
                 
             break;
@@ -122,6 +126,7 @@ class PagoController extends AbstractController
             'cuotas' => $cuotas,
             'bFiltro'=>$filtro,
             'bFolio'=>$folio,
+            'bRut'=>$rut,
             'companias'=>$companias,
             'bCompania'=>$compania,
             'dateInicio'=>$dateInicio,
@@ -979,53 +984,62 @@ class PagoController extends AbstractController
         // this condition is needed because the 'brochure' field is not required
         // so the PDF file must be processed only when a file is uploaded
         if ($brochureFile) {
-
+            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];
+            $extension = strtolower(pathinfo($_FILES['file']['name'][0], PATHINFO_EXTENSION));
+            if (!in_array($extension, $allowedExtensions)) {
+                return new Response('Extensión no permitida. Solo jpg, png, gif o pdf.', 400);
+            }
 
             $fichero_subido = $this->getParameter('url_root').
             $this->getParameter('img_pagos') . basename($_FILES['file']['name'][0]);
             
-           /* if (move_uploaded_file($_FILES['file']['tmp_name'][0], $fichero_subido)) {
-                echo "El fichero es válido y se subió con éxito.\n";
-            } else {
-                echo "¡Posible ataque de subida de ficheros!\n";
-            }*/
-
-            //echo filesize($_FILES['file']['tmp_name'][0]);
-            $source=$_FILES['file']['tmp_name'][0];
-            $imgInfo = getimagesize($source); 
+            $source = $_FILES['file']['tmp_name'][0];
             
-            $mime = $imgInfo['mime']; 
-             
-            // Creamos una imagen
-            switch($mime){ 
-                case 'image/jpeg': 
-                    $image = imagecreatefromjpeg($source); 
-                    break; 
-                case 'image/png': 
-                    $image = imagecreatefrompng($source); 
-                    break; 
-                case 'image/gif': 
-                    $image = imagecreatefromgif($source); 
-                    break; 
-                default: 
-                    $image = imagecreatefromjpeg($source); 
-            } 
+            if ($extension === 'pdf') {
+                // Para PDF, mover directamente sin procesar
+                if (!move_uploaded_file($source, $fichero_subido)) {
+                    return new Response('Error al subir el archivo PDF.', 500);
+                }
+            } else {
+                // Procesar como imagen
+                $imgInfo = @getimagesize($source);
+                if ($imgInfo === false) {
+                    return new Response('Archivo no es una imagen válida.', 400);
+                }
+                
+                $mime = $imgInfo['mime']; 
+                 
+                // Creamos una imagen
+                switch($mime){ 
+                    case 'image/jpeg': 
+                        $image = imagecreatefromjpeg($source); 
+                        break; 
+                    case 'image/png': 
+                        $image = imagecreatefrompng($source); 
+                        break; 
+                    case 'image/gif': 
+                        $image = imagecreatefromgif($source); 
+                        break; 
+                    default: 
+                        return new Response('Formato de imagen no soportado. Solo jpg, png o gif.', 400);
+                } 
 
-            $quality=100;
-            if(filesize($_FILES['file']['tmp_name'][0])>1000000){
-                $quality=75;
-            }
-            if(filesize($_FILES['file']['tmp_name'][0])>2000000){
-                $quality=60;
-            }
-            if(filesize($_FILES['file']['tmp_name'][0])>3000000){
-                $quality=50;
-            }
-            if(filesize($_FILES['file']['tmp_name'][0])>4000000){
-                $quality=40;
-            }
-            // Guardamos la imagen
-            imagejpeg($image, $fichero_subido, $quality); 
+                $quality=100;
+                if(filesize($_FILES['file']['tmp_name'][0])>1000000){
+                    $quality=75;
+                }
+                if(filesize($_FILES['file']['tmp_name'][0])>2000000){
+                    $quality=60;
+                }
+                if(filesize($_FILES['file']['tmp_name'][0])>3000000){
+                    $quality=50;
+                }
+                if(filesize($_FILES['file']['tmp_name'][0])>4000000){
+                    $quality=40;
+                }
+                // Guardamos la imagen
+                imagejpeg($image, $fichero_subido, $quality); 
+            } 
             /*
             $originalFilename = pathinfo($brochureFile->getClientOriginalName(), PATHINFO_FILENAME);
             // this is needed to safely include the file name as part of the URL
@@ -1475,9 +1489,6 @@ class PagoController extends AbstractController
             
             $pagoCuotasRepository->asociarPagos($contrato,$cuotaRepository,$pagoCuotasRepository,$pago);
             $primeraCuotaVigente=$cuotaRepository->findOneByPrimeraVigente($contrato->getId());
- 
-            
-            
 
             return $this->redirectToRoute('verpagos_index',['id'=>$contrato->getId()]);
         

@@ -6,11 +6,14 @@ use App\Entity\UsuarioCategoria;
 use App\Entity\Empresa;
 use App\Entity\UsuarioCuenta;
 use App\Entity\Cuenta;
+use App\Entity\Privilegio;
 use App\Entity\UsuarioStatus;
 use App\Form\UsuarioType;
 use App\Repository\UsuarioRepository;
 use App\Repository\UsuarioTipoRepository;
 use App\Repository\ModuloPerRepository;
+use App\Repository\PrivilegioRepository;
+use App\Repository\PrivilegioTipousuarioRepository;
 use App\Repository\UsuarioTipoDocumentoRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -65,7 +68,9 @@ class AdministrativoController extends AbstractController
                         UserPasswordEncoderInterface $encoder,
                         UsuarioTipoRepository $usuarioTipoRepository,
                         ModuloPerRepository $moduloPerRepository,
-                        UsuarioTipoDocumentoRepository $tipoDocumento): Response
+                        UsuarioTipoDocumentoRepository $tipoDocumento,
+                        PrivilegioTipousuarioRepository $privilegioTipousuarioRepository,
+                        PrivilegioRepository $privilegioRepository): Response
     {
         $this->denyAccessUnlessGranted('create','administrativo');
         $user=$this->getUser();
@@ -132,6 +137,22 @@ class AdministrativoController extends AbstractController
                 $usuario->setEmpresaActual($cuenta->getEmpresa()->getId());
                 $entityManager->persist($usuario);
                 $entityManager->flush();
+            }
+            $privilegioTipousuarios=$privilegioTipousuarioRepository->findBy(['tipousuario'=>$usuario->getUsuarioTipo()->getId()]);
+            foreach($privilegioTipousuarios as $privilegioTipousuario){
+                $privilegio=$privilegioRepository->findBy(["moduloPer"=>$privilegioTipousuario->getModuloPer()->getId(),"usuario"=>$usuario->getId()]);
+                if(!$privilegio){
+    
+                    $privilegioNew=new Privilegio();
+                    $privilegioNew->setUsuario($usuario);
+                    $privilegioNew->setModuloPer($privilegioTipousuario->getModuloPer());
+                    $privilegioNew->setAccion($privilegioTipousuario->getAccion());
+    
+                    $entityManager = $this->getDoctrine()->getManager();
+                    $entityManager->persist($privilegioNew);
+                    $entityManager->flush();
+    
+                }
             }
 
             return $this->redirectToRoute('administrativo_index');

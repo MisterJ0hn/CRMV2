@@ -81,11 +81,15 @@
   
     <table border="1"  cellspacing="0" width="50%">
         {% for cuota in anexo.cuotas %}
-        <tr>
-            <td align="right">{{cuota.numero}}</td>
-            <td align="center">{{cuota.fechaPago|date('Y-m-d')}}</td>
-            <td align="right">${{cuota.monto|number_format(0,",",".")}}</td>
-        </tr>
+            {% if cuota.anular is null %}
+                
+            
+            <tr>
+                <td align="right">{{cuota.numero}}</td>
+                <td align="center">{{cuota.fechaPago|date('Y-m-d')}}</td>
+                <td align="right">${{cuota.monto|number_format(0,",",".")}}</td>
+            </tr>
+            {% endif %}
         {% endfor %}
     </table>
     {% endif %}

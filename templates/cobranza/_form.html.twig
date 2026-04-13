@@ -17,7 +17,7 @@
                         </div>
                         <div class="col-sm-12 col-md-3">
                             <small class="text-muted">Función Gestión (*)</small>
-                            {{form_row(form.funcion,{'label':false,'attr':{'class':'form-control'}})}}
+                            {{form_row(form.funcion,{'label':false,'attr':{'class':'form-control cbo-funcion'}})}}
                                     
                                     
                         </div>
@@ -112,5 +112,13 @@
                 $(".datetimepicker-compromiso").val('');
               }
             });
+    })
+    $(".cbo-funcion").on('change',function(){
+        if($(this).val()==5){
+            console.log("ocultar respuesta");
+            $(".cbo-respuesta").hide();
+        }else{
+            $(".cbo-respuesta").show();
+        }
     })
 </script>

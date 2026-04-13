@@ -4,7 +4,7 @@
 
 {% block body %}
  <form action="" method="get" class="frmBuscar">
-        {{ include('/cuadrosBusquedas/busquedaContrato.html.twig', {'TipoFiltro':TipoFiltro}) }}
+        {{ include('/cuadrosBusquedas/busquedaPagosPendientes.html.twig') }}
 </form>
     <div class="card">
         
@@ -82,7 +82,7 @@
                     </tr>
                 {% else %}
                     <tr>
-                        <td colspan="16">No hay contratos</td>
+                        <td colspan="13">No hay contratos</td>
                     </tr>
                 {% endfor %}
                 </tbody>
