@@ -1,0 +1,282 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Contrato index{% endblock %}
+
+{% block body %}
+<style>
+.contenedor-boton{
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.menu-botones{
+    display: none;
+    margin-right: 10px;
+    white-space: nowrap;
+}
+.menu-botones button{
+    margin-right: 5px;
+}
+/* Skeleton */
+.skeleton-line {
+    background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s infinite;
+    border-radius: 4px;
+    height: 14px;
+    display: inline-block;
+}
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+</style>
+
+    <form action="" method="get" class="form-envio">
+        {{ include('/cuadrosBusquedas/busquedaContrato.html.twig', {'TipoFiltro':TipoFiltro}) }}
+    </form>
+
+    <div id="resultado">
+         <!--<div class="card">
+            <div class="card-header"></div>
+            <div class="card-body table-responsive p-0" style="height:500px;">
+               <table class="table table-head-fixed text-nowrap table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th><span class="skeleton-line" style="width:70px"></span></th>
+                            <th><span class="skeleton-line" style="width:50px"></span></th>
+                            <th><span class="skeleton-line" style="width:60px"></span></th>
+                            <th><span class="skeleton-line" style="width:90px"></span></th>
+                            <th><span class="skeleton-line" style="width:70px"></span></th>
+                            <th><span class="skeleton-line" style="width:70px"></span></th>
+                            <th><span class="skeleton-line" style="width:70px"></span></th>
+                            <th><span class="skeleton-line" style="width:60px"></span></th>
+                            <th><span class="skeleton-line" style="width:80px"></span></th>
+                            <th><span class="skeleton-line" style="width:20px"></span></th>
+                            <th><span class="skeleton-line" style="width:20px"></span></th>
+                            <th><span class="skeleton-line" style="width:20px"></span></th>
+                            <th><span class="skeleton-line" style="width:20px"></span></th>
+                            <th><span class="skeleton-line" style="width:20px"></span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for i in 1..12 %}
+                        <tr>
+                            <td><span class="skeleton-line" style="width:{{ random([60,80,70]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([40,55,50]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([30,45,40]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([80,110,100]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([60,90,75]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([60,90,75]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([50,80,65]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([50,70,60]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:{{ random([70,90,80]) }}px"></span></td>
+                            <td><span class="skeleton-line" style="width:20px"></span></td>
+                            <td><span class="skeleton-line" style="width:20px"></span></td>
+                            <td></td>
+                            <td></td>
+                            <td><span class="skeleton-line" style="width:24px"></span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer clearfix">
+                <div class="navigation text-center">
+                    <span class="skeleton-line" style="width:220px; height:32px; border-radius:6px;"></span>
+                </div>
+            </div>
+        </div>-->
+    </div>
+
+<!-- Modal Audio Upload -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Cargar Audio</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+            <form action="{{path('contrato_audio_upload')}}" enctype="multipart/form-data" method="post">
+                <div class="row">
+                    <div class="col-sm-9 col-md-9">
+                        <input type="file" name="file" class="form-control" accept=".mp3,.wav,.amr,.ogg,.mp4">
+                         <small class="text-muted">Solo permite formato mp3, wav, ogg o amr</small><br>
+                        <input type="hidden" name="hdContrato" id="hdContrato">
+                    </div>
+                    <div class="col-sm-3 col-md-3">
+                        <button type="submit" class="btn btn-primary btn-subir-audio">Subir <i class="fas fa-upload"></i></button>
+                    </div>
+                </div>
+            </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Reasignar -->
+<div class="modal fade" id="reasignarModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Reasignar</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+            <div class="reasignarModalBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <script>
+        var _filtrosActuales = '';
+
+        function skeletonHTML() {
+            var filas = '';
+            var anchos = [[60,80,70],[40,55,50],[30,45,40],[80,110,100],[60,90,75],[60,90,75],[50,80,65],[50,70,60],[70,90,80]];
+            for (var i = 0; i < 12; i++) {
+                filas += '<tr>';
+                anchos.forEach(function(w) {
+                    filas += '<td><span class="skeleton-line" style="width:' + w[i % w.length] + 'px"></span></td>';
+                });
+                filas += '<td><span class="skeleton-line" style="width:20px"></span></td>';
+                filas += '<td><span class="skeleton-line" style="width:20px"></span></td>';
+                filas += '<td><span class="skeleton-line" style="width:20px"></span></td><td><span class="skeleton-line" style="width:20px"></span></td>';
+                filas += '<td><span class="skeleton-line" style="width:24px"></span></td>';
+                filas += '</tr>';
+            }
+            return '<div class="card">' +
+                '<div class="card-header"></div>' +
+                '<div class="card-body table-responsive p-0" style="height:500px;">' +
+                '<table class="table table-head-fixed text-nowrap table-striped table-sm">' +
+                '<thead><tr>' +
+                '<th>Compañia</th>' +
+                '<th>Folio</th>' +
+                '<th>AgendaId</th>' +
+                '<th>Cliente</th>' +
+                '<th>Agendador</th>' +
+                '<th>Abogado</th>' +
+                '<th>Tramitador</th>' +
+                '<th>Sucursal</th>' +
+                '<th>Contrato/Anexo</th>' +
+                '<th><img src="{{url_web}}/build/img/ultObs2_transparente.png" width="25px"></th>' +
+                '<th><i class="fas fa-traffic-light"></i></th>' +
+                '<th><i class="fas fa-star text-secondary"></i></th>' +
+                '<th><i class="far fa-credit-card text-success"></i></th>' +
+                '<th><i class="fas fa-ellipsis-h ml-1"></i></th>' +
+                '</tr></thead>' +
+                '<tbody>' + filas + '</tbody>' +
+                '</table></div>' +
+                '<div class="card-footer clearfix"><div class="navigation text-center">' +
+                '<span class="skeleton-line" style="width:220px;height:32px;border-radius:6px;"></span>' +
+                '</div></div></div>';
+
+            
+                    
+        }
+
+        function cargarContratos(url) {
+            /*$('#resultado').html(skeletonHTML());*/
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    $('#resultado').html(data.html);
+                     $(".btn-busqueda").prop('disabled',false);
+                     $(".btn-subir-audio").prop('disabled',false);
+                },
+                error: function() {
+                    $('#resultado').html('<div class="alert alert-danger m-3">Error al cargar los datos.</div>');
+                     $(".btn-busqueda").prop('disabled',false);
+                     $(".btn-subir-audio").prop('disabled',false);
+                }
+            });
+
+           
+        }
+
+        // Carga inicial al abrir la página
+        $(document).ready(function() {
+            _filtrosActuales = '';
+            cargarContratos('/contrato/obtenerContenido');
+        });
+
+        // Interceptar submit del formulario de búsqueda
+        $(".form-envio").on("submit", function(e) {
+            e.preventDefault();
+            _filtrosActuales = $(this).serialize();
+            cargarContratos('/contrato/obtenerContenido?' + _filtrosActuales);
+           
+        });
+
+        // Interceptar clics en paginación y ordenamiento dentro del resultado
+        $(document).on('click', '#resultado a.page-link, #resultado th a', function(e) {
+            e.preventDefault();
+            var url = $(this).attr('href');
+            if (url && url !== '#') {
+                // Preservar filtros actuales si la URL no los tiene
+                if (_filtrosActuales && url.indexOf('bFiltro') === -1 && url.indexOf('bFolio') === -1) {
+                    url += (url.indexOf('?') === -1 ? '?' : '&') + _filtrosActuales;
+                }
+                cargarContratos(url);
+            }
+        });
+
+        $('#bFecha').daterangepicker({
+            "drops": "down",
+            "startDate":"{{dateInicio}}",
+            "endDate": "{{dateFin}}",
+            "locale": {
+                "format": "YYYY-MM-DD",
+                "applyLabel": "Apply",
+                "cancelLabel": "Cancel",
+            }
+        }, function(start, end, label) {
+            console.log('New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+        });
+
+        $(".bFolio").change(function(){ $(".bFiltro").val(''); });
+        $(".bFiltro").change(function(){ $(".bFolio").val(''); });
+        $(".bFecha").change(function(){ $(".bFolio").val(''); });
+
+        $('#exampleModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget);
+            var contrato = button.data('contrato');
+            $(this).find('#hdContrato').val(contrato);
+        });
+
+        $(".btn-export-excel").on("click", function() {
+            $(".form-envio").attr("action", "/contrato/export_excel");
+            document.querySelector('.form-envio').submit();
+        });
+
+        function reasignarCerrador(contratoId){
+            $.ajax({
+                url: "/contrato/" + contratoId + "/reasignar",
+                type: "get",
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                async: true,
+                success: function(data) {
+                    $(".reasignarModalBody").html(data);
+                    $("#reasignarModal").modal('show');
+                },
+                statusCode: {
+                    403: function() {
+                        $(".reasignarModalBody").html("<p>Acceso Denegado</p>");
+                        $("#reasignarModal").modal('show');
+                    }
+                }
+            });
+        }
+    </script>
+{% endblock %}

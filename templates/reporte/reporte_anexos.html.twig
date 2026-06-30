@@ -1,0 +1,105 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ pagina }}{% endblock %}
+
+{% block body %}
+<section>
+    <div class="card">
+        <div class="card-header">
+            Filtro
+        </div>
+        <div class="card-body">
+            <form action="{{ path('reporte_anexos') }}" method="get" id="bForm">
+                <div class="row">
+                    <div class="col-sm-12 col-md-3">
+                        <input type="text" class="form-control" name="bFiltro" placeholder="Nombre cliente"
+                               value="{{ bFiltro }}">
+                    </div>
+                    <div class="col-sm-12 col-md-2">
+                        <input type="text" class="form-control" name="bFolio" placeholder="Folio / ID Agenda"
+                               value="{{ bFolio }}">
+                    </div>
+                    <div class="col-sm-12 col-md-3">
+                        <input type="text" class="form-control" name="bFecha" id="bFecha" placeholder="Fecha anexo"
+                               value="">
+                    </div>
+                    <div class="col-sm-12 col-md-1">
+                        <button class="btn btn-primary"><i class="fas fa-search"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<section>
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Contratos con Anexos</h3>
+        </div>
+        <div class="card-body table-responsive p-0" style="height: 450px;">
+            <table class="table table-head-fixed text-nowrap table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>{{ knp_pagination_sortable(reportes, 'Folio Contrato', 'con.folio') }}{% if reportes.isSorted('con.folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(reportes, 'ID Agenda', 'a.id') }}{% if reportes.isSorted('a.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(reportes, 'FechaContrato', 'con.fechaCreacion') }}{% if reportes.isSorted('con.fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(reportes, 'FechaUltimoAnexo', 'ca.fechaCreacion') }}{% if reportes.isSorted('ca.fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(reportes, 'Cliente', 'con.nombre') }}{% if reportes.isSorted('con.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>{{ knp_pagination_sortable(reportes, 'Compañía', 'cu.nombre') }}{% if reportes.isSorted('cu.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                        <th>Tipo Anexo</th>
+                       
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reporte in reportes %}
+                    <tr>
+                        <td>{{ reporte.id }}-{{ reporte.contrato.folio }}-{{ reporte.folio }}</td>
+                        <td>{{ reporte.contrato.agenda.id }}</td>
+                        <td>{{ reporte.contrato.fechaCreacion ? reporte.contrato.fechaCreacion|date('d-m-Y') : ''}}</td>
+                        <td>{{ reporte.fechaCreacion ? reporte.fechaCreacion|date('d-m-Y') : ''}}</td>
+                        <td>{{ reporte.contrato.nombre }}</td>
+                        <td>{{ reporte.contrato.agenda.cuenta.nombre }}</td>
+                        <td>
+                            {% if reporte.tipoAnexo == 1 %}Agregar Causa
+                            {% elseif reporte.tipoAnexo == 2 %}Extensión del Plazo
+                            {% elseif reporte.tipoAnexo == 3 %}Renegociación
+                            {% else %}—{% endif %}
+                        </td>
+                                                <td>
+                            <a href="{{ path('anexo_index', {id: reporte.contrato.id}) }}"
+                               class="btn btn-xs btn-info" title="Ver Anexos">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8">No hay registros</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="navigation">
+            {{ knp_pagination_render(reportes, '@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig', {}, {
+                'position': 'centered',
+                'rounded': true
+            }) }}
+        </div>
+    </div>
+</section>
+
+<script>
+    $('#bFecha').daterangepicker({
+        "drops": "down",
+        "startDate": "{{ dateInicio }}",
+        "endDate": "{{ dateFin }}",
+        "locale": {
+            "format": "YYYY-MM-DD",
+            "applyLabel": "Aplicar",
+            "cancelLabel": "Cancelar"
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,14 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}{{pagina|default('Usuarios')}}{% endblock %}
+
+{% block body %}
+	
+    {{ include('cobradores/_form.html.twig', {'button_label': 'Modificar'}) }}
+
+    
+       
+    
+    
+{% endblock %}

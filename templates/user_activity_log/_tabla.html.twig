@@ -1,0 +1,96 @@
+<tbody id="logsBody">
+{% for log in logs %}
+    <tr>
+        <td class="text-nowrap">
+            {{ log.fechaRegistro|date('Y-m-d H:i:s') }}
+        </td>
+        <td>
+            {% if log.usuario %}
+                <span class="badge badge-secondary">{{ log.usuario.username }}</span>
+                {{ log.usuario.nombre }}
+            {% else %}
+                <span class="text-muted">—</span>
+            {% endif %}
+        </td>
+        <td>
+            {% set metodo = log.metodo %}
+            {% if metodo == 'GET' %}
+                <span class="badge badge-info">GET</span>
+            {% elseif metodo == 'POST' %}
+                <span class="badge badge-success">POST</span>
+            {% elseif metodo == 'PUT' or metodo == 'PATCH' %}
+                <span class="badge badge-warning">{{ metodo }}</span>
+            {% elseif metodo == 'DELETE' %}
+                <span class="badge badge-danger">DELETE</span>
+            {% else %}
+                <span class="badge badge-light">{{ metodo }}</span>
+            {% endif %}
+        </td>
+        <td class="text-break" style="max-width:260px">
+            <small>{{ log.ruta }}</small>
+        </td>
+        <td>
+            {% if log.controlador %}
+                {% set modLabel = log.controlador|split('\\')|last|split('::')|first|replace({'Controller':''}) %}
+                <span class="badge badge-primary">{{ modLabel }}</span>
+                <small class="text-muted">
+                    {{ log.controlador|split('::')|last }}
+                </small>
+            {% else %}
+                <span class="text-muted">—</span>
+            {% endif %}
+        </td>
+        <td class="text-center">
+            {% set code = log.statusCode %}
+            {% if code >= 200 and code < 300 %}
+                <span class="badge badge-success">{{ code }}</span>
+            {% elseif code >= 300 and code < 400 %}
+                <span class="badge badge-info">{{ code }}</span>
+            {% elseif code >= 400 and code < 500 %}
+                <span class="badge badge-warning">{{ code }}</span>
+            {% elseif code >= 500 %}
+                <span class="badge badge-danger">{{ code }}</span>
+            {% else %}
+                <span class="badge badge-secondary">{{ code }}</span>
+            {% endif %}
+        </td>
+        <td><small>{{ log.ip }}</small></td>
+        <td>
+            {% if log.latitud and log.longitud %}
+                <a href="https://www.google.com/maps?q={{ log.latitud }},{{ log.longitud }}"
+                   target="_blank" rel="noopener"
+                   title="{{ log.latitud }}, {{ log.longitud }}">
+                    <i class="fas fa-map-marker-alt text-danger mr-1"></i>
+                    {% if log.ciudad %}{{ log.ciudad }}{% endif %}
+                    {% if log.pais %}<small class="text-muted">({{ log.pais }})</small>{% endif %}
+                </a>
+            {% else %}
+                <span class="text-muted">—</span>
+            {% endif %}
+        </td>
+    </tr>
+{% else %}
+    <tr>
+        <td colspan="8" class="text-center text-muted py-3">
+            <i class="fas fa-inbox mr-1"></i> Sin registros para los filtros seleccionados.
+        </td>
+    </tr>
+{% endfor %}
+</tbody>
+<tfoot id="logsPagination">
+<tr>
+    <td colspan="8">
+        <div class="d-flex justify-content-between align-items-center px-2 py-1">
+            <small class="text-muted">
+                Total: <strong>{{ logs.totalItemCount }}</strong> registros
+            </small>
+            <div>
+                {{ knp_pagination_render(logs, '@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig', {}, {
+                    'position': 'centered',
+                    'rounded': true
+                }) }}
+            </div>
+        </div>
+    </td>
+</tr>
+</tfoot>

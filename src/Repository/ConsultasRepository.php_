@@ -1,0 +1,105 @@
+<?php
+
+namespace App\Repository;
+
+use App\Entity\Contrato;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
+
+class ConsultasRepository
+{
+    private $em;
+
+    public function __construct(EntityManagerInterface $em)
+    {
+        $this->em = $em;
+    }
+
+    private function baseQueryBuilder(): QueryBuilder
+    {
+        return $this->em->createQueryBuilder()
+            ->select(
+                'MIN(m.nombre) AS materia',
+                'c.folio',
+                'c.fechaCreacion AS fechaContrato',
+                'MAX(ca.fechaCreacion) AS fechaUltAnexo',
+                'c.nombre AS cliente',
+                'cerrador.nombre AS nombre_cerrador',
+                'tramitador.nombre AS nombre_tramitador'
+            )
+            ->from(Contrato::class, 'c')
+            ->join('c.agenda', 'a')
+            ->join('a.cuenta', 'cu')
+            ->join('cu.cuentaMaterias', 'cm')
+            ->join('cm.materia', 'm')
+            ->join('a.abogado', 'cerrador')
+            ->join('c.tramitador', 'tramitador')
+            ->leftJoin('c.contratoAnexos', 'ca')
+            ->where('c.fechaCreacion >= :dateLimit')
+            ->andWhere('c.fechaDesiste IS NULL')
+            ->andWhere('IDENTITY(a.status) NOT IN (13, 15)')
+            ->groupBy('c.id, c.folio, c.fechaCreacion, c.nombre, cerrador.id, cerrador.nombre, tramitador.id, tramitador.nombre')
+            ->setParameter('dateLimit', new \DateTime('-24 months'));
+    }
+
+    public function findActivos(): array
+    {
+        return $this->baseQueryBuilder()
+            ->andWhere('c.diasMorosidad <= 45')
+            ->andWhere('EXISTS (SELECT cu2.id FROM App\Entity\Cuota cu2 WHERE cu2.contrato = c AND cu2.pagado IS NULL AND COALESCE(cu2.anular, 0) = 0)')
+            ->andWhere('EXISTS (SELECT v.contratoId FROM App\Entity\VwClientesActivosFinal v WHERE v.contratoId = c.id)')
+            ->getQuery()
+            ->getScalarResult();
+    }
+
+    public function findAbandonados(): array
+    {
+        return $this->baseQueryBuilder()
+            ->andWhere('c.diasMorosidad > 45')
+            ->andWhere('EXISTS (SELECT cu2.id FROM App\Entity\Cuota cu2 WHERE cu2.contrato = c AND COALESCE(cu2.anular, 0) = 0 AND cu2.pagado IS NOT NULL)')
+            ->andWhere('EXISTS (SELECT cu3.id FROM App\Entity\Cuota cu3 WHERE cu3.contrato = c AND COALESCE(cu3.anular, 0) = 0 AND cu3.pagado IS NULL)')
+            ->andWhere('EXISTS (SELECT v.contratoId FROM App\Entity\VwClientesActivosFinal v WHERE v.contratoId = c.id)')
+            ->getQuery()
+            ->getScalarResult();
+    }
+
+    public function findCompletados(): array
+    {
+        return $this->em->createQueryBuilder()
+            ->select(
+                'MIN(m.nombre) AS materia',
+                'c.folio',
+                'c.fechaCreacion AS fechaContrato',
+                'MAX(ca.fechaCreacion) AS fechaUltAnexo',
+                'c.nombre AS cliente',
+                'cerrador.nombre AS nombre_cerrador',
+                'tramitador.nombre AS nombre_tramitador',
+                'TIMESTAMPDIFF(MONTH, c.fechaCreacion, CURRENT_TIMESTAMP()) AS mesesSistema'
+            )
+            ->from(Contrato::class, 'c')
+            ->join('c.agenda', 'a')
+            ->join('a.cuenta', 'cu')
+            ->join('cu.cuentaMaterias', 'cm')
+            ->join('cm.materia', 'm')
+            ->join('a.abogado', 'cerrador')
+            ->join('c.tramitador', 'tramitador')
+            ->leftJoin('c.contratoAnexos', 'ca')
+            ->where('c.fechaCreacion >= :dateLimit')
+            ->andWhere('c.fechaDesiste IS NULL')
+            ->andWhere('IDENTITY(a.status) NOT IN (13, 15)')
+            ->andWhere('NOT EXISTS (SELECT cu2.id FROM App\Entity\Cuota cu2 WHERE cu2.contrato = c AND cu2.pagado IS NULL AND COALESCE(cu2.anular, 0) = 0)')
+            ->groupBy('c.id, c.folio, c.fechaCreacion, c.nombre, cerrador.id, cerrador.nombre, tramitador.id, tramitador.nombre')
+            ->setParameter('dateLimit', new \DateTime('-24 months'))
+            ->getQuery()
+            ->getScalarResult();
+    }
+
+    public function findFantasmas(): array
+    {
+        return $this->baseQueryBuilder()
+            ->andWhere('NOT EXISTS (SELECT cu2.id FROM App\Entity\Cuota cu2 WHERE cu2.contrato = c AND COALESCE(cu2.anular, 0) = 0 AND cu2.pagado IS NOT NULL)')
+            ->andWhere('EXISTS (SELECT v.contratoId FROM App\Entity\VwClientesActivosFinal v WHERE v.contratoId = c.id)')
+            ->getQuery()
+            ->getScalarResult();
+    }
+}

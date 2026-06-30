@@ -1,0 +1,87 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Contrato index{% endblock %}
+
+{% block body %}
+
+    <form action="" method="get" class="form-envio">               
+
+        {{ include('/cuadrosBusquedas/busquedaContrato.html.twig', {'TipoFiltro':TipoFiltro}) }}
+    </form>
+    <div id="resultado">
+    </div>
+       
+    <script>
+    function cargarContratos(url) {
+            /*$('#resultado').html(skeletonHTML());*/
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    $('#resultado').html(data.html);
+                     $(".btn-busqueda").prop('disabled',false);
+                },
+                error: function() {
+                    $('#resultado').html('<div class="alert alert-danger m-3">Error al cargar los datos.</div>');
+                     $(".btn-busqueda").prop('disabled',false);
+                }
+            });
+        }
+
+        // Carga inicial al abrir la página
+        $(document).ready(function() {
+            _filtrosActuales = '';
+            cargarContratos('/contratos_vencidos/obtenerContenido');
+        });
+
+        // Interceptar submit del formulario de búsqueda
+        $(".form-envio").on("submit", function(e) {
+            e.preventDefault();
+            _filtrosActuales = $(this).serialize();
+            cargarContratos('/contratos_vencidos/obtenerContenido?' + _filtrosActuales);
+           
+        });
+
+        // Interceptar clics en paginación y ordenamiento dentro del resultado
+        $(document).on('click', '#resultado a.page-link, #resultado th a', function(e) {
+            e.preventDefault();
+            var url = $(this).attr('href');
+            if (url && url !== '#') {
+                // Preservar filtros actuales si la URL no los tiene
+                if (_filtrosActuales && url.indexOf('bFiltro') === -1 && url.indexOf('bFolio') === -1) {
+                    url += (url.indexOf('?') === -1 ? '?' : '&') + _filtrosActuales;
+                }
+                cargarContratos(url);
+            }
+        });
+
+        $('#bFecha').daterangepicker({
+            "drops": "down",
+            "startDate":"{{dateInicio}}",
+            "endDate": "{{dateFin}}",
+            "locale": {
+                "format": "YYYY-MM-DD",
+                "applyLabel": "Apply",
+                "cancelLabel": "Cancel",
+            }
+        }, function(start, end, label) {
+        console.log('New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD') + ' (predefined range: ' + label + ')');
+        
+        });
+        $(".bFolio").change(function(){
+            $(".bFiltro").val('');
+        });
+        $(".bFiltro").change(function(){
+            $(".bFolio").val('');
+        });
+        $(".bFecha").change(function(){
+            $(".bFolio").val('');
+        });
+        $(".btn-buscar").on("click",function(){
+            $(".form-envio").attr("action","/contrato");
+            $(".form-envio").submit();
+            $("button").prop('disabled',false);
+        });
+    </script>
+{% endblock %}

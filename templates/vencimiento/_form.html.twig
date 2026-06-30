@@ -1,0 +1,71 @@
+
+<div class="card">
+    <div class="card-body">
+
+        {{ form_start(form) }}
+        <div class="row">
+            <div class="col-md-4">
+                <div class="col-sm-12 col-md-12">
+                    <small class="text-muted">Valor Minimo</small>
+                    {{form_row(form.valMin,{'label':false,'attr':{'class':'form-control'},'required':true})}}
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <small class="text-muted">Valor Maximo</small>
+                    {{ form_row(form.valMax,{'label':false,'attr':{'class':'form-control'},'required':true}) }}
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <small clas="text-muted">Color</small>
+                    {{ form_row(form.color,{'label':false,'attr':{'class':'form-control'},'required':true}) }}
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <small clas="text-muted">Icono</small>
+                     <button type="button" class="btn btn-xs btn-success" data-toggle="popover" title="Iconos" data-content="Puedes ver mas iconos en https://fontawesome.com/v5/search?ic=free-collection"><i class="fas fa-question"></i></button>
+            
+                    {{ form_row(form.icono,{'label':false,'attr':{'class':'form-control'},'required':true}) }}
+                </div>
+
+                <div class="col-sm-12 col-md-12">
+                    <small clas="text-muted">Monto Max.</small>
+                    {{ form_row(form.montoMax,{'label':false,'attr':{'class':'form-control'},'required':true})}}
+                 
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <small clas="text-muted">Equipo</small>
+                    <select name="cboEquipo" class="form-control" >
+                        <option value=''></option>
+                        {% for equipo in equipos %}
+
+                            <option value='{{equipo.id}}' 
+                            {% if equipo_actual is not empty %}
+                                
+                                
+                                {% if equipo.id == equipo_actual.id %}
+                                    selected
+                                {% endif %}
+                            {% endif %}
+                            >{{equipo.nombre}}</option>
+                        {% endfor %}
+                        
+                        
+                    </select>
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <small clas="text-muted">Solo por admin</small>
+                    {{ form_row(form.soloPorAdmin,{'label':false,'attr':{'class':'form-check'},'required':false}) }}
+                </div>
+                <div class="col-sm-12 col-md-12 mt-3">
+                <button class="btn btn-primary">{{ button_label|default('Actualizar') }}</button>
+                </div>
+            </div>
+            
+        {{ form_end(form) }}
+    </div>
+</div>
+
+
+<script>
+    $(function () {
+        $('[data-toggle="popover"]').popover();
+    });
+
+</script>

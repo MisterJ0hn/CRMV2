@@ -1,0 +1,227 @@
+<style>
+
+</style>
+
+<div class="mc-table-wrap table-responsive" style="min-height:200px;">
+    <table class="table table-sm text-nowrap mc-table">
+        <thead>
+            <tr>
+                <th class="pl-3">
+                    Folio
+                </th>
+
+                <th >
+                    Fecha
+                </th>
+                <th width="100px;">
+                   Cliente
+                </th>
+                
+                <th>
+                    Materia
+                </th>
+                <th>
+                   Servicio
+                </th>
+                <th>
+                   Tramitador
+                </th>
+                <th width="50px;">
+                    Etapa Actual
+                </th>
+                <th title="Rit/Rol de la causa">
+                    Rit / Rol
+                </th>
+                <th title="Próxima Tarea Tramitador">
+                    <i class="fas fa-bell" style="color:#555;"></i> Tarea
+                </th>
+                <th>
+                    Cuota 1
+                </th>
+                <th>
+                    <i class="fas fa-traffic-light"></i>
+                </th>
+                <th>
+                    <i class="fas fa-star text-secondary"></i>
+                </th>
+                <th>
+                   {{ knp_pagination_sortable(contratos, 'Actividad', 'c.fechaUltimaObservacionGeneral') }} {% if contratos.isSorted('c.fechaUltimaObservacionGeneral') %} <i class="fas fa-sort"></i>{% endif %}
+                </th>
+                <th>
+                   LT
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for contrato in contratos %}
+            <tr>
+                {# ── Folio ── #}
+                <td class="pl-3">
+                    
+                        <strong style="color:#fff;">{{ contrato.folioContrato }}</strong>
+                 
+                        <br><small style="color:#666;">{{ contrato.agenda.id }}</small>
+                   
+                </td>
+                <td>
+                    
+                        {{ contrato.fechaCreacionVista|date('d-m-Y') }}
+                      
+                        <br><small style="color:#666;">{{ contrato.fechaCreacionVista|date('H:i') }}</small>
+                   
+                </td>
+
+                {# ── Cliente ── #}
+                <td>
+                    <strong style="color:#fff;">{{ contrato.nombre }}</strong>
+                    {% if contrato.rut %}
+                        <br><small style="color:#666;">{{ contrato.rut }}</small>
+                    {% endif %}
+                </td>
+                 
+                {# ── Materia ── #}
+                <td style="color:#bbb;">
+                 {% set materia="" %}
+                {% for cuenta_materia in contrato.agenda.cuenta.cuentaMaterias %}
+                    {% set materia = cuenta_materia.materia.nombre %}
+                {% endfor %}
+                {% set svc = materia|lower %}
+                {% if 'laboral' in svc %}
+                <span class="badge badge-danger">
+                    <i class="fas fa-briefcase mr-1"></i>
+                     {{ materia ?? '—' }}
+                </span>
+                {% elseif 'civil' in svc %}
+                <span class="badge badge-info">
+                    <i class="fas fa-balance-scale mr-1"></i>
+                    
+                        {{ materia ?? '—' }}
+                    </span>
+                {% elseif 'familia' in svc %}
+                <span class="badge badge-primary">
+                    
+                    <i class="fas fa-users mr-1"></i>
+                        {{ materia ?? '—' }}
+                    </span>
+                {% elseif 'tributario' in svc %}
+                <span class="badge badge-warning">
+                    <i class="fas fa-home mr-1"></i>
+                    
+                        {{ materia ?? '—' }}
+                    </span>
+                {% else %}
+                    <i class="fas fa-file-alt mr-1"></i>
+                {% endif %}
+               
+                
+                
+                </td>
+
+                {# ── Servicio ── #}
+                <td>
+                    {% if contrato.servicios %}
+                       
+                        {{ contrato.servicios|raw }}
+                        
+                    {% else %}
+                        <span style="color:#555;">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                {% if contrato.tramitador  %}
+                    <strong style="color:#fff;">{{ contrato.tramitador.nombre?? '—'}}</strong>                
+                {% else %}
+                    <span style="color:#555;">—</span>  
+                {% endif %}                 
+                </td>
+                {# ── LT: primera etapa no terminada ── #}
+                <td width="50px;">
+                    {% if contrato.etapas %}
+                        <span class="text-info" title="Primera etapa en proceso">
+                            {{ contrato.etapas|raw }}
+                        </span>
+                    {% else %}
+                        <span style="color:#555;">—</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if contrato.ritRolCausa %}
+                       
+                            {{ contrato.ritRolCausa|raw }}
+                       
+                    {% else %}
+                        <span style="color:#555;">—</span>
+                    {% endif %}
+                </td>
+
+                {# ── Próximo Recordatorio Tramitador ── #}
+                <td style="color:#fff;">                                               
+                        {{ contrato.ultimoRecordatorio|raw  }}
+                </td>
+                <td class="text-center">
+                    {% if contrato.primerPago > 0 %}
+                        <i class="fas fa-times" style="color:#e74c3c;" title="Primera cuota pendiente"></i>
+                    {% else %}
+                     <i class="fas fa-check" style="color:#2ecc71;" title="Primera cuota pagada"></i>
+                        
+                    {% endif %}
+                </td>
+                {# ── Pago ── #}
+                <td>
+                    {% set pago = proximoPago(contrato.id) %}
+                    {% if pago %}
+                       
+                        {{semaforoContrato(pago|date('Y-m-d'))|raw}}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if contrato.esVip == 1 %}
+                        <p>
+                        {{contrato.moroso==0?getVip(1)|raw:getVip(0)|raw}}
+                        </p>
+                    {% endif %}
+                </td>
+                {# ── Última actividad ── #}
+                <td>
+                    {% set dias = contrato.diasUltObservacion %}
+                    {% if dias == 0 %}
+                        <span class="text-success font-weight-bold">Hoy</span>
+                    {% elseif dias == 1 %}
+                        <span class="text-info">Ayer</span>
+                    {% elseif dias <= 3 %}
+                        <span class="text-warning">{{ dias }} días</span>
+                    {% elseif dias <= 7 %}
+                        <span style="color:#e6a817;">{{ dias }} días</span>
+                    {% else %}
+                        <span class="text-danger">{{ dias }} días</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm" role="group">
+                        
+                        <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn btn-sm text-white bg-light">LT</a>
+                        <a href="{{url_web}}{{pdf_contrato}}{{contrato.pdf}}" class="btn btn-success btn-sm"><i class="fas fa-file-pdf"></i></a>
+                        <a href="{{path('anexo_index',{'id':contrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos"><i class="fas fa-file"></i></a>
+                    </div>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="9" class="text-center py-5 mc-empty">
+                    <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
+                    No hay clientes activos
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mc-footer clearfix">
+    <div class="navigation">
+        {{ knp_pagination_render(contratos, '@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig', {}, {
+            'position': 'centered',
+            'rounded': true,
+        }) }}
+    </div>
+</div>

@@ -1,0 +1,77 @@
+<div class="mc-table-wrap table-responsive" style="min-height:200px;">
+    <table class="table table-sm text-nowrap mc-table">
+        <thead>
+            <tr>                            
+                <th>{{ knp_pagination_sortable(mensajes, 'Prioridad', 'mensajePrioridad') }} 
+                    {% if mensajes.isSorted('mensajePrioridad') %} 
+                        <i class="fas fa-sort"></i>
+                    {% endif %}
+                </th>
+                <th>{{ knp_pagination_sortable(mensajes, 'Usuario', 'UsuarioRegistro') }} 
+                    {% if mensajes.isSorted('tipo') %} 
+                        <i class="fas fa-sort"></i>
+                    {% endif %}
+                </th>
+                <th>{{ knp_pagination_sortable(mensajes, 'Observación', 'observacion') }} 
+                    {% if mensajes.isSorted('usuarioRegistro.nombre') %} 
+                        <i class="fas fa-sort"></i>
+                    {% endif %}
+                </th>
+                
+                <th>{{ knp_pagination_sortable(mensajes, 'FechaAviso', 'fechaAviso') }} 
+                    {% if mensajes.isSorted('fechaAviso') %} 
+                        <i class="fas fa-sort"></i>
+                    {% endif %}
+                </th>
+                <th>{{ knp_pagination_sortable(mensajes, 'Estado', 'leido') }} 
+                    {% if mensajes.isSorted('leido') %} 
+                        <i class="fas fa-sort"></i>
+                    {% endif %}
+                </th>
+                <th>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for mensaje in mensajes %}
+            <tr>                        
+            <td>
+            {% if mensaje.mensajePrioridad is not null %}
+            <span class="badge" style="background-color:{{  mensaje.mensajePrioridad.color }}; color: {{ mensaje.mensajePrioridad.colorTexto }}">{{ mensaje.mensajePrioridad.nombre }}</span>                        
+            {% endif %}</td>
+            <td>{{mensaje.usuarioRegistro}}</td>
+                <td>
+                <span class="d-inline-block text-truncate" style="max-width: 300px;">
+                    {{mensaje.observacion}}
+                </span>
+                </td>
+                
+                <td>{{mensaje.fechaAviso|date("Y-m-d")}}</td>
+                <td>
+               
+                    {% if mensaje.leido %}
+                        <span class="text-success">Finalizado</span>
+                    {% else %}
+                        <span class="text-danger">Pendiente</span>
+                    {% endif %}
+                    
+                
+                </td>
+                <td> 
+                <a href="{{path('mensaje_show',{'id':mensaje.id})}}" class="btn btn-primary btn-sm"> <i class="fa fa-eye"></i></a>
+        
+                
+            </tr>
+        {% endfor %}
+        </tbody> 
+    </table>
+</div>   
+<div class="mc-footer clearfix">
+    {# display navigation #}
+    <div class="navigation">
+        {{ knp_pagination_render(mensajes,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
+        'position': 'centered',
+        'rounded': true,
+        }) }}
+    </div>
+</div>

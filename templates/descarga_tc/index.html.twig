@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Descarga TC{% endblock %}
+
+{% block body %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Descarga TC</h3>
+    </div>
+    <div class="card-body">
+        <p class="text-muted">Descarga datos de clientes que hayan pagado alguna cuota en los ultimos 24 meses y cuyo contrato no tenga fecha de desistimiento. Nota: Este archivo se actualiza diariamente.
+</p>
+        <a href="{{ path('app_descarga_tc_export') }}" class="btn btn-success">
+            <i class="fas fa-download"></i> Descargar Excel
+        </a>
+    </div>
+</div>
+{% endblock %}

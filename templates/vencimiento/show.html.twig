@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vencimiento{% endblock %}
+
+{% block body %}
+<h1>Vencimiento</h1>
+    
+<div class="card">
+    <div class="card-body">
+
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="col-sm-12 col-md-12">
+                    <small class="text-muted">Valor Minimo</small>
+                    <br>{{ vencimiento.valMin }}
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <small class="text-muted">Valor Maximo</small>
+                    <br>{{ vencimiento.valMax }}
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <small clas="text-muted">Color</small>
+                    <br><span class="badge badge-pill badge-{{ vencimiento.color }}">{{ vencimiento.color }}</span>
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <small clas="text-muted">Icono</small>
+                    <br><i class="{{ vencimiento.icono }}"></i> {{vencimiento.icono}}
+                </div>
+                <div class="col-sm-12 col-md-12">
+                    <small clas="text-muted">Monto Max.</small>
+                    <br>
+                    {{ vencimiento.montoMax }}
+                 
+                </div>
+                
+                <div class="col-sm-12 col-md-12 mt-3">
+                <a href="{{ path('vencimiento_edit', {'id': vencimiento.id}) }}" class="btn btn-primary">Editar</a>
+                </div>
+            </div>
+            
+   
+    </div>
+</div>
+
+
+{% endblock %}

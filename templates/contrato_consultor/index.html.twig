@@ -1,0 +1,207 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Contrato Consultor{% endblock %}
+
+{% block body %}
+<style>
+.contenedor-boton{
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.menu-botones{
+    display: none;
+    margin-right: 10px;
+    white-space: nowrap;
+}
+.menu-botones button{
+    margin-right: 5px;
+}
+
+/* Skeleton */
+.skeleton-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 8px;
+}
+.skeleton-cell {
+    background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.3s infinite;
+    border-radius: 4px;
+    height: 14px;
+    flex-shrink: 0;
+}
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+.skeleton-header {
+    background: #f4f6f9;
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    gap: 8px;
+    border-bottom: 2px solid #dee2e6;
+}
+.skeleton-header .skeleton-cell {
+    background: linear-gradient(90deg, #d0d5dd 25%, #e4e8ef 50%, #d0d5dd 75%);
+    background-size: 200% 100%;
+    height: 13px;
+}
+</style>
+
+<form id="form-busqueda" action="" method="get">
+    <input type="hidden" name="tab" id="hdTab" value="{{ tabInicial }}">
+    {{ include('/cuadrosBusquedas/busquedaContratoConsultor.html.twig') }}
+</form>
+
+<div class="card card-primary card-outline card-outline-tabs">
+    <div class="card-header p-0 border-bottom-0">
+        <ul class="nav nav-tabs" id="tabs-consultor" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link tab-link {% if tabInicial == 'prime' %}active{% endif %}"
+                   href="#" data-tab="prime">Prime</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link tab-link {% if tabInicial == 'preferente' %}active{% endif %}"
+                   href="#" data-tab="preferente">Preferente</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link tab-link {% if tabInicial == 'morosos' %}active{% endif %}"
+                   href="#" data-tab="morosos">
+                  Morosos
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div id="tab-content">
+        {{ include('contrato_consultor/_skeleton.html.twig') }}
+    </div>
+</div>
+
+<!-- Modal Reasignar -->
+<div class="modal fade" id="reasignarModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reasignar</h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="reasignarModalBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    var tabActivo = '{{ tabInicial }}';
+
+    function skeletonHtml() {
+        var cols = [9, 6, 5, 10, 14, 10, 9, 9, 3, 3, 5]; // % widths per column
+        var header = '<div class="skeleton-header">' +
+            cols.map(function(w){ return '<div class="skeleton-cell" style="width:' + w + '%"></div>'; }).join('') +
+            '</div>';
+        var rows = '';
+        for (var i = 0; i < 12; i++) {
+            rows += '<div class="skeleton-row">' +
+                cols.map(function(w){
+                    var opacity = 0.6 + Math.random() * 0.4;
+                    return '<div class="skeleton-cell" style="width:' + w + '%;opacity:' + opacity.toFixed(2) + '"></div>';
+                }).join('') +
+            '</div>';
+        }
+        return '<div class="card-body p-0">' + header + rows + '</div>';
+    }
+
+    function cargarTab(tab, page) {
+        tabActivo = tab;
+        $('#hdTab').val(tab);
+
+        var params = $('#form-busqueda').serialize();
+        // ensure tab and page are set correctly
+        params = params.replace(/tab=[^&]*/,'tab=' + tab);
+        if (page && page > 1) {
+            params += '&page=' + page;
+        }
+
+        $('#tab-content').html(skeletonHtml());
+
+        $.ajax({
+            url: '/contrato_consultor/tab_data',
+            type: 'GET',
+            data: params,
+            success: function(html) {
+                $('#tab-content').html(html);
+                $(".btn-busqueda").prop("disabled", false);
+            },
+            error: function() {
+                $('#tab-content').html('<div class="card-body"><p class="text-danger">Error al cargar los datos.</p></div>');
+            }
+        });
+        
+    }
+
+    // Intercept pagination clicks inside tab-content
+    $(document).on('click', '#tab-content a.page-link, #tab-content th a', function(e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        var page = 1;
+        var match = url.match(/[?&]page=(\d+)/);
+        if (match) page = parseInt(match[1]);
+        cargarTab(tabActivo, page);
+    });
+
+    // Tab click
+    $('.tab-link').on('click', function(e) {
+        e.preventDefault();
+        $('.tab-link').removeClass('active');
+        $(this).addClass('active');
+        cargarTab($(this).data('tab'));
+    });
+
+    // Form submit → AJAX for active tab
+    $('#form-busqueda').on('submit', function(e) {
+        e.preventDefault();
+        cargarTab(tabActivo);
+       
+        
+    });
+
+    // Daterangepicker init
+    $('#bFecha').daterangepicker({
+        "drops": "down",
+        "startDate": "{{ dateInicio }}",
+        "endDate":   "{{ dateFin }}",
+        "locale": {
+            "format": "YYYY-MM-DD",
+            "applyLabel": "Apply",
+            "cancelLabel": "Cancel"
+        }
+    });
+
+    $(".bFolio").change(function(){ $(".bFiltro").val(''); });
+    $(".bFiltro").change(function(){ $(".bFolio").val(''); });
+    $(".bFecha").change(function(){  $(".bFolio").val(''); });
+
+    // Load initial tab on page ready
+    $(document).ready(function() {
+        cargarTab(tabActivo);
+
+    });
+
+    {% if error_toast %}
+        {{ error_toast|raw }};
+    {% endif %}
+
+    function exportar(){
+        window.location="{{path('contrato_consultor_tab_export')}}/?tab="+tabActivo+"&"+$('#form-busqueda').serialize();
+    }
+</script>
+{% endblock %}

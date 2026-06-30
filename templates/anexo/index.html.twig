@@ -1,0 +1,142 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Anexo{% endblock %}
+
+{% block body %}
+
+<div class="card">
+    <div class="card-header">
+        <h1>Folio: {{contrato.folio}}</h1>
+        <a href="{{path('anexo_new',{'id':contrato.id})}}" class="btn btn-primary" >Crear Anexo</a>
+           
+    </div>
+    <div class="card-body">
+        <div class="card-body table-responsive p-0" style="height: 500px;">
+
+            
+            <table class="table table-head-fixed text-nowrap table-striped table-sm">
+                <thead>
+                    <tr>
+                        <th>Compañia</th>
+                        <th>Folio</th>
+                        <th>Cliente</th>
+                        <th>Agendador</th>
+                        <th>Abogado</th>
+                        <th>Tramitador</th>
+                        <th>Sucursal</th>
+                        <th>Fecha Anexo</th>
+                        <th>Tipo Anexo</th>
+                        <th>Usuario Registro</th>
+                        <th>Acciones</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                {% for anexo in contratoAnexos  %}
+                    <tr>
+                        <td>{{contrato.agenda.cuenta}}</td>
+                        <td>{{anexo.id}}-{{contrato.folio}} {{anexo.folio}}</td>
+                        <td>{{contrato.nombre}}</td>
+                        <td>{{contrato.agenda.agendador}}</td>
+                        <td>{{contrato.agenda.abogado}}</td>
+                        <td>{{contrato.tramitador}}</td>
+                        <td>{{contrato.sucursal}}</td>
+                        <td>{{anexo.fechaCreacion|date("Y-m-d H:i")}}</td>
+                        
+                        <td>
+                            {% if anexo.tipoAnexo==1 %}
+                                    <p>Agregar causa</p>
+                            {% endif %}
+                            {% if anexo.tipoAnexo==2 %}   
+                                    <p>Extensión del plazo</p>
+                            {% endif %}
+                            {% if anexo.tipoAnexo==3 %}
+                                    <p>Renegociación</p>
+                            {% endif %}
+                        
+                        </td>
+                        <td>{{ anexo.usuarioRegistro?anexo.usuarioRegistro.nombre:"" }}</td>
+           
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
+                                <a href="{{url_web}}{{pdf_contrato}}{{anexo.pdf}}" class="btn btn-success btn-sm"><i class="fas fa-file-pdf"></i></a>
+                                {% if loop.last %}
+                                <!--<a href="{{path('anexo_eliminar',{'id':anexo.id})}}" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></a>-->
+                                {% endif %}
+                                
+                            </div>
+
+                        </td>
+                        
+
+                    </tr>
+                {% else %}
+                    <tr>
+                        <th colspan="9">
+                            <p>Sin registros</p>
+                        </th>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+            </table>
+        
+            
+        </div>
+    </div>
+    <div class="card-footer">
+           
+                
+        </div>
+</div>
+
+{% if inicioSuscripcion==1 %}
+<!-- Modal Suscripción -->
+<div class="modal fade" id="modal-suscripcion" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title"><i class="fas fa-link"></i> Suscripción Pago Automático</h5>
+                <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+            </div>
+            <div class="modal-body" id="modal-suscripcion-body">
+                <div class="form-group">
+                    <label>Link para enviar al cliente:</label>
+                    <div class="input-group">
+                        <input type="text" id="input-link-suscripcion" class="form-control" readonly value="">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary btn-copiar-link" type="button"><i class="fas fa-copy"></i></button>
+                        </div>
+                    </div>
+                    <a href="" id="whatsapp-link" target="_blank" class="btn btn-success mt-2"><i class="fab fa-whatsapp"></i> Enviar por WhatsApp</a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $(document).on("click", ".btn-copiar-link", function () {
+        var linkVal = $("#input-link-suscripcion").val();
+        navigator.clipboard.writeText(linkVal).then(function () {
+            var btn = $(".btn-copiar-link");
+            btn.html('<i class="fas fa-check"></i>');
+            setTimeout(function () {
+                btn.html('<i class="fas fa-copy"></i>');
+            }, 1500);
+        });
+    });
+
+    $("#input-link-suscripcion").val('{{urlSuscripcion}}');
+    $("#whatsapp-link").attr("href", "https://api.whatsapp.com/send?text=" + encodeURIComponent('{{urlSuscripcion}}'));
+    $("#modal-suscripcion").modal("show");
+
+
+</script>
+{% endif %}
+
+{% endblock %}

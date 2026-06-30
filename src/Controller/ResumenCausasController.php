@@ -1,0 +1,495 @@
+<?php
+
+namespace App\Controller;
+
+use App\Repository\AgendaRepository;
+use App\Repository\ConfiguracionRepository;
+use App\Repository\CuentaRepository;
+use App\Repository\UsuarioRepository;
+use App\Repository\VwCausasActivasFinalRepository;
+use App\Repository\VwClientesActivosFinalRepository;
+use App\Repository\VwResumenCausasRepository;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Knp\Component\Pager\PaginatorInterface;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Csv;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Nick\SecureSpreadsheet\Encrypt;
+
+/**
+ * @Route("/resumen_causas")
+ */
+class ResumenCausasController extends AbstractController
+{
+    /**
+     * @Route("/", name="resumen_causas_index")
+     */
+    public function index(Request $request,
+                        VwResumenCausasRepository $vwResumenCausasRepository,
+                        VwCausasActivasFinalRepository $vwCausasActivasFinalRepository,
+                        VwClientesActivosFinalRepository $vwClientesActivosFinalRepository,
+                        PaginatorInterface $paginator,
+                        CuentaRepository $cuentaRepository): Response
+    {
+        $this->denyAccessUnlessGranted('view','Resumen_Causas_Familia');
+        $user=$this->getUser();
+        $companias="7";
+        $bTipoCuenta="";
+       $listado=[];
+        if(null!=$request->query->get('bTipoCuenta') && $request->query->get('bTipoCuenta')!=""){
+            $bTipoCuenta=$request->query->get('bTipoCuenta');
+        }
+       
+        $resumen = $vwResumenCausasRepository->findResumenConFecha($companias);
+        $fechaActualizacion = $resumen[0]['fechaActualizacion'] ?? null;
+
+/*
+
+        switch ($bTipoCuenta) {
+            case 'alDia':
+               $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesActivos':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesAlDia':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesMorosos':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesActivosVIP':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesAlDiaVIP':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'conRol':
+                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'sinRol':
+                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'finalizadas':
+                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            default:
+                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            }*/
+         $causasActivasFinal=$paginator->paginate(
+            $listado, 
+            $request->query->getInt('page', 1),
+            20 ,
+            array('defaultSortFieldName' => 'id', 'defaultSortDirection' => 'desc'));
+           
+        
+        
+        return $this->render('resumen_causas/index.html.twig', [
+            'pagina' => 'Resumen Causas Familia',
+            'resumen'=>$resumen,
+            'listado'=>$causasActivasFinal,
+            "tipoFiltro"=>"resumenCausas",
+            "companias"=>$companias,
+            "bTipoCuenta"=>$bTipoCuenta,
+            "bMateria"=>"familia",
+            'fechaActualizacion'=>$fechaActualizacion,
+        ]);
+    }
+
+    /**
+     * @Route("/civil", name="resumen_causas_civil")
+     */
+    public function resumencivil(Request $request,
+                        VwResumenCausasRepository $vwResumenCausasRepository,
+                        VwCausasActivasFinalRepository $vwCausasActivasFinalRepository,
+                        VwClientesActivosFinalRepository $vwClientesActivosFinalRepository,
+                        PaginatorInterface $paginator,
+                        CuentaRepository $cuentaRepository): Response
+    {
+        $this->denyAccessUnlessGranted('view','Resumen_Causas_Civil');
+        $user=$this->getUser();
+        $companias="1,2,3,10";
+        $bTipoCuenta="";
+        $listado=[];
+        if(null!=$request->query->get('bTipoCuenta') && $request->query->get('bTipoCuenta')!=""){
+            $bTipoCuenta=$request->query->get('bTipoCuenta');
+        }
+       
+        $resumen = $vwResumenCausasRepository->findResumenConFecha($companias);
+
+        /*switch ($bTipoCuenta) {
+            case 'alDia':
+               $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesActivos':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesAlDia':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesMorosos':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesActivosVIP':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesAlDiaVIP':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'conRol':
+                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'sinRol':
+                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'finalizadas':
+                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            default:
+                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            }*/
+         $causasActivasFinal=$paginator->paginate(
+            $listado, 
+            $request->query->getInt('page', 1),
+            20 ,
+            array('defaultSortFieldName' => 'id', 'defaultSortDirection' => 'desc'));
+           
+        $fechaActualizacion = $resumen[0]['fechaActualizacion'] ?? null;
+
+        return $this->render('resumen_causas/index.html.twig', [
+            'pagina' => 'Resumen Causas Civil',
+            'resumen'=>$resumen,
+            'listado'=>$causasActivasFinal,
+            "tipoFiltro"=>"resumenCausas",
+            "companias"=>$companias,
+            "bTipoCuenta"=>$bTipoCuenta,
+            "bMateria"=>"civil",
+            'fechaActualizacion'=>$fechaActualizacion,
+            
+            
+        ]);
+    }
+
+    /**
+     * @Route("/tributaria", name="resumen_causas_tributaria")
+     */
+    public function resumentributaria(Request $request,
+                        VwResumenCausasRepository $vwResumenCausasRepository,
+                        VwCausasActivasFinalRepository $vwCausasActivasFinalRepository,
+                        VwClientesActivosFinalRepository $vwClientesActivosFinalRepository,
+                        PaginatorInterface $paginator,
+                        CuentaRepository $cuentaRepository): Response
+    {
+         $this->denyAccessUnlessGranted('view','resumen_causas_tributaria');
+        $user=$this->getUser();
+        $companias="4,6,5";
+        $bTipoCuenta="";
+       $listado=[];
+        if(null!=$request->query->get('bTipoCuenta') && $request->query->get('bTipoCuenta')!=""){
+            $bTipoCuenta=$request->query->get('bTipoCuenta');
+        }
+       
+        $resumen = $vwResumenCausasRepository->findResumenConFecha($companias);
+        $fechaActualizacion = $resumen[0]['fechaActualizacion'] ?? null;
+
+        /*
+        switch ($bTipoCuenta) {
+            case 'alDia':
+               $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesActivos':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesAlDia':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesMorosos':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesActivosVIP':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'clientesAlDiaVIP':
+                $listado =$vwClientesActivosFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'conRol':
+                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'sinRol':
+                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            case 'finalizadas':
+                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            default:
+                $listado =$vwCausasActivasFinalRepository->findByCuentas($companias, $bTipoCuenta);
+                break;
+            }*/
+         $causasActivasFinal=$paginator->paginate(
+            $listado, 
+            $request->query->getInt('page', 1),
+            20 ,
+            array('defaultSortFieldName' => 'id', 'defaultSortDirection' => 'desc'));
+           
+        
+        
+        return $this->render('resumen_causas/index.html.twig', [
+            'pagina' => 'Resumen Causas Tributaria',
+            'resumen'=>$resumen,
+            'listado'=>$causasActivasFinal,
+            "tipoFiltro"=>"resumenCausas",
+            "companias"=>$companias,
+            "bTipoCuenta"=>$bTipoCuenta,
+            "bMateria"=>"tributaria",
+            'fechaActualizacion'=>$fechaActualizacion,
+            
+        ]);
+    }
+
+    /**
+     * @Route("/resumencausastramitadores", name="resumen_causas_tramitadores", methods={"GET","POST"})
+     */
+    public function resumencausastramitadores(Request $request, $cuentasId, $tipoCausa, $total, VwCausasActivasFinalRepository $vwCausasActivasFinalRepository,VwClientesActivosFinalRepository $vwClientesActivosFinalRepository): Response
+    {
+        $user=$this->getUser();
+
+        
+        $nombre_status="";
+        switch ($tipoCausa) {
+            case 'alDia':
+                $nombre_status="Causas al dia";
+                $queryresumen=$vwCausasActivasFinalRepository->groupByCerrador($cuentasId,$tipoCausa);
+                break;
+            case 'clientesActivos':
+                $nombre_status="Clientes Activos";
+                 $queryresumen=$vwClientesActivosFinalRepository->groupByCerrador($cuentasId,$tipoCausa);
+                break;
+            case 'clientesAlDia':
+                $nombre_status="Clientes al dia";
+                 $queryresumen=$vwClientesActivosFinalRepository->groupByCerrador($cuentasId,$tipoCausa);
+                break;
+            case 'clientesMorosos':
+                $nombre_status="Clientes Morosos";
+                 $queryresumen=$vwClientesActivosFinalRepository->groupByCerrador($cuentasId,$tipoCausa);
+                break;
+            case 'clientesActivosVIP':
+                $nombre_status="Clientes Activos VIP";
+                 $queryresumen=$vwClientesActivosFinalRepository->groupByCerrador($cuentasId,$tipoCausa);
+                break;
+            case 'clientesAlDiaVIP':
+                $nombre_status="Clientes al dia VIP";
+                 $queryresumen=$vwClientesActivosFinalRepository->groupByCerrador($cuentasId,$tipoCausa);
+                break;
+            case 'conRol':
+                $nombre_status="Causas con rol";
+                $queryresumen=$vwCausasActivasFinalRepository->groupByCerrador($cuentasId,$tipoCausa);
+                break;
+            case 'sinRol':
+                $nombre_status="Causas sin rol";
+                $queryresumen=$vwCausasActivasFinalRepository->groupByCerrador($cuentasId,$tipoCausa);
+                break;
+            case 'finalizadas':
+                $nombre_status="Causas finalizadas";
+                $queryresumen=$vwCausasActivasFinalRepository->groupByCerrador($cuentasId,$tipoCausa);
+                break;
+            default:
+                $nombre_status="Causas";
+                $queryresumen=$vwCausasActivasFinalRepository->groupByCerrador($cuentasId,$tipoCausa);
+                break;
+            }
+        
+
+
+        return $this->render('resumen_causas/_resumencausastramitadores.html.twig',[
+            'tramitadores'=>$queryresumen,           
+            'nombre_status'=>$nombre_status,
+            'total'=>$total,
+        ]);
+    }
+
+    /**
+     * @Route("/excel", name="resumen_causas_excel", methods={"GET","POST"})
+     */
+    public function excel(Request $request,
+                        VwCausasActivasFinalRepository $vwCausasActivasFinalRepository,
+                        VwClientesActivosFinalRepository $vwClientesActivosFinalRepository, 
+                        AgendaRepository $agendaRepository, 
+                        VwResumenCausasRepository $vwResumenCausasRepository,
+                        ConfiguracionRepository $configuracionRepository): Response
+    {
+        
+        $this->denyAccessUnlessGranted('view','resumen_causas_excel');
+        $user = $this->getUser();
+        $materia="";
+        $bTipoCuenta="";
+       
+        if(null!=$request->query->get('bTipoCuenta') && $request->query->get('bTipoCuenta')!=""){
+            $bTipoCuenta=$request->query->get('bTipoCuenta');
+        }
+        if(null!=$request->query->get('bMateria') && $request->query->get('bMateria')!=""){
+            $materia=$request->query->get('bMateria');
+        }
+        switch ($materia) {
+            case 'civil':
+                $cuentasId="1,2,3,10";
+                $fileName="ResumenCivil.xlsx";
+                $fileName_protegido="ResumenCivil_protegido.xlsx";
+                $titulo = "Resumen Causas Civil ";
+                break;
+            case 'tributaria':
+                $cuentasId="4,6,5";
+                $fileName="ResumenTributaria.xlsx";
+                $fileName_protegido="ResumenTributaria_protegido.xlsx";
+                $titulo = "Resumen Causas Tributaria ";
+                break;
+            case 'familia':
+                $cuentasId="7";
+                $fileName="ResumenFamilia.xlsx";
+                $fileName_protegido="ResumenFamilia_protegido.xlsx";
+                $titulo = "Resumen Causas Familia ";
+                break;
+        }
+
+         
+        switch ($bTipoCuenta) {
+            case 'alDia':
+                $nombre_status="Causas al dia";
+                $queryresumen=$vwCausasActivasFinalRepository->findByCuentas($cuentasId,$bTipoCuenta);
+                break;
+            case 'clientesActivos':
+                $nombre_status="Clientes Activos";
+                 $queryresumen=$vwClientesActivosFinalRepository->findByCuentas($cuentasId,$bTipoCuenta);
+                break;
+            case 'clientesAlDia':
+                $nombre_status="Clientes al dia";
+                 $queryresumen=$vwClientesActivosFinalRepository->findByCuentas($cuentasId,$bTipoCuenta);
+                break;
+            case 'clientesMorosos':
+                $nombre_status="Clientes Morosos";
+                 $queryresumen=$vwClientesActivosFinalRepository->findByCuentas($cuentasId,$bTipoCuenta);
+                break;
+            case 'clientesActivosVIP':
+                $nombre_status="Clientes Activos VIP";
+                 $queryresumen=$vwClientesActivosFinalRepository->findByCuentas($cuentasId,$bTipoCuenta);
+                break;
+            case 'clientesAlDiaVIP':
+                $nombre_status="Clientes al dia VIP";
+                 $queryresumen=$vwClientesActivosFinalRepository->findByCuentas($cuentasId,$bTipoCuenta);
+                break;
+            case 'conRol':
+                $nombre_status="Causas con rol";
+                $queryresumen=$vwCausasActivasFinalRepository->findByCuentas($cuentasId,$bTipoCuenta);
+                break;
+            case 'sinRol':
+                $nombre_status="Causas sin rol";
+                $queryresumen=$vwCausasActivasFinalRepository->findByCuentas($cuentasId,$bTipoCuenta);
+                break;
+            case 'finalizadas':
+                $nombre_status="Causas finalizadas";
+                $queryresumen=$vwCausasActivasFinalRepository->findByCuentas($cuentasId,$bTipoCuenta);
+                break;
+            default:
+                $nombre_status="Causas";
+                $queryresumen=$vwCausasActivasFinalRepository->findByCuentas($cuentasId,$bTipoCuenta);
+                break;
+            }
+        $arrayCuentas = explode(",",$cuentasId);
+        $resumanCausa= $vwResumenCausasRepository->findOneBy(['cuentaId'=>$arrayCuentas]);
+        $spreadSheet=new Spreadsheet();
+        
+        /* @var $sheet \PhpOffice\PhpSpreadsheet\Writer\Xlsx\Worksheet */
+        $sheet = $spreadSheet->getActiveSheet();
+        $sheet->setCellValue('A1',"Fecha Actualización: ".($resumanCausa?$resumanCausa->getFechaActualizacion()->format('d-m-Y H:i:s'):""));
+
+
+        $sheet->setCellValue('A2', 'Materia');
+        $sheet->setCellValue('B2', 'AgendaId');
+        $sheet->setCellValue('C2', 'Folio');
+        $sheet->setCellValue('D2', 'FechaCto');
+        $sheet->setCellValue('E2', 'Tramitador');
+        $sheet->setCellValue('F2', 'Cerrador');
+        $sheet->setCellValue('G2', 'Activo');
+        $sheet->setCellValue('H2', 'Moroso');
+        $sheet->setCellValue('I2', 'VIP');
+        $sheet->setCellValue('J2', 'Rol/Rit');
+
+        //$sheet->setCellValue('L2', 'U.ObservaciónCausa');
+        $sheet->setCellValue('K2', 'C.Finalizada');
+        $sheet->setCellValue('L2', 'Telefono Cliente');
+        //$sheet->setCellValue('O2', 'U.ObservacionCliente');
+        $sheet->setCellValue('M2', 'Ult.Observacion');
+        $sheet = $spreadSheet->getActiveSheet();
+        $i=3;
+        foreach($queryresumen as $causa){
+             $rolrit="";
+            if($bTipoCuenta=="clientesActivosVIP" || $bTipoCuenta=="clientesAlDiaVIP" || $bTipoCuenta=="clientesActivos" || $bTipoCuenta=="clientesAlDia" || $bTipoCuenta=="clientesMorosos"){
+                 $rolrit="";
+            }else{
+                if($causa->getCausa()){
+                    if($causa->getCausa()->getLetra()!=null && $causa->getCausa()->getRol()!=null && $causa->getCausa()->getAnio()!=null){
+                        $rolrit=$causa->getCausa()->getLetra()."-".$causa->getCausa()->getRol()."-".$causa->getCausa()->getAnio();
+                    }
+                }
+            }
+            $sheet->setCellValue('A'.$i, $causa->getCuentaNombre());
+            $sheet->setCellValue('B'.$i, $causa->getAgendaId());
+            $sheet->setCellValue('C'.$i, $causa->getFolio());
+            $sheet->setCellValue('D'.$i, $causa->getFechaCto());
+            $sheet->setCellValue('E'.$i, $causa->getTramitador());
+            $sheet->setCellValue('F'.$i, $causa->getCerrador());
+            $sheet->setCellValue('G'.$i, $causa->getActivo());
+            $sheet->setCellValue('H'.$i, $causa->getMoroso());
+            $sheet->setCellValue('I'.$i, $causa->getVip());
+            $sheet->setCellValue('J'.$i, $rolrit);
+           
+           // $sheet->setCellValue('L'.$i, $causa->getFechaRegistroObservacion()?$causa->getFechaRegistroObservacion():"");
+            $sheet->setCellValue('K'.$i, $causa->getCausaFinalizada());
+            if($bTipoCuenta=="clientesActivosVIP" || $bTipoCuenta=="clientesAlDiaVIP"){
+                $agenda=$agendaRepository->find($causa->getAgendaId());
+           
+                $sheet->setCellValue('L'.$i, $agenda?$agenda->getTelefonoCliente():"");
+            }
+            $sheet->setCellValue('M'.$i, $causa->getDiasUltObservacion() );
+           // $sheet->setCellValue('O'.$i, $causa->getFechaObservacionCliente()?$causa->getFechaObservacionCliente():"");
+            $i++;
+        }
+
+        $sheet->setTitle($titulo);
+        $security = $spreadSheet->getSecurity();
+        $security->setLockWindows(true);
+        $security->setLockStructure(true);
+        $security->setWorkbookPassword("123456"); 
+        // Create your Office 2007 Excel (XLSX Format)
+        $writer = new Xlsx($spreadSheet);
+        /*$writer->setDelimiter(',');
+        $writer->setEnclosure('');*/
+           
+        // Create a Temporary file in the system
+        $temp_file = tempnam(sys_get_temp_dir(), $fileName);
+        $temp_file_protegido = tempnam(sys_get_temp_dir(), $fileName_protegido);
+        $writer->save($temp_file);
+        $configuracion = $configuracionRepository->find(1);
+        if($configuracion->getClaveEncriptacionDescargas()){
+            $encryptor = new Encrypt();
+            $encryptor->input($temp_file)
+            ->password($configuracion->getClaveEncriptacionDescargas())
+            ->output( $temp_file_protegido);
+            $temp_file = $temp_file_protegido;   
+        }
+        // Create the excel file in the tmp directory of the system
+        
+
+        
+        //exec('libreoffice --headless --convert-to xlsx:"Calc MS Excel 2007 XML:EncryptFile=true;Password=123456" '.$temp_file);
+        // Return the excel file as an attachment
+        return $this->file($temp_file, $fileName, ResponseHeaderBag::DISPOSITION_ATTACHMENT);
+        
+    }
+
+}

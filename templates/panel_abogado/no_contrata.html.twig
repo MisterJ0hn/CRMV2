@@ -1,0 +1,33 @@
+<form action="{{path('panel_abogado_no_contrata',{'id':agenda.id})}}" method="post" id="form-nocontrata">
+    <div class="row">
+        <div class="col-sm-9 col-md-4">
+            <small class="text-muted">Sub Estado</small>
+            <select name="cboSubStatus" class="form-control"  required >
+                <option value="">Seleccione</option>
+
+                {% for sub_status in sub_statues %}
+                    <option value="{{sub_status.id}}"
+                    
+                    >{{sub_status.nombre}}</option>
+                {% endfor %}
+            </select>
+        </div>
+    
+    
+    </div>
+    <div class="row">
+                    
+        <div class="col-sm-12 col-md-9">
+    
+            <small class="text-muted">Observación</small>
+            <textarea name="txtObservacion" class="form-control"></textarea>
+            <input type="hidden" name="hdNoContrata" value="{{status}}">
+        </div>
+    </div>
+        <button class="btn btn-danger">Finalizar</button>
+</form>
+<script>
+    $('#form-nocontrata').on('submit',function(){
+        $('button').attr("disabled", true);
+    });
+</script>

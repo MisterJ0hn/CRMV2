@@ -1,0 +1,119 @@
+{{ form_start(form,{attr:{'class':'dropzone','id':'my-awesome-dropzone'}}) }}
+    <div class="row">
+        <div class="col-sm-12  col-md-8">
+
+            <div class="card">
+                <div class="card-header">
+                    <h1>Folio: {{contrato.folio}}</h1> 
+                </div>
+                <div class="card-body table-responsive pad">
+                
+            
+                    <div class="row">
+                        <div class="col-sm-12 col-md-4">
+              
+                        {% if pago.pagoTipo.id == 7 %}
+                            <small class="text-muted">Monto Devuelto (*)</small>
+                        {% else %}
+                            <small class="text-muted">Monto Pagado (*)</small>
+                        {% endif %}
+                            {{form_row(form.monto,{'label':false,'attr':{'class':'form-control monto','style':'display:none'}})}}
+                            <p>{{pago.monto|number_format(0,',','.')}}</p>
+                            <strong><label id="m-monto"></label></strong>
+                        </div>
+                        <div class="col-sm-12 col-md-4">
+                            <small class="text-muted">Fecha Comprobante (*)</small>
+                            <p>{{pago.fechaPago|date('Y-m-d H:i')}}</p>
+                            <input class="form-control datetimepicker-pago" name="fechaPago" style="display:none">
+                                    
+                                    
+                        </div>
+                        <div class="col-sm-12 col-md-4">
+                            <small class="text-muted">Fecha Ingreso Comprobante</small>
+                            <br>
+                            {{"now"|date('Y-m-d')}}
+                        </div>
+                        <div class="col-sm-12 col-md-4">
+                        
+                            <small class="text-muted">N° Comprobante</small>
+                            <p>{{pago.ncomprobante}}</p>
+                            {{form_row(form.ncomprobante,{'label':false,'attr':{'class':'form-control ncomprobante','style':'display:none'}})}}
+                        </div>
+                        <div class="col-sm-12 col-md-4">
+                        {% if pago.pagoTipo.id == 7 %}
+                            <small class="text-muted">N° Documento</small>
+                        {% else %}
+                            <small class="text-muted">N° Boleta</small>
+                            
+                        {% endif %}
+                            {{form_row(form.boleta,{'label':false,'attr':{'class':'form-control','required':true}})}}
+                        </div>
+                        <div class="col-sm-12 col-md-4">
+                            <small class="text-muted">Tipo Deposito (*)</small>
+                            {{form_row(form.pagoTipo,{'label':false,'attr':{'class':'form-control cboTipo','style':'display:none'}})}}
+              
+                            <p>{{pago.pagoTipo}}</p>
+                        </div>
+                        <div class="col-sm-12 col-md-4">
+                            <small class="text-muted">Cta. Cte. (*)</small>
+                            <p>{{pago.cuentaCorriente}}</p>
+                            {{form_row(form.cuentaCorriente,{'label':false,'attr':{'class':'form-control','style':'display:none'}})}}
+                        </div>
+                        <div class="col-sm-12 col-md-4">
+                            <small class="text-muted">Canal (*)</small>
+                            <p>{{pago.pagoCanal}}</p>
+                            {{form_row(form.pagoCanal,{'label':false,'attr':{'class':'form-control','style':'display:none'}})}}
+                        </div>
+                        <div class="col-sm-12 col-md-12">
+                            <small class="text-muted">Observación</small>
+                            <p>{{pago.observacion}}</p>
+                            {{form_row(form.observacion,{'label':false,'attr':{'class':'form-control','style':'display:none'}})}}
+                            {{form_row(form.comprobante,{'label':false,'attr':{'class':'form-control comprobante','style':'display:none'}})}}
+                            
+                        </div>
+                    </div> 
+                </div>
+                
+                <div class="card-footer">
+                   
+                    <div class="row">
+                        <div class="col-2">
+                            <button class="btn btn-primary btn-guardar" type="submit" >{{ button_label|default('Guardar') }}</button>
+                        </div>
+                        <div class="col-10">
+                            <div class="alert alert-danger" role="alert" style="display: none;">
+                                Debe subir una imagen para poder ingresar pago.
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+        </div>
+        <div class="col-sm-12  col-md-4">
+            
+            {% if pago.comprobante is not empty %}
+                
+            
+                    <div class="card">
+                        <div class="card-body table-responsive pad">
+                            {% if etapa==2 %}
+                                {% set extension = pago.comprobante|split('.')|last|lower %}
+                                {% if extension == 'pdf' %}
+                                    <iframe src="{{url_web}}{{img_pagos}}{{pago.comprobante}}" width="100%" height="500px" style="border: none;"></iframe>
+                                {% else %}
+                                    <img src="{{url_web}}{{img_pagos}}{{pago.comprobante}}">
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+        </div>
+    </div>   
+    {{ form_end(form) }}
+
+<script>
+
+ 
+</script>

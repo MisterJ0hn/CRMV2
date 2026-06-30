@@ -1,0 +1,63 @@
+<hr />
+                    <!-- seccion para suscribir pago automático-->
+
+
+<div class="col-sm-12 col-md-12">
+    <h3>Suscripción pago automático</h3>
+{% if contrato.aceptaSuscripcion == 1 %}
+    <div class="col-12">
+        <p>El cliente aceptó generar suscripción automática</p>
+    </div>
+   
+    {% if contrato.estadoSuscripcion=="ACTIVA" %}
+        <div class="alert alert-success" role="alert">
+            Suscripción se encuentra Activa
+        </div>
+    {% else %}
+        {% if contrato.estadoSuscripcion is null or contrato.estadoSuscripcion == "" %}
+            <div class="alert alert-warning" role="alert">
+                <p>La suscripción se encuentra en proceso. Si generas este anexo talvez afectes las cuotas pendientes.</p>
+            </div>
+        {% else %}
+            <div class="alert alert-danger" role="alert">
+                <p>Ha ocurrido un error al activar: {{contrato.estadoSuscripcion}}</p>
+            </div>
+        {% endif %}
+    {% endif %}
+    <div class="alert alert-danger" role="alert">
+
+    <div class="form-group form-check">
+    <input type="checkbox" value="1" name="chkCancelarSuscripcion" class="form-check-input" id="chkCancelarSuscripcion"/>
+    <label class="form-check-label" for="exampleCheck1">Desea cancelar la suscripción?</label>
+  </div>
+{% else %}
+    <div class="row mb-3">
+        <div class="col-12 ml-4">
+            <input type="checkbox" name="chkAceptaSuscripcion" id="chkAceptaSuscripcion" value="1" class="form-check-input" >  
+            <label for="chkAceptaSuscripcion" class="form-check-label">El cliente acepta registro de suscripción automática?</label> 
+        </div>
+    </div>  
+{% endif %}
+</div>
+<script>
+    $("#chkCancelarSuscripcion").on("click", function(){
+        console.log("presiona check :"+$(this).is(":checked"));
+         if ($(this).is(":checked")==true )
+         {
+            if(!confirm("Estas seguro de cancelar la suscripción? Esto cancelará las cuotas pendientes.")){
+                $(this).prop("checked",false);
+            }
+
+        }
+    });
+    $("#chkAceptaSuscripcion").on("click", function(){
+       
+         if ($(this).is(":checked")==true )
+         {
+            if(!confirm("Estas seguro de aceptar la suscripción? Esto generará cuotas que luego serán descontadas automaticamente al banco del cliente.")){
+                $(this).prop("checked",false);
+            }
+
+        }
+    });
+</script>

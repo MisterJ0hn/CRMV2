@@ -1,0 +1,449 @@
+
+<div class="row">
+    <div class="col-sm-12 col-md-12 col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                Agregar causa
+            </div>
+            <div class="card-body">
+                <section>
+                    <div class="row">
+                        <div class="col-12">
+                            <small class="text-muted">Contrato Original</small> {{contrato.folio}} 0
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted">Ultimo Anexo</small> {% if ultFolio %}
+                                {{ ultAnexo.id }}-{{ contrato.folio }} {{ ultFolio }}
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted">Fecha Creacion</small> {{contrato.fechaCreacion|date('Y-m-d')}}
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <div class="row">
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Cuota</th>
+                                <th>Vcto.</th>
+                                <th>Debe</th>
+                                <th>Haber</th>
+                            </tr>
+                            {% set monto = 0 %}
+                            {% set pagado = 0 %}
+                            {%  for cuota in cuotas %}
+                            <tr>
+                                <td>{{cuota.numero}}</td>
+                                <td>{{cuota.fechaPago|date('Y-m-d')}}</td>
+                                <td>{{cuota.monto| number_format(0, ',', '.') }}</td>
+                                <td>{{cuota.pagado| number_format(0, ',', '.')}}</td>
+                            </tr>
+                            {% set monto = monto + cuota.monto %}
+                            {% set pagado = pagado + cuota.pagado %}
+
+                            {% endfor %}
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th>{{monto| number_format(0, ',', '.')}}</th>
+                                <th>{{pagado| number_format(0, ',', '.')}}</th>
+                            </tr>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th class="text-danger">{{(monto-pagado)| number_format(0, ',', '.')}}</th>
+                            </tr>
+                        </table>
+                    </div>
+
+                </section>
+                
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-12 col-md-12 col-lg-8">
+        <div class="row">
+            <div class="col-12">
+                <h4 id="materia">Causa</h4>
+            </div>
+        </div>
+
+        
+        {{ form_start(form,{'action': path('anexo_causas',{'id':contrato.id}), 'method': 'POST','attr':{'onsubmit':'return checkEnvio();'}}) }}
+        <div class="row">
+         <select name="cboMateria" class="form-control cbomateria" placeholder="Materias" style="visibility:hidden" >
+                    
+                    {% for cuenta_materia in cuenta_materias %}
+                    <option value="{{ cuenta_materia.materia.id }}" selected>{{ cuenta_materia.materia.nombre }}</option>
+                    {% endfor %}
+                </select>
+            <div class="col-sm-12 col-md-3 submateria">
+                <select name="cboSubMateria" class="form-control cboSubMateria"  >
+                    <option>Seleccione Servicio</option>
+                </select>
+            </div>    
+            <div class="col-sm-12 col-md-4">
+                <div class="row">
+                    <div class="col-sm-12 col-md-3 ml-0 mr-0 pl-0 pr-0 letras">
+                        <input type="text" name="txtLetra" placeholder="Letra" class="form-control txtLetra" size="3" maxlength="10"> 
+                    </div>
+                    <div class="col-sm-12 col-md-1 ml-0 mr-0 pl-0 pr-0" align="center">
+                        -
+                    </div>
+                    <div class="col-sm-12 col-md-3 ml-0 mr-0 pl-0 pr-0">
+                        <input type="text" name="txtRol" placeholder="N°" class="form-control txtRol" size="6" maxlength="255">
+                    </div>
+                    <div class="col-sm-12 col-md-1 ml-0 mr-0 pl-0 pr-0" align="center">
+                        -
+                    </div>
+                    <div class="col-sm-12 col-md-3 ml-0 mr-0 pl-0 pr-0">
+                        <input type="text" name="txtAnio" placeholder="Año" class="form-control txtAnio" size="4" maxlength="4">
+                    </div>
+                </div>
+               <small class="text-muted">Formato: Letra-Rol-Año</small>
+            </div> 
+            <div class="col-sm-12 col-md-5 ">
+                <input type="text" name="txtCaratulado" placeholder="Caratulado" class="form-control txtCaratulado" size="50" maxlength="30">
+                <small class="text-muted">Caracteres max. 50</small>
+            </div> 
+            
+                        
+        </div>
+        <div class="row">
+            
+            <div class="col-sm-12 col-md-5">
+                
+                <select name="corte" class="form-control corte">
+                    <option value=""> Seleccione Corte </option>
+                    
+                </select> 
+            </div>   
+            <div class="col-sm-12 col-md-6">
+                <select name="juzgado" class="form-control juzgado">
+                    <option value=""> Seleccione Juzgado </option>
+                    {% for juzgado in juzgados %}
+                        <option value="{{juzgado.id}}">{{juzgado.nombre}}</option>
+                    {% endfor %}
+                </select> 
+            </div>  
+            <div class="col-sm-12 col-md-1">
+                <button type="button" class="btn btn-primary btn-agregar" onclick="javascript:agregarCausa()"><i class="fas fa-plus"></i></button>
+            </div>  
+        </div>
+      
+
+        
+        
+        <div class="card-body" >
+            <div class="table-responsive ">
+                <table class="table table-head-fixed text-nowrap table-striped table-sm">
+                    <thead>
+                        <tr>
+                            <th>Id Servicio</th>
+                            <th>Servicio</th>
+                            <th>Causa/Rol</th>
+                            <th>Caratulado</th>
+                            <th>Juzgado</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody class="causas_anteriores">
+                
+                
+                    
+                    </tbody>
+                </table>
+            </div>
+            <div id="estrategiasJuridicas">
+                <div class="table-responsive ">
+                    <table class="table table-head-fixed text-nowrap table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th>Id Servicio</th>
+                                <th>Servicio</th>
+                                <th>Causa/Rol</th>
+                                <th>Caratulado</th>
+                                <th>Juzgado</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody class="detalle_causas">
+
+                        </tbody>
+                    </table>
+                </div>                    
+                    
+            </div>
+            <div class="loading"></div>
+        </div>  
+
+        <section>
+            <div class="row">
+                 <!--Formas de pago-->
+
+                {{ include('contrato/_tiposDePago.html.twig') }}
+
+                <!--Fin Formas de pago-->
+                <div class="col-sm-12 col-md-12">
+                    <small class="text-muted">Observación</small><br>
+                    {{form_row(form.observacion,{'label':false,'attr':{'class':'form-control'},'required':true})}}
+                    
+                </div>
+                 {{ include('/anexo/_suscripcion.html.twig') }}
+                
+                <div class="col-sm-12 col-md-12">
+                    <button class="btn btn-primary btn-crearAnexo" >Crear Anexo</button>
+                </div>
+            </div>
+
+            {{ form_end(form) }}
+        </section>
+        
+    </div>
+</section>
+
+
+<script>
+
+    $('.cuotas').change(function(){
+        recalcula();
+    });
+    $('.monto-contrato').change(function(){
+        recalcula();
+        $("#m-monto-contrato").html($.number( $(this).val(), 0, ',', '.' ));
+    });
+    $('.primera-cuota').change(function(){
+        recalcula();
+        $("#m-primera-cuota").html($.number( $(this).val(), 0, ',', '.' ));
+    });
+    $('.nivel-deuda').change(function(){
+        recalcula();
+        $("#m-nivel-deuda").html($.number( $(this).val(), 0, ',', '.' ));
+    });
+    $('.pago-actual').change(function(){
+        recalcula();
+        $("#m-pago-actual").html($.number( $(this).val(), 0, ',', '.' ));
+    });
+    $('.interes').change(function(){
+        recalcula();
+    });
+    
+    letrasCausa($('.cbomateria').val());
+    
+    $("#m-monto-contrato").html($.number( $('.monto-contrato').val(), 0, ',', '.' ));
+    $("#m-primera-cuota").html($.number( $('.primera-cuota').val(), 0, ',', '.' ));
+    $("#m-valor-cuota").html($.number( $('.valor-cuota').val(), 0, ',', '.' ));
+    $("#m-pago-actual").html($.number( $('.pago-actual').val(), 0, ',', '.' ));
+    $("#m-nivel-deuda").html($.number( $('.nivel-deuda').val(), 0, ',', '.' ));
+    $('.fecha-total').hide();
+    $('.fecha-total-group').hide();
+    $('.primera-cuota').prop("required", false);
+
+    $(".number").inputmask({
+        mask: "9",
+        repeat:20,
+    });
+    
+
+    var item_causa=0;
+
+    $(document).ready(function(){
+        
+        cambiaEstrategiaJuridica($(".cbomateria").val());
+
+        listarCausasAnterior();
+         
+        
+        obtenerCortes({{contrato.agenda.cuenta.id}});
+        
+    });
+   
+    function listarCausasAnterior(){
+        //console.log('paso');
+        $.ajax({
+            url:"{{ path('anexo_causas_anteriores', {'id':contrato.id}) }}",
+            type: "post",
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+                $(".loading").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+            },
+            success:function(data){
+                $(".causas_anteriores").html(data);
+                
+                $(".loading").html('');
+                
+            }
+        });
+        
+    }
+    function eliminarCausaAnterior(causa){  
+        $.ajax({
+            url:"/anexo/"+causa+"/causas_anteriores_eliminar",
+            type: "post",
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+            },
+            success:function(data){
+                listarCausasAnterior();
+            }
+        });
+    }
+    
+    function  cambiaEstrategiaJuridica(value){
+        $.ajax({
+            url:"/estrategia_juridica/"+value+"/combo",
+            type: "post",
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+                $(".loading").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+            },
+            success:function(data){
+                $(".cboSubMateria").html(data);
+                $(".loading").html('');
+                $("#materia").html("* Causa "+$(".cbomateria option:selected").text());
+            }
+        });
+        
+    }
+    function agregarCausa(){
+
+        if($('.cboSubMateria').val()!=""){
+            $(".loading").html('');
+            var item_id=Math.floor(Math.random() * 100);
+            var fieldHTML = "<tr class='causa-"+item_id+"'>"+
+                                "<td>"+$('.cboSubMateria').val()+"</td>"+
+                                "<td><input type='hidden' value='"+$('.cboSubMateria').val()+"' name='hdSubMateria[]'  >"+$('.cboSubMateria option:selected').text()+"</td>"+
+                                "<td><input type='hidden' value='"+$('.txtLetra').val()+"' name='hdLetraCausa[]'  >"+
+                                "<input type='hidden' value='"+$('.txtRol').val()+"' name='hdRolCausa[]'  >"+
+                                "<input type='hidden' value='"+$('.txtAnio').val()+"' name='hdAnioCausa[]'  >"
+                                +$('.txtLetra').val()+"-"+$('.txtRol').val()+"-"+$('.txtAnio').val()+"</td>"+
+                                "<td><input type='hidden' value='"+$('.txtCaratulado').val()+"' name='hdCaratulado[]'  >"+$('.txtCaratulado').val()+"</td>"+
+                                "<td><input type='hidden' value='"+$('.juzgado').val()+"' name='hdJuzgado[]'  >"+$('.juzgado option:selected').text()+"</td>"+
+                                "<td><button type='button' class='btn btn-danger' onclick='javascript:eliminarCausa("+item_id+")' ><i class='fas fa-trash'></i></button></td>"+
+                            "</tr>";
+
+            $(".detalle_causas").append(fieldHTML); 
+            $('.cboSubMateria').val('');
+            $('.txtLetra').val('');
+            $('.txtRol').val('');
+            $('.txtAnio').val('');
+            $('.txtCaratulado').val('');
+            letrasCausa($('.cbomateria').val());
+            $('.corte').val('');
+            $('.juzgado').val('');
+
+            item_causa++;
+        }else{
+            alert("Debe ingresar un servicio");
+        }
+    }
+    function eliminarCausa(causa){  
+        $('.causa-'+causa).remove();
+        item_causa--;
+    }
+
+    
+    
+ 
+
+    function checkEnvio(){
+        if(item_causa){
+            $("button").prop('disabled',true);
+            console.log('desabilitando');
+            $(".btn-crearAnexo").html('<i class="fas fa-sync-alt fa-spin"></i> Creando Anexo...');
+            return true;
+        }
+        $(".loading").html(' <div class="overlay"><div class="text-bold pt-2">Ingresar al menos 1 causa</div></div>');
+        alert("Debe Ingresar al menos 1 causa");
+        return false;
+    }
+
+    function obtenerCortes(cuenta){
+       
+            $(".corte").show();
+            $.ajax({
+                url:"/materia/"+cuenta+"/corte_combo",
+                type: "post",
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                async: true,
+                beforeSend: function(){
+                    //$(".loading").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+                    
+                },
+                success:function(data){
+                    $(".corte").html(data);
+                    //$(".loading").html('');
+                    $(".juzgado").empty();
+                    $(".juzgado").append("<option>Seleccione Juzgado</option>"); 
+                }
+            });
+       
+    }
+
+    $(".corte").on("change",function(){
+        $.ajax({
+                url:"/juzgado_cuenta/"+$(this).val()+"/corte_combo",
+                type: "post",
+                dataType: "html",
+                cache: false,
+                contentType: false,
+                processData: false,
+                async: true,
+                beforeSend: function(){
+                    //$(".loading").html(' <div class="overlay"><i class="fas fa-3x fa-sync-alt fa-spin"></i><div class="text-bold pt-2">Loading...</div></div>');
+                    
+                },
+                success:function(data){
+                    $(".juzgado").html(data);
+                    
+                }
+
+            });
+    });
+
+    function letrasCausa(materia_id){
+        $.ajax({
+            url:"/materia/"+materia_id+"/causa_letras",
+            type: "get",
+            dataType: "json",
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+            },
+            success:function(data){
+                console.log("data");
+                console.log(data);
+
+                var letras=data;
+                $('.letras').html('<select name="txtLetra" class="form-control txtLetra"><option value=""> Letra </option></select>');
+                $.each(letras,function(i,letra){
+                    $('.txtLetra').append('<option value="'+letra+'">'+letra+'</option>');
+                });
+
+            },error:function(error){
+                $(".letras").html('<input type="text" name="txtLetra" placeholder="Letra" class="form-control txtLetra" size="3" maxlength="10">');
+            }
+        });
+    }
+
+</script>

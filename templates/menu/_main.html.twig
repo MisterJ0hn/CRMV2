@@ -1,0 +1,70 @@
+<!-- Sidebar -->
+    <div class="sidebar">
+      <!-- Sidebar user (optional) -->
+      <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+        
+        <div class="info">
+          <a href="#" class="d-block">{{sesion.getSesion.nombre}}</a>
+          <small class="text-muted">{{sesion.getSesion.usuarioTipo.nombre}}</small>
+        </div>
+      </div>
+      <!-- Sidebar Menu -->
+      <nav class="mt-2">
+        <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+          <!-- Add icons to the links using the .nav-icon class
+               with font-awesome or any other icon font library -->
+             <li class="nav-item">
+              <a href="/mis_datos/" class="nav-link">
+                <i class="nav-icon fas fa-user"></i>
+                <p>
+                  Mis Datos
+                </p>
+              </a>
+            </li>
+      {% if items is defined %}
+        {% for item in items %}
+
+              <li class="nav-item {{item.raiz1|raw}} {% if item.open == 'open' %} menu-open{% endif %}">
+              <a href="{{item.url}}" class="nav-link {% if item.class is defined %}{{ item.class }}{% endif %}">
+                <i class="nav-icon {{item.icon}}"></i>
+                <p>
+                  {{item.title}}
+                  {{item.raiz2|raw}}
+                </p>
+              </a>
+              {% if item.raiz1 != '' %}
+                <ul class="nav nav-treeview">
+                {% for subitem in subitems %}
+                  {% if subitem.menuraiz == item.menuraiz %}
+                    <li class="nav-item">
+                      <a href="{{subitem.url}}" class="nav-link {% if subitem.class is defined %}{{ subitem.class }}{% endif %}">
+                        <i class="{{subitem.icon}} nav-icon"></i>
+                        <p>{{subitem.title}}</p>
+                      </a>
+                    </li>
+                  {% endif %}
+
+                {% endfor %}
+                </ul>
+              {% endif %}
+            </li>
+
+        {% endfor %}
+      {% endif %}
+          
+          <li class="nav-item">
+              <a href="/logout" class="nav-link">
+                <i class="nav-icon fas fa-sign-out-alt"></i>
+                <p>
+                 Salir
+                </p>
+              </a>
+            </li>
+
+          
+          
+        </ul>
+      </nav>
+      <!-- /.sidebar-menu -->
+    </div>
+    <!-- /.sidebar -->

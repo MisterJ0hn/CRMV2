@@ -1,0 +1,171 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mantenedor Colaboradores{% endblock %}
+
+{% block body %}
+
+
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Agregar Colaborador</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Perfil</label>
+                            <select id="sel-perfil" class="form-control select2">
+                                <option value="">-- Seleccione perfil --</option>
+                                {% for perfil in perfiles %}
+                                    <option value="{{ perfil.id }}">{{ perfil.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Usuario</label>
+                            <select id="sel-usuario" class="form-control select2" disabled>
+                                <option value="">-- Seleccione usuario --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-group w-100">
+                            <button id="btn-agregar" class="btn btn-primary btn-block" disabled>
+                                <i class="fas fa-plus"></i> Agregar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Listado de Colaboradores</h3>
+            </div>
+            <div class="card-body table-responsive p-0">
+                <table class="table table-striped table-sm" id="tabla-colaboradores">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Nombre</th>
+                            <th>Perfil</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for colaborador in colaboradores %}
+                        <tr id="fila-{{ colaborador.id }}">
+                            <td>{{ colaborador.id }}</td>
+                            <td>{{ colaborador.usuario.nombre }}</td>
+                            <td>{{ colaborador.usuario.usuarioTipo.nombre }}</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm btn-eliminar" data-id="{{ colaborador.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr id="fila-vacia">
+                            <td colspan="4" class="text-center">No hay colaboradores registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<script>
+$(function () {
+    $('#sel-perfil').on('change', function () {
+        var perfilId = $(this).val();
+        var $selUsuario = $('#sel-usuario');
+        var $btnAgregar = $('#btn-agregar');
+
+        $selUsuario.empty().append('<option value="">-- Seleccione usuario --</option>').prop('disabled', true);
+        $btnAgregar.prop('disabled', true);
+
+        if (!perfilId) return;
+
+        $.get('/mantenedor_colaboradores/usuarios_por_perfil/' + perfilId, function (data) {
+            $.each(data, function (i, u) {
+                $selUsuario.append('<option value="' + u.id + '">' + u.nombre + '</option>');
+            });
+            $selUsuario.prop('disabled', false);
+        });
+    });
+
+    $('#sel-usuario').on('change', function () {
+        $('#btn-agregar').prop('disabled', !$(this).val());
+    });
+
+    $('#btn-agregar').on('click', function () {
+        var usuarioId = $('#sel-usuario').val();
+        if (!usuarioId) return;
+
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Agregando...');
+
+        $.post('/mantenedor_colaboradores/agregar', { usuario_id: usuarioId }, function (data) {
+            $('#fila-vacia').remove();
+            var fila = '<tr id="fila-' + data.id + '">' +
+                '<td>' + data.id + '</td>' +
+                '<td>' + data.nombre + '</td>' +
+                '<td>' + data.perfil + '</td>' +
+                '<td><button class="btn btn-danger btn-sm btn-eliminar" data-id="' + data.id + '"><i class="fas fa-trash"></i></button></td>' +
+                '</tr>';
+            $('#tabla-colaboradores tbody').append(fila);
+            toastr.success('Colaborador agregado correctamente.');
+        }).fail(function (xhr) {
+            var msg = xhr.responseJSON ? xhr.responseJSON.error : 'Error al agregar colaborador.';
+            toastr.error(msg);
+        }).always(function () {
+            $('#btn-agregar').prop('disabled', false).html('<i class="fas fa-plus"></i> Agregar');
+        });
+    });
+
+    $(document).on('click', '.btn-eliminar', function () {
+        var id = $(this).data('id');
+        var $fila = $('#fila-' + id);
+
+        Swal.fire({
+            title: '¿Eliminar colaborador?',
+            text: 'Esta acción no se puede deshacer.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then(function (result) {
+            if (result.value) {
+                $.ajax({
+                    url: '/mantenedor_colaboradores/' + id,
+                    type: 'DELETE',
+                    success: function () {
+                        $fila.remove();
+                        if ($('#tabla-colaboradores tbody tr').length === 0) {
+                            $('#tabla-colaboradores tbody').append(
+                                '<tr id="fila-vacia"><td colspan="4" class="text-center">No hay colaboradores registrados.</td></tr>'
+                            );
+                        }
+                        toastr.success('Colaborador eliminado.');
+                    },
+                    error: function (xhr) {
+                        var msg = xhr.responseJSON ? xhr.responseJSON.error : 'Error al eliminar.';
+                        toastr.error(msg);
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

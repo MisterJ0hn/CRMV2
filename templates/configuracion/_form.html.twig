@@ -1,0 +1,62 @@
+{{ form_start(form) }}
+
+
+<section>
+<div class="card">
+<div class="card-body">
+    <table class="table table-hover table-sm">
+    
+    <tr data-widget="expandable-table" aria-expanded="true">
+        <th colspan="2"><h3>Días</h3></th>
+    </tr>
+    <tr data-widget="expandable-body">
+    <td><label>Dias max. comision cobrador</label></td><td>{{form_row(form.maxDiasComision,{'label':false,'attr':{'class':'form-control'}})}}</td>
+        
+    </tr>
+    <tr>
+    <td><label>Dias Morosidad Vip:</label></td><td>{{form_row(form.diasMorisidadVip,{'label':false,'attr':{'class':'form-control'}})}}</td>
+    </tr>
+    <tr>
+    <td><label>Valor Multa Desiste</label></td><td>{{form_row(form.valorMulta,{'label':false,'attr':{'class':'form-control'}})}}</td>
+    </tr>
+    <tr>
+        <th colspan="2"><h3>Morosidad Pago Recurrente</h3></th>
+    </tr>
+    <tr>
+    <td><label>Nombre Segmento:</label></td><td>{{form_row(form.morosidadPatNombre,{'label':false,'attr':{'class':'form-control'}})}}</td>
+    </tr>
+    <tr>
+    <td><label>Dias Morosidad:</label></td><td>{{form_row(form.diasMorosidadPat,{'label':false,'attr':{'class':'form-control'}})}}</td>
+    </tr>
+
+    <tr>
+    <td><label>Icono:</label></td><td>{{form_row(form.morosidadPatIcono,{'label':false,'attr':{'class':'form-control'}})}} <button type="button" class="btn btn-xs btn-success" data-toggle="popover" title="Iconos" data-content="Puedes ver mas iconos en https://fontawesome.com/v5/search?ic=free-collection"><i class="fas fa-question"></i></button></td>
+    </tr>
+    <tr>
+    <td><label>Color:</label></td><td>{{form_row(form.morosidadPatColor,{'label':false,'attr':{'class':'form-control'}})}}</td>
+    </tr>
+    <tr>
+        <th colspan="2"><h3>WebHook Facebook</h3></th>
+    </tr>
+    <tr>
+    <td><label>Access Token:</label></td><td>{{form_row(form.accessToken,{'label':false,'attr':{'class':'form-control'}})}}</td>
+    </tr>
+    <tr>
+    <td><label>Verify Token:</label></td><td>{{form_row(form.verifyToken,{'label':false,'attr':{'class':'form-control'}})}}</td>
+    </tr>
+    <tr>
+        <th colspan="2"><h3>API CRM</h3></th>
+    </tr>
+    <tr>
+    <td><label>Api KEY:</label></td><td>{{form_row(form.crmApiKey,{'label':false,'attr':{'class':'form-control'}})}}</td>
+    </tr>
+    <tr>
+    <td><label>Secret KEY</label></td><td>{{form_row(form.crmSecretKey,{'label':false,'attr':{'class':'form-control'}})}}</td>
+    </tr>
+  
+    </table>
+</div>
+</div>
+</section>
+    <button class="btn btn-primary">{{ button_label|default('Save') }}</button>
+{{ form_end(form) }}

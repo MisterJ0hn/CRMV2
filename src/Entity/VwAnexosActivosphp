@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Entity;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
+
+/**
+* @ORM\Entity(readOnly=true)
+ * @ORM\Table(name="vw_anexos_activos")
+ */
+class VwAnexosActivos{
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $contratoId;
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $fechaCreacionAnexo;
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $vigenciaAnexo;
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $numeroAnexo;
+    
+}

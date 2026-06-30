@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mensaje{% endblock %}
+
+{% block body %}
+<div class="card">
+    {% if mensaje.mensajePrioridad is not null %}
+    <div class="card-header" style="background:{{mensaje.mensajePrioridad.color}};color:{{mensaje.mensajePrioridad.colorTexto}}">
+        <h3 class="card-title">Prioridad: {{mensaje.mensajePrioridad.nombre}}</h3>
+    </div>
+     {% endif %}
+    <div class="card-body">
+        <div class="row">
+            <div class="col-sm-12 col-md-4">
+                <small class="text-muted">Tipo</small>
+                <p>{{mensaje.mensajeTipo}}</p>
+            </div>
+            <div class="col-sm-12 col-md-4 ">
+                <small class="text-muted">Fecha</small>
+               <p>{{mensaje.fechaAviso|date('Y-m-d H:i')}}</p>
+            </div>
+            <div class="col-sm-12 col-md-4 ">
+                <small class="text-muted">Estado</small>
+                <br>
+                {% if mensaje.leido %}
+                    <span class="text-success">Finalizado</span>
+                {% else %}
+                    <span class="text-danger">Pendiente</span>
+                {% endif %}
+            </div>
+            <div class="col-sm-12 col-md-12">
+                <small class="text-muted">Observación</small>
+                <p>{{mensaje.observacion}}</p>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer justify-content-between">
+        {% if permite_finalizar %}
+        <a href="{{path('mensaje_leido',{'id':mensaje.id})}}" class='btn btn-success' >Finalizado</a>
+        {% endif %}
+        <a href="{{path('mensaje_calendario')}}" class='btn btn-primary' >Ver Calendario</a>
+    </div>
+
+</div>
+{% endblock %}

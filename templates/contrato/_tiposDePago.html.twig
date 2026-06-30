@@ -1,0 +1,610 @@
+{% if contratoAnexo is not defined %}
+    
+
+<div class="col-sm-12 col-md-3">
+    <small class="text-muted">Monto Deuda</small>
+    {{form_row(form.montoNivelDeuda,{'label':false,'attr':{'class':'form-control nivel-deuda','autocomplete':"ÑÖcompletes"}})}}
+</div>
+<div class="col-sm-12 col-md-3">
+    <small class="text-muted t-pago-actual" >Pago Mensual Deuda</small>
+    {{form_row(form.pagoActual,{'label':false,'attr':{'class':'form-control pago-actual number','autocomplete':"ÑÖcompletes"}})}}
+    <strong><label id="m-pago-actual"></label></strong>
+</div>
+{% endif %}
+<div class="col-sm-12 col-md-3">
+    <small class="text-muted">Monto
+    {% if contratoAnexo is defined %}
+        Anexo
+    {% else %}
+        Contrato
+    {% endif %}
+     *</small>
+    {{form_row(form.MontoContrato,{'label':false,'attr':{'class':'form-control monto-contrato number','required':true,'autocomplete':"ÑÖcompletes"}})}}
+    <strong><label id="m-monto-contrato"></label></strong>
+</div>
+        {% if contratoAnexo is not defined %}
+
+<div class="col-sm-12 col-md-6">
+{% else %}
+<div class="col-sm-12 col-md-4">
+    {% endif %}
+
+    <div class="row">
+        
+            <small class="text-muted isAbono">Abono *</small>
+            <div class="col">{{form_row(form.isAbono,{'label':false,'attr':{'class':' chk-bono'}})}}</div>
+    
+        <small class="text-muted textTotal">Paga el total *</small>
+        <div class="col divTotal">{{form_row(form.isTotal,{'label':false,'attr':{'class':' chk-total'}})}}</div>
+        {% if contratoAnexo is not defined %}
+            <small class="text-muted isIncorporacion">Incorporación *</small>
+            <div class="col">{{form_row(form.isIncorporacion,{'label':false,'attr':{'class':' chk-incorporacion'}})}}</div>
+        {% endif %}
+    </div>
+    <div class="row">
+        <div class="col-5  col-primera-cuota">
+            {% if contratoAnexo is not defined %}
+            {{form_row(form.primeraCuota,{'label':false,'attr':{'class':'form-control primera-cuota number','required':true,'autocomplete':"ÑÖcompletes"}})}}
+            {% else %}
+            {{form_row(form.abono,{'label':false,'attr':{'class':'form-control abono number','autocomplete':"ÑÖcompletes"}})}}
+            
+            {% endif %}
+            <strong><label id="m-primera-cuota"></label></strong>
+        </div>
+        <div class="col fecha-total-group col-total">
+            <div class="input-group">
+                <input type="text" class="fecha-total form-control" name="txtFechaTotal">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-primary btn-calendar-total"> <i class="fas fa-calendar-alt"></i></button>
+                </div>
+            </div>
+            
+        </div> 
+        {% if contratoAnexo is not defined %}
+        <div class="col fecha-incorporacion-group">
+            <div class="input-group ">
+                <input type="text" class="fecha-incorporacion form-control" name="txtFechaIncorporacion" required>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-primary btn-calendar-incorporacion" > <i class="fas fa-calendar-alt"></i></button>
+                </div>
+            </div>
+        </div>
+                {{form_row(form.fechaPrimeraCuota,{'label':false,'attr':{'class':'form-control','required':true,'style':'visibility:hidden'}})}}
+        {% else %}
+        <div class="col fecha-abono-group">
+            <div class="input-group ">
+                <input type="text" class="fecha-abono form-control" name="txtFechaAbono" required>
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-primary btn-calendar-abono" > <i class="fas fa-calendar-alt"></i></button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+                    
+    </div>
+</div>
+
+ {% if contratoAnexo is not defined %}
+<div class="col-sm-12 col-md-3">
+    <small class="text-muted t-cuotas" >Cuotas *</small>
+    {{form_row(form.cuotas,{'label':false,'attr':{'class':'form-control cuotas number','required':true,'autocomplete':"ÑÖcompletes"}})}}
+</div>
+
+<div class="col-sm-12 col-md-3">
+    <small class="text-muted t-valor-cuota">Valor cuota *</small>
+    {{form_row(form.valorCuota,{'label':false,'attr':{'class':'form-control valor-cuota','required':true,'autocomplete':"ÑÖcompletes"}})}}
+    <strong><label id="m-valor-cuota"></label></strong>
+</div>
+{% else %}
+<div class="col-sm-12 col-md-2">
+    <small class="text-muted t-cuotas" >Cuotas *</small>
+    {{form_row(form.nCuotas,{'label':false,'attr':{'class':'form-control cuotas number','required':true,'autocomplete':"ÑÖcompletes"}})}}
+</div>
+<div class="col-sm-12 col-md-3">
+    <small class="text-muted t-valor-cuota">Valor cuota *</small>
+    {{form_row(form.valorCuota,{'label':false,'attr':{'class':'form-control valor-cuota','required':true,'autocomplete':"ÑÖcompletes"}})}}
+    
+    <strong><label id="m-valor-cuota"></label></strong>
+</div>
+
+{% endif %}
+
+
+<div class="col-sm-12 col-md-12 diasPago" >
+    <small class="text-muted">Dias de Pago *</small>
+    <br>
+    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+        {% for diasPago in diasPagos %}
+        <label class="btn btn-success 
+        {% if contrato.diaPago == diasPago.dias %}
+        active
+        {% endif %}">
+            <input type="radio" name="chkDiasPago" class="chkDiasPago" id="chkDiasPago{{diasPago.dias}}" autocomplete="off" 
+            {% if contrato.diaPago == diasPago.dias %}
+                        checked
+            {% endif %}
+                value="{{diasPago.dias}}" required>{{diasPago.nombre}}
+        </label>
+        {% endfor %}
+    </div>
+</div>
+<div class="col-sm-12 col-md-3 mesPrimerPago">
+    <small class="text-muted t-mes-pago">Mes Primer Pago</small>
+    <input type="text" name="txtFechaPago" class="form-control primer-pago">    
+</div>
+<div class="col-sm-12 col-md-3 vigenciaMeses">
+    <small class="text-muted  ">Vigencia en Meses</small>
+    {% if contratoAnexo is not defined %}
+    <p>{{contrato.vigencia}}</p>
+    {{form_row(form.vigencia,{'label':false,'attr':{'class':'form-control','style':'visibility:hidden'}})}}
+    {% else %}
+    <select name="vigencia" id="vigencia" class="form-control" required>
+        <option value="">Seleccione vigencia</option>
+        {% for i in 1..contrato.vigencia %}
+            <option value="{{ i }}">{{ i }} meses</option>
+        {% endfor %}
+    </select>
+    {{form_row(form.vigencia,{'label':false,'attr':{'class':'form-control','style':'visibility:hidden'}})}}
+    {% endif %}
+    
+</div>
+    
+<script>
+    $('.primer-pago').inputmask("9999-99");
+    $('.cuotas').val(1);
+    $('.fecha-incorporacion').hide();
+    $('.fecha-incorporacion-group').hide();
+    $('.fecha-incorporacion').prop('required',false);
+    $('.fecha-abono').hide();
+    $('.fecha-abono-group').hide();
+    $('.fecha-abono').prop('required',false);
+    {% if contratoAnexo is defined %}
+        $('.abono').hide();
+        $('.abono').prop('required',false);
+        $('.abono').val(0);
+    {% else %}
+    $('.primera-cuota').css("visibility", "hidden");
+    $('.primera-cuota').prop("required", false);
+    $('.primera-cuota').val(0);
+    $('.isAbono').hide();
+    $('.chk-bono').hide();
+    {% endif %}
+    $('#m-primera-cuota').hide();
+    $('.fecha-total').daterangepicker({
+            "singleDatePicker": true,
+            "drops": "up",
+            "autoUpdateInput": false,
+           {% if contratoAnexo is not defined %}
+                "maxDate": "{{contrato.fechaCreacion|date_modify('+15 day')|date('Y-m-d')}}",
+                "minDate":"{{contrato.fechaCreacion|date('Y-m-d')}}",
+            {% else %}
+                "maxDate": "{{contratoAnexo.fechaCreacion|date_modify('+15 day')|date('Y-m-d')}}",
+                "minDate":"{{contratoAnexo.fechaCreacion|date('Y-m-d')}}",
+            {% endif %}
+            "locale": {
+                "format": "YYYY-MM-DD",
+                "applyLabel": "Apply",
+                "cancelLabel": "Cancel",
+            }
+        }, function(start, end, label) {
+    });
+    $('.fecha-total').off('apply.daterangepicker').on('apply.daterangepicker', function(ev, picker) {
+            //$(this).val(picker.startDate.format('YYYY-MM-DD'));
+
+            $(this).val(picker.startDate.format('YYYY-MM-DD'));
+    });
+
+    $('.fecha-total').off('cancel.daterangepicker').on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
+    });
+    $('.btn-calendar-total').on('click', function() {
+        $('.fecha-total').trigger('click');
+    });
+    $('.fecha-total').inputmask("9999-99-99");
+
+    $(".fecha-total").on("blur",function(){
+        {% if contratoAnexo is not defined %}
+            var fechaCreacion = moment("{{contrato.fechaCreacion|date('Y-m-d')}}", "YYYY-MM-DD");
+        {% else %}
+            var fechaCreacion = moment("{{contratoAnexo.fechaCreacion|date('Y-m-d')}}", "YYYY-MM-DD");
+        {% endif %}
+        var fechaSeleccionada = moment($(this).val(), "YYYY-MM-DD");
+        var diasDiff = fechaSeleccionada.diff(fechaCreacion, 'days');
+        
+        if (diasDiff > 15) {
+            alert("La fecha seleccionada no debe superar 15 días desde la fecha actual.");
+            $(this).val('');
+            $(this).focus();
+            return;
+        }
+        if (diasDiff < 0 ){
+            alert("La fecha selecionada no debe ser inferior a la fecha actual.");
+            $(this).val('');
+            $(this).focus();
+            return;
+        
+        }
+    });
+
+        
+
+    $(".chk-total").change(function(){
+        if($(this).prop( "checked" )){
+            
+            $('.fecha-total').show();
+            $('.fecha-total-group').show();
+            $('.fecha-total').prop('required',true);
+            $('.cuotas').val(0);
+            $('.cuotas').hide();
+            
+            $('.valor-cuota').hide();
+            $('.primera-cuota').val($('.monto-contrato').val());
+
+            $('#m-valor-cuota').val(0);
+            $('#m-valor-cuota').hide();
+            $('#m-primera-cuota').hide();
+            //$('.chk-bono').hide();
+            //$('.isAbono').hide();
+            $('.primera-cuota').css("visibility", "hidden");
+            
+            $('.t-cuotas').hide();
+            $('.t-valor-cuota').hide();
+            $('.chkDiasPago').prop('required',false);
+            $('.mesPrimerPago').hide();
+            $('.diasPago').hide();
+            {% if contratoAnexo is not defined %}
+                $('.fecha-incorporacion').hide();
+                $('.fecha-incorporacion-group').hide();
+                $('.fecha-incorporacion').prop('required',false);
+                $('.isIncorporacion').hide();
+                $('.chk-incorporacion').hide();
+        
+                
+                $('.vigenciaMeses').hide();
+                
+                $('.col-total').removeClass('col');
+                $('.col-total').addClass('col-6');
+            {% else %}
+                /*$('.col-primera-cuota').removeClass('col-11');
+                $('.col-primera-cuota').addClass('col-1');*/
+                $(".chk-bono").prop('checked',false);
+                $(".chk-bono").hide();
+                $('.isAbono').hide();
+            {% endif %}
+
+        }else{
+            
+           
+            $('.cuotas').val(1);
+            $('.cuotas').show();
+            $('.valor-cuota').show();
+            $('.primera-cuota').val(0);          
+            $('#m-valor-cuota').show();
+            //$('.chk-bono').show();
+            //$('.isAbono').show();
+           
+            $('.t-cuotas').show();
+            $('.t-valor-cuota').show();
+           
+            $('.fecha-total').hide();
+            $('.fecha-total-group').hide();
+            $('.fecha-total').prop('required',false);
+            $('.diasPago').show();
+            $('.mesPrimerPago').show();
+            $('.chkDiasPago').prop('required',true);
+            {% if contratoAnexo is not defined %}
+                $('.isIncorporacion').show();
+                $('.chk-incorporacion').show();
+                
+                $('.vigenciaMeses').show();
+                 
+                $('.col-total').removeClass('col');
+                $('.col-total').addClass('col-6');
+            {% else  %}
+               /* $('.col-primera-cuota').addClass('col-11');
+                $('.col-primera-cuota').removeClass('col-1');*/ 
+                $(".chk-bono").show();
+                $('.isAbono').show();
+            {% endif %}
+
+        }
+    });
+
+    {% if contratoAnexo is not defined %}
+        $('.fecha-incorporacion').daterangepicker({
+            "singleDatePicker": true,
+            "drops": "up",
+            "autoUpdateInput": false,
+            "maxDate": "{{contrato.fechaCreacion|date_modify('+30 day')|date('Y-m-d')}}",
+            "minDate":"{{contrato.fechaCreacion|date('Y-m-d')}}",
+            "locale": {
+                "format": "YYYY-MM-DD",
+                "applyLabel": "Apply",
+                "cancelLabel": "Cancel",
+            }
+        }, function(start, end, label) {
+        });
+
+        $('.fecha-incorporacion').off('apply.daterangepicker').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD'));
+        });
+
+        $('.fecha-incorporacion').off('cancel.daterangepicker').on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
+        });
+         $('.btn-calendar-incorporacion').on('click', function() {
+            $('.fecha-incorporacion').trigger('click');
+        });
+
+        $(".fecha-incorporacion").on("blur",function(){
+            var fechaCreacion = moment("{{contrato.fechaCreacion|date('Y-m-d')}}", "YYYY-MM-DD");
+            var fechaSeleccionada = moment($(this).val(), "YYYY-MM-DD");
+            var diasDiff = fechaSeleccionada.diff(fechaCreacion, 'days');
+            
+            if (diasDiff > 30) {
+                alert("La fecha seleccionada no debe superar 30 días desde la fecha actual.");
+                $(this).val('');
+                $(this).focus();
+                return;
+            }
+            if (diasDiff < 0 ){
+                alert("La fecha selecionada no debe ser inferior a la fecha actual.");
+                $(this).val('');
+                $(this).focus();
+                return;
+            
+            }
+        });
+        
+        $('.fecha-incorporacion').inputmask("9999-99-99");
+
+        $(".chk-incorporacion").change(function(){
+            if($(this).prop( "checked" )){
+                $('.primera-cuota').css("visibility", "visible");
+                $('.fecha-incorporacion').prop('required',true);
+                $('#m-primera-cuota').show();
+
+                //$('.isAbono').hide();
+
+                //cambiamos texto en abono para que quede como cuota incorporacion..
+                $('.isAbono').html("Cuota Incorporación *");
+                $('.isIncorporacion').html("Fecha Incorporación");
+
+                $(".chk-total").prop('checked',false);
+                $(".chk-total").hide();
+                $('.textTotal').hide();
+                $('.cuotas').show();
+                $('.cuotas').val(1);
+                $('.fecha-incorporacion').show();
+                $('.fecha-incorporacion-group').show();
+                $('.fecha-total').hide();
+                $('.fecha-total-group').hide();
+                
+                $('.t-cuotas').html('Cuotas restantes *');
+                $('.t-valor-cuota').html('Valor Cuotas Restantes *');
+                $('.t-mes-pago').html('Mes Segundo Pago');
+
+                $('.fecha-incorporacion-group').removeClass('col');
+                $('.fecha-incorporacion-group').addClass('col-6');
+            
+            }else{
+                $('.primera-cuota').css("visibility", "hidden");
+                $('.primera-cuota').val(0);
+                recalcula();
+                $('#m-primera-cuota').hide();
+                $('.fecha-incorporacion').prop('required',false);
+
+                //cambiamos texto en abono para que quede como cuota incorporacion..
+                $('.isAbono').html("Abono *");
+                $('.isIncorporacion').html("Incorporación");
+
+
+                $(".chk-total").show();
+                $('.textTotal').show();
+                $('#m-primera-cuota').html("");
+                $('#m-primera-cuota').hide();
+                $('.t-cuotas').html('Cuotas *');
+                $('.t-valor-cuota').html('Valor Cuotas *');
+                $('.t-mes-pago').html('Mes Primer Pago');
+                $('.fecha-incorporacion').hide();
+                $('.fecha-incorporacion-group').hide();
+
+                $('.fecha-incorporacion-group').removeClass('col-6');
+                $('.fecha-incorporacion-group').addClass('col');
+
+            }
+        });
+       
+    {% endif %}
+    
+    {% if contratoAnexo is defined %}
+        $('.fecha-abono').daterangepicker({
+            "singleDatePicker": true,
+            "drops": "up",
+            "autoUpdateInput": false,
+            "maxDate": "{{contratoAnexo.fechaCreacion|date_modify('+15 day')|date('Y-m-d')}}",
+            "minDate":"{{contratoAnexo.fechaCreacion|date('Y-m-d')}}",
+            "locale": {
+                "format": "YYYY-MM-DD",
+                "applyLabel": "Apply",
+                "cancelLabel": "Cancel",
+            }
+        }, function(start, end, label) {
+        });
+
+        $('.fecha-abono').off('apply.daterangepicker').on('apply.daterangepicker', function(ev, picker) {
+            $(this).val(picker.startDate.format('YYYY-MM-DD'));
+        });
+
+        $('.fecha-abono').off('cancel.daterangepicker').on('cancel.daterangepicker', function(ev, picker) {
+            $(this).val('');
+        });
+         $('.btn-calendar-abono').on('click', function() {
+            $('.fecha-abono').trigger('click');
+        });
+
+        $(".fecha-abono").on("blur",function(){
+            var fechaCreacion = moment("{{contrato.fechaCreacion|date('Y-m-d')}}", "YYYY-MM-DD");
+            var fechaSeleccionada = moment($(this).val(), "YYYY-MM-DD");
+            var diasDiff = fechaSeleccionada.diff(fechaCreacion, 'days');
+            
+            if (diasDiff > 15) {
+                alert("La fecha seleccionada no debe superar 15 días desde la fecha actual.");
+                $(this).val('');
+                $(this).focus();
+                return;
+            }
+            if (diasDiff < 0 ){
+                alert("La fecha selecionada no debe ser inferior a la fecha actual.");
+                $(this).val('');
+                $(this).focus();
+                return;
+            
+            }
+        });
+        
+        $('.fecha-abono').inputmask("9999-99-99");
+
+        $(".chk-bono").change(function(){
+            if($(this).prop( "checked" )){
+                $('.isIncorporacion').hide();
+                $('.fecha-incorporacion').prop('required',false);
+                $('.fecha-incorporacion').hide();
+
+                $('.fecha-incorporacion-group').hide();
+                $('.fecha-abono').prop('required',true);
+                $('.fecha-abono').show();
+                $('.fecha-abono-group').show();
+              
+                $('.abono').show();
+                $('.t-cuotas').html('Cuotas restantes *');
+                $('.t-valor-cuota').html('Valor Cuotas Restantes *');
+                $('.t-mes-pago').html('Mes Segundo Pago');
+                $('#m-primera-cuota').show();
+                $('.primer-pago').daterangepicker({
+                    "singleDatePicker": true,
+                    "drops": "up",
+                    "minDate": "{{contrato.fechaCreacion|date('Y-m-d')}}",
+                    "locale": {
+                        "format": "YYYY-MM-DD",
+                        "applyLabel": "Apply",
+                        "cancelLabel": "Cancel",
+                    }
+                }, function(start, end, label) {
+                });
+                //$('.textTotal').show();
+            // $('.divTotal').show();
+                $(".chk-total").prop('checked',false);
+                $(".chk-total").hide();
+                $('.textTotal').hide();
+                $('.cuotas').show();
+                $('.cuotas').val(1);
+                $('.valor-cuota').show();
+                $('#m-valor-cuota').show();
+                $('.chk-incorporacion').hide();
+            }else{
+                $('.abono').hide();
+                $('#m-primera-cuota').hide();
+                $('.abono').val(0);
+                $('#m-primera-cuota').html("");
+                $('.t-cuotas').html('Cuotas *');
+                $('.t-valor-cuota').html('Valor Cuotas *');
+                $('.t-mes-pago').html('Mes Primer Pago');
+                $(".chk-total").show();
+                $('.textTotal').show();
+                //$('.textTotal').hide();
+                //$('.divTotal').hide();
+                //$('.chk-total').prop("checked", false);
+                $('.primer-pago').daterangepicker({
+                    "singleDatePicker": true,
+                    "drops": "up",
+                    "defaultDate": "{{contrato.fechaCreacion|date('Y-m-d')}}",
+                    "minDate": "{{contrato.fechaCreacion|date('Y-m-d')}}",
+                    "locale": {
+                        "format": "YYYY-MM-DD",
+                        "applyLabel": "Apply",
+                        "cancelLabel": "Cancel",
+                    }
+                }, function(start, end, label) {
+                });
+
+
+                $('.isIncorporacion').show();
+                $('.chk-incorporacion').show();
+                $('.fecha-abono').prop('required',false);
+                $('.fecha-abono').hide();
+                $('.fecha-abono-group').hide();
+            }
+            recalcula();
+        });
+    {% endif %}
+    
+    $('.cuotas').change(function(){
+        recalcula();
+    });
+    $('.monto-contrato').change(function(){
+       
+        recalcula();
+        
+        $("#m-monto-contrato").html($.number( $(this).val(), 0, ',', '.' ));
+    });
+    $('.primera-cuota').change(function(){
+        recalcula();
+        $("#m-primera-cuota").html($.number( $(this).val(), 0, ',', '.' ));
+    });
+    $('.interes').change(function(){
+        recalcula();
+    });
+
+    $('.abono').change(function(){
+        recalcula();
+        $("#m-primera-cuota").html($.number( $(this).val(), 0, ',', '.' ));
+    });
+    function recalcula()
+    {
+
+        var _montoContrato=$('.monto-contrato').val();
+        {% if contratoAnexo is defined %}
+        var _primeraCuota=$('.abono').val();
+        {% else %}
+        var _primeraCuota=$('.primera-cuota').val();
+        {% endif %}
+        var montoContrato=parseInt( _montoContrato)-parseInt(_primeraCuota);
+ 
+        var cuotas=parseInt($('.cuotas').val());
+        var interes=0;
+        if(cuotas < 1){
+            var valorCuota=0;
+            console.log(valorCuota);
+        }else{
+            var valorCuota=(montoContrato+(montoContrato/100*interes))/cuotas;
+            console.log(montoContrato);
+        }
+        $('.valor-cuota').val(Math.round(valorCuota));
+        $("#m-valor-cuota").html($.number( $('.valor-cuota').val(), 0, ',', '.' ));
+        if($('.chk-total').prop( "checked" )){
+            $('.primera-cuota').val($('.monto-contrato').val());
+        }
+        
+    }
+
+    $('.primer-pago').daterangepicker({
+        "singleDatePicker": true,
+        "drops": "up",
+        {% if contratoAnexo is not defined %}
+        "defaultDate": "{{contrato.fechaCreacion|date('Y-m-d')}}",
+        "minDate":"{{contrato.fechaCreacion|date('Y-m-d')}}",
+        {% else %}
+        "defaultDate": "{{contratoAnexo.fechaCreacion|date('Y-m-d')}}",
+        "minDate":"{{contratoAnexo.fechaCreacion|date('Y-m-d')}}",
+        {% endif %}  
+        "locale": {
+            "format": "YYYY-MM-DD",
+            "applyLabel": "Apply",
+            "cancelLabel": "Cancel",
+        }
+    }, function(start, end, label) {
+    });
+
+</script>

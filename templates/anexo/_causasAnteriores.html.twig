@@ -1,0 +1,30 @@
+{% for causa in causas_anteriores %}
+                    <tr>
+                        <td>
+                            {{causa.id}}
+                        </td>
+                        <td>
+                            {{causa.materiaEstrategia.estrategiaJuridica}}
+                        </td>
+                        <td>
+                        {% if causa.idCausa != null %}
+                            {{causa.idCausa}}
+                        {% else %}
+                        {{causa.letra}}-{{causa.rol}}-{{causa.anio}} 
+                        {% endif %}
+                            
+                        </td>
+                        <td>
+                            {{causa.causaNombre}}
+                        </td>
+                        <td>
+                            {{causa.juzgado is null ? '': causa.juzgado.nombre}}
+                        </td>
+                        <td>
+                        {% if is_granted("view", "eliminar_causas")  %}
+                            <button type="button" class="btn btn-danger btn-sm" onclick="javascript:eliminarCausaAnterior({{causa.id}})"><i class="fa fa-trash"></i></button>
+                        {% endif %}
+                        </td>
+                    </tr>
+                    
+{% endfor %}

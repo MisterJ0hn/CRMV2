@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mantencion Morosidad Pat{% endblock %}
+
+{% block body %}
+<div class="card">
+    <div class="card-header">
+        
+    </div>
+    <div class="card-body">
+        <form action="" method="post">
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <small class="text_mute">Nombre Segmento:</small>
+                        <input type="text" class="form-control" id="txtNombreSegmento" name="txtNombreSegmento" value="{{bNombreSegmento}}">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <small class="text_mute">Dias Morosidad Pat:</small>
+                        <input type="text" class="form-control" id="txtDiasMorosidadPat" name="txtDiasMorosidadPat" value="{{bDiasMorosidad}}">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <small class="text_mute">Icono 
+                        <button type="button" class="btn btn-xs btn-success" data-toggle="popover" title="Iconos" data-content="Puedes ver mas iconos en https://fontawesome.com/v5/search?ic=free-collection"><i class="fas fa-question"></i></button>
+                        
+                        </small> 
+                        <input type="text" class="form-control" id="txtIcono" name="txtIcono" value="{{bIcono}}">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <div class="form-group">
+                        <small class="text_mute">Color:</small>
+                        <input type="text" class="form-control" id="txtColor" name="txtColor" value="{{bColor}}">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-3">
+                    <button class="btn btn-primary" >Guardar </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

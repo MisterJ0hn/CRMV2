@@ -1,0 +1,153 @@
+<div class="card">
+        <div class="card-header">
+            Filtro
+        </div>
+        <div class="card-body">
+            
+            <div class="row">
+                <div class="col-sm-12 col-md-1" style="display:none">
+                <label>Compañia</label>
+                    <select name="bCompania" class="form-control">
+                        <option value="0">Todos</option>
+                        {% for compania in companias %}
+                            <option value="{{compania.id}}"
+                            {% if bCompania==compania.id %}
+                                selected
+                            {% endif %}
+                            >{{compania.nombre}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-sm-12 col-md-2">
+                <label>Perfil</label>
+                
+                    <select name="bPerfil" class="form-control bPerfil">
+                        <option value="0">Todos</option>
+                        {% for perfil in perfiles %}
+
+                        {% if perfil.id != 9  %}
+                            {% if perfil.id != 8  %}
+                                <option value="{{perfil.id}}"
+                                {% if bPerfil==perfil.id %}
+                                    selected
+                                {% endif %}
+                                >{{perfil.nombre}}</option>
+
+                            {% endif %}
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+    
+                
+              
+                </div>
+               
+                <div class="col-sm-12 col-md-2">
+                    <label>Encargado</label>
+                    <select name="bEncargado" class="form-control bEncargado">
+                        <option value="0">Todos</option>
+                    
+                    </select>
+                </div>
+        
+                <div class="col-sm-12 col-md-2">
+                <label>AgendaId/Folio</label>
+                        <input type="text" class="form-control bFolio" name="bFolio"  placeholder="" value="{{bFolio}}">
+                </div>
+                 <div class="col-sm-12 col-md-2">
+                 <label>Nombre/Teléfono</label>
+                        <input type="text" class="form-control bFiltro" name="bFiltro" placeholder="" value="">
+                </div>
+                <div class="col-sm-12 col-md-1">
+                <label>TipoFecha</label>
+                    <select name="bTipofecha" class="form-control">
+                        <option value="1" {% if tipoFecha==1 %}
+                        selected
+                    {% endif %}>Pendiente</option>
+                        <option value="2" {% if tipoFecha==2 %}
+                        selected
+                    {% endif %}>Resuelto</option>
+                     <option value="3" {% if tipoFecha==3 %}
+                        selected
+                    {% endif %}>Cerrado</option>
+                    </select>
+                </div>
+                <div class="col-sm-12 col-md-2">
+                <label>RangoFecha</label>
+                    <input type="text" class="form-control" name="bFecha" id="bFecha"  value="">
+                </div>
+                
+                <div class="col-sm-12 col-md-1">
+                    <button class="btn btn-primary" style="margin-top: 30px;"><i class="fas fa-search"></i></button>
+                </div>
+           
+
+            </div>
+            
+        </div>  
+        
+    </div>
+    <script>
+    $(".bPerfil").on("change",function(){
+        $.ajax({
+            url:"/usuario_tipo/"+$(this).val()+"/usuarios",
+            type: "get",
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+                
+            },
+            success:function(data){
+                // Aquí puedes manejar la respuesta si es necesario
+             
+                response = JSON.parse(data);
+                $(".bEncargado").html('<option value="0">Todos</option>');
+            
+                response.forEach(encargado => {
+                    $(".bEncargado").append('<option value="'+encargado.id+'">'+encargado.nombre+'</option>');
+                });
+                
+                
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert(thrownError);
+            }
+
+        });
+    });
+    {% if bPerfil > 0 %}
+        $.ajax({
+            url:"/usuario_tipo/"+$(".bPerfil").val()+"/usuarios",
+            type: "get",
+            dataType: "html",
+            cache: false,
+            contentType: false,
+            processData: false,
+            async: true,
+            beforeSend: function(){
+                
+            },
+            success:function(data){
+                // Aquí puedes manejar la respuesta si es necesario
+             
+                response = JSON.parse(data);
+                $(".bEncargado").html('<option value="0">Todos</option>');
+            
+                response.forEach(encargado => {
+                    $(".bEncargado").append('<option value="'+encargado.id+'">'+encargado.nombre+'</option>');
+                });
+                
+                {% if bEncargado > 0 %}
+                    $(".bEncargado").val({{bEncargado}});
+                {% endif %}
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                console.log(thrownError);
+            }
+
+        });
+    {% endif %}
+    </script>

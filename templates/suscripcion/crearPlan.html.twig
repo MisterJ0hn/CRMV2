@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Crear PLan{% endblock %}
+
+{% block body %}
+
+{{error|raw}}
+{{ form_start(form) }}
+
+<button type="submit" class="btn btn-primary">Crear Plan</button>
+{{ form_end(form) }}
+{% endblock %}

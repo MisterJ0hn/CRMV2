@@ -1,0 +1,187 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% endblock %}
+
+{% block body %}
+<style>
+.skeleton-row {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    gap: 6px;
+}
+.skeleton-cell {
+    background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.3s infinite;
+    border-radius: 4px;
+    height: 14px;
+    flex-shrink: 0;
+}
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+.skeleton-header {
+    background: #f4f6f9;
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    gap: 6px;
+    border-bottom: 2px solid #dee2e6;
+}
+.skeleton-header .skeleton-cell {
+    background: linear-gradient(90deg, #d0d5dd 25%, #e4e8ef 50%, #d0d5dd 75%);
+    background-size: 200% 100%;
+    height: 13px;
+}
+</style>
+
+    <section>
+    <div class="row">
+
+        <div class="col-sm-6 col-md-3">
+            
+            <div class="info-box">
+                <span class="info-box-icon {{vencimiento.color}}"><i class="{{ vencimiento.icono }}"></i></span>
+                <div class="info-box-content">
+                <span class="info-box-text">{{vencimiento.nombre}}</span>
+                <span class="info-box-number">{{vencimiento.min}} -  {{vencimiento.max}} </span>
+                
+                
+                </div>
+
+                
+                <!-- /.info-box-content -->
+            </div>
+            
+        </div>
+       
+        
+    </div>
+
+    </section>
+    <div class="card">
+        <div class="card-header">
+            <form action="" method="get" class="form-envio">
+            <input type="hidden" name="bStatus" id="bStatus" value="{{status|default('')}}">
+                <div class="row">
+                    <div class="col-sm-12 col-md-3">
+                    <label>Compañia</label>
+                        <select name="bCompania" class="form-control">
+                            <option value="0">Todos</option>
+                            {% for compania in companias %}
+                                <option value="{{compania.id}}"
+                                {% if bCompania==compania.id %}
+                                    selected
+                                {% endif %}
+                                >{{compania.nombre}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-12 col-md-3">
+                        <label >AgendaId/Folio</label>
+                        <input type="text" class="form-control bFolio" name="bFolio"  value="{{bFolio}}">
+                    </div>
+                    <div class="col-sm-12 col-md-3">
+                    <label >Nombre/Teléfono</label>
+                        <input type="text" class="form-control bFiltro" name="bFiltro"  value="{{bFiltro}}">
+                    </div>
+                  
+                    <div class="col-sm-12 col-md-1 mt-3">
+                        <button class="btn btn-primary btn-buscar mt-3"><i class="fas fa-search"></i></button>
+                    </div>
+                   
+                </div>
+                </form>
+        </div>
+        <div id="resultado">
+        
+        </div>
+    </div>
+    <script>
+        $('#bFecha').daterangepicker({
+        
+            "drops": "down",
+            "startDate":"{{dateInicio}}",
+            "endDate": "{{dateFin}}",
+            "locale": {
+                "format": "YYYY-MM-DD",
+                "applyLabel": "Apply",
+                "cancelLabel": "Cancel",
+            }
+        }, function(start, end, label) {
+        console.log('New date range selected: ' + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD') + ' (predefined range: ' + label + ')');
+        
+        });
+
+
+   
+    function skeletonHTML() {
+        // cols: Folio, AgendaId, Cobrador, Cliente, CuotaMora, D.Mora, $Cuota, $Mora, U.Pago, U.Gest, U.Rspta, Compromiso, C.Pgda, Q.Gest, Anexo, Sem, PAT, Acciones
+        var cols = [5, 5, 7, 12, 6, 5, 5, 5, 6];
+        var header = '<div class="skeleton-header">' +
+            cols.map(function(w){ return '<div class="skeleton-cell" style="width:' + w + '%"></div>'; }).join('') +
+            '</div>';
+        var rows = '';
+        for (var i = 0; i < 15; i++) {
+            var opacity = (1 - i * 0.05).toFixed(2);
+            rows += '<div class="skeleton-row">' +
+                cols.map(function(w){ return '<div class="skeleton-cell" style="width:' + w + '%;opacity:' + opacity + '"></div>'; }).join('') +
+                '</div>';
+        }
+        return '<div class="card-body p-0">' + header + rows + '</div>';
+    }
+
+    function cargarContratos(url) {
+        $('#resultado').html(skeletonHTML());
+        $(".btn-buscar").prop('disabled', true);
+        $.ajax({
+            url: url,
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                $('#resultado').html(data.html);
+                    $(".btn-buscar").prop('disabled',false);
+                 
+            },
+            error: function() {
+                $('#resultado').html('<div class="alert alert-danger m-3">Error al cargar los datos.</div>');
+                $(".btn-buscar").prop('disabled',false);
+            }
+        });
+
+        
+    }
+
+    // Carga inicial al abrir la página
+    $(document).ready(function() {
+        _filtrosActuales = '';
+        cargarContratos('/cobranza_pat/obtenerContenido');
+    });
+
+    // Interceptar submit del formulario de búsqueda
+    $(".form-envio").on("submit", function(e) {
+        e.preventDefault();
+        _filtrosActuales = $(this).serialize();
+        cargarContratos('/cobranza_pat/obtenerContenido?' + _filtrosActuales);
+        
+    });
+
+    // Interceptar clics en paginación y ordenamiento dentro del resultado
+    $(document).on('click', '#resultado a.page-link, #resultado th a', function(e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        if (url && url !== '#') {
+            // Preservar filtros actuales si la URL no los tiene
+            if (_filtrosActuales && url.indexOf('bFiltro') === -1 && url.indexOf('bFolio') === -1) {
+                url += (url.indexOf('?') === -1 ? '?' : '&') + _filtrosActuales;
+            }
+            cargarContratos(url);
+        }
+    });
+    
+</script>
+
+{% endblock %}
