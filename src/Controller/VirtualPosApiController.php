@@ -14,6 +14,7 @@ use App\Entity\VirtualPosLog;
 use App\Repository\ConfiguracionRepository;
 use App\Repository\ContratoRepository;
 use App\Repository\CuotaRepository;
+use App\Repository\PagoCuotasRepository;
 use App\Service\VirtualPos;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -157,7 +158,8 @@ class VirtualPosApiController extends AbstractController
         Request $request,
         ConfiguracionRepository $confRepo,
         EntityManagerInterface $em,
-        CuotaRepository $cuotaRepository
+        CuotaRepository $cuotaRepository,
+        PagoCuotasRepository $pagoCuotasRepository
     ): JsonResponse {
         $log = new VirtualPosLog();
         $log->setFechaRegistro(new \DateTime());
@@ -235,17 +237,22 @@ class VirtualPosApiController extends AbstractController
                 $observacion = "pago de múltiples cuotas";
             }
            
-
+            $monto_total_pendiente = $amount;
             foreach ($cuotas as $cuota) {
                 $contrato = $cuota->getContrato();
+
+                //Primero: obtendremos el valor de la cuota que se debe pagar:
                 if($cuota->getPagado() != null ){
                     $monto_pago = $cuota->getMonto()-$cuota->getPagado();
                 }else{
                     $monto_pago = $cuota->getMonto();
                 }
+
+                $monto_total_pendiente -= $monto_pago;
+
                 $pago = new Pago();
-                $pago->setNcomprobante($uuid);
-                $pago->setComprobante($uuid);
+                $pago->setNcomprobante($uuid);            
+                $pago->setComprobante('nodisponible.png');
                 $pago->setBoleta('');
                 $pago->setMonto($monto_pago);
                 $pago->setFechaPago($fechaPago);
@@ -255,25 +262,32 @@ class VirtualPosApiController extends AbstractController
                 $pago->setPagoCanal($em->getRepository(PagoCanal::class)->find(7));
                 $pago->setPagoTipo($em->getRepository(PagoTipo::class)->find(10));
                 $pago->setUsuarioRegistro($em->getRepository(Usuario::class)->find(4));
-                $pago->setCuentaCorriente($em->getRepository(CuentaCorriente::class)->find(5));
+                $pago->setCuentaCorriente($em->getRepository(CuentaCorriente::class)->find(4));
                 $pago->setObservacion($observacion);
                 $em->persist($pago);
+                $em->flush();
+                //Segundo: preguntemos si la cuota fue pagada total o parcial:
+                if($cuota->getPagado() != null ){
+                    $pagoCuotasRepository->asociarPagos($contrato,$cuotaRepository,$pagoCuotasRepository,$pago);
+                }else{                      
+
+                    $pagoCuota = new PagoCuotas();
+                    $pagoCuota->setPago($pago);
+                    $pagoCuota->setCuota($cuota);
+                    $pagoCuota->setMonto($cuota->getMonto());
+                    $em->persist($pagoCuota);
+
+                    $cuota->setPagado($cuota->getMonto());
+                    $em->persist($cuota);
+                    $em->flush();
+                }
                 
                 $log1 = new VirtualPosLog();
                 $log1->setFechaRegistro(new \DateTime());
                 $log1->setRequest($request->getContent() ?: '{}');
 
                 $this->log($em, $log1, true, ['success' => true, 'message' => 'Pago registrado', 'pago_id' => $pago->getId()], 200);
-                $pagoCuota = new PagoCuotas();
-                $pagoCuota->setPago($pago);
-                $pagoCuota->setCuota($cuota);
-                $pagoCuota->setMonto($cuota->getMonto());
-                $em->persist($pagoCuota);
-
-                $cuota->setPagado($cuota->getMonto());
-                $em->persist($cuota);
-
-            
+                            
                 if($cuota->getContrato()->getContratoEstadoSuscripcion()!=null && $cuota->getContrato()->getContratoEstadoSuscripcion()->getId() == 2){
                     $this->cancelarPagoVirtualPos($cuota, $em, $confRepo);
                     $historicoSuscripcion = new ContratoHistoricoSuscripcion();
@@ -305,6 +319,28 @@ class VirtualPosApiController extends AbstractController
 
                 $this->log($em, $log2, true, ['success' => true, 'message' => 'Pago asociado a cuota '.$cuota->getId(), 'pago_id' => $pago->getId()], 200);
 
+            }
+            if($monto_total_pendiente>0){
+                $pago = new Pago();
+                $pago->setNcomprobante($uuid);            
+                $pago->setComprobante('nodisponible.png');
+                $pago->setBoleta('');
+                $pago->setMonto($monto_total_pendiente);
+                $pago->setFechaPago($fechaPago);
+                $pago->setHoraPago(new \DateTime($fechaPago->format('H:i:s')));
+                $pago->setFechaRegistro(new \DateTime());
+                $pago->setContrato($contrato);
+                $pago->setPagoCanal($em->getRepository(PagoCanal::class)->find(7));
+                $pago->setPagoTipo($em->getRepository(PagoTipo::class)->find(10));
+                $pago->setUsuarioRegistro($em->getRepository(Usuario::class)->find(4));
+                $pago->setCuentaCorriente($em->getRepository(CuentaCorriente::class)->find(4));
+                $pago->setObservacion($observacion);
+                $em->persist($pago);
+                $em->flush();
+                
+                $pagoCuotasRepository->asociarPagos($contrato,$cuotaRepository,$pagoCuotasRepository,$pago);
+
+                
             }
 
             if ($contrato) {

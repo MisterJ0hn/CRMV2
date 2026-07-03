@@ -7,6 +7,7 @@ use App\Entity\Empresa;
 use App\Form\CanalType;
 use App\Repository\CanalRepository;
 use App\Repository\EmpresaRepository;
+use App\Repository\ModuloPerRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,12 +21,16 @@ class CanalController extends AbstractController
     /**
      * @Route("/", name="canal_index", methods={"GET","POST"})
      */
-    public function index(Request $request,CanalRepository $canalRepository,EmpresaRepository $empresaRepository): Response
+    public function index(Request $request,
+                        CanalRepository $canalRepository,
+                        EmpresaRepository $empresaRepository, 
+                        ModuloPerRepository $moduloPerRepository): Response
     {
         $user=$this->getUser();
 
         $canal = new Canal();
         $canal->setEmpresa($empresaRepository->find($user->getEmpresaActual()));
+        $pagina=$moduloPerRepository->findOneByName('Canal',$user->getEmpresaActual());
         $canal->setEstado(1);
         $canal->setUsuarioRegistro($user);
         $form = $this->createForm(CanalType::class, $canal);
@@ -42,7 +47,7 @@ class CanalController extends AbstractController
         return $this->render('canal/index.html.twig', [
             'canals' => $canalRepository->findBy(['empresa'=>$user->getEmpresaActual(),'estado'=>1]),
             'form' => $form->createView(),
-            'pagina'=>'Canal'
+            'pagina'=>$pagina->getNombre()
         ]);
     }
 

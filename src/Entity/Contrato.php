@@ -2104,10 +2104,20 @@ class Contrato
         return $this->suscripcionValidacionCallback;
     }
 
-    public function setSuscripcionValidacionCallback(?bool $suscripcionValidacionCallback): self    
+    public function setSuscripcionValidacionCallback(?bool $suscripcionValidacionCallback): self
     {
         $this->suscripcionValidacionCallback = $suscripcionValidacionCallback;
 
         return $this;
     }
+
+    // --- Propiedades transient módulo Encuesta (no mapeadas a BD) ---
+    private ?int $ultimaNota = null;
+    private ?\DateTimeInterface $fechaGestion = null;
+
+    public function getUltimaNota(): ?int { return $this->ultimaNota; }
+    public function setUltimaNota(?int $v): self { $this->ultimaNota = $v; return $this; }
+
+    public function getFechaGestion(): ?\DateTimeInterface { return $this->fechaGestion; }
+    public function setFechaGestion(?\DateTimeInterface $v): self { $this->fechaGestion = $v; return $this; }
 }

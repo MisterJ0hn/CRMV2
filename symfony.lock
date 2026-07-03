@@ -13,6 +13,12 @@
             "./src/Entity/.gitignore"
         ]
     },
+    "aws/aws-crt-php": {
+        "version": "v1.2.7"
+    },
+    "aws/aws-sdk-php": {
+        "version": "3.337.0"
+    },
     "beberlei/doctrineextensions": {
         "version": "v1.3.0"
     },
@@ -169,6 +175,9 @@
     },
     "monolog/monolog": {
         "version": "2.2.0"
+    },
+    "mtdowling/jmespath.php": {
+        "version": "2.9.1"
     },
     "myclabs/php-enum": {
         "version": "1.7.6"

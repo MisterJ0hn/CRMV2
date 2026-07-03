@@ -37,6 +37,7 @@
                 <span class="info-box-text">{{vencimiento.nombre}}</span>
                 {% if sesion.getSesion.usuarioTipo.id == 1 %}
                 <span class="info-box-number">{{vencimiento.valMin}} -  {{vencimiento.valMax}} </span>
+                <span class="info-box-text">{{equipoSegmento(vencimiento)}}</span>
                 {% endif %}
                 <a href="#" class="small-box-footer" onclick="javascript:buscar({{vencimiento.id}})">
                     Ver mas <i class="fas fa-arrow-circle-right"></i>

@@ -913,4 +913,134 @@ class ContratoRepository extends ServiceEntityRepository
 
         return $esVip;
     }
+
+    /**
+     * Query paginable para el módulo Encuesta, sin depender de vw_contrato.
+     * Retorna un Query object (no resultado) para que KnpPaginator use COUNT+LIMIT SQL.
+     */
+    public function findEncuestaQuery(
+        ?int $usuario = null,
+        ?int $empresa = null,
+        ?int $compania = null,
+        ?string $filtro = null,
+        ?string $folio = null,
+        ?string $dateInicio = null,
+        ?string $dateFin = null,
+        int $tipoFecha = 0,
+        ?int $status = null,
+        ?array $grupos = null
+    ): \Doctrine\ORM\Query {
+        $qb = $this->createQueryBuilder('c')
+            ->addSelect('a', 'cu', 'g')
+            ->join('c.agenda', 'a')
+            ->join('a.cuenta', 'cu')
+            ->leftJoin('c.estadoEncuesta', 'ee')
+            ->leftJoin('c.grupo', 'g')
+            ->andWhere('a.status IN (7, 14)');
+
+        if (!is_null($empresa)) {
+            $qb->andWhere('cu.empresa = :empresa')->setParameter('empresa', $empresa);
+        }
+        if (!is_null($usuario)) {
+            $qb->andWhere('a.abogado = :usuario')->setParameter('usuario', $usuario);
+        }
+        if (!is_null($compania)) {
+            $qb->andWhere('a.cuenta = :compania')->setParameter('compania', $compania);
+        }
+        if (!is_null($filtro)) {
+            $qb->andWhere('(c.nombre LIKE :filtro OR c.telefono LIKE :filtro OR c.email LIKE :filtro)')
+               ->setParameter('filtro', '%' . $filtro . '%');
+        }
+        if (!is_null($folio) && $folio !== '') {
+            $qb->andWhere('(c.folio = :folio OR a.id = :folio)')
+               ->setParameter('folio', $folio);
+        }
+        if (!is_null($grupos)) {
+            if (count($grupos) > 0) {
+                $qb->andWhere('c.grupo IN (:grupos)')->setParameter('grupos', $grupos);
+            } else {
+                $qb->andWhere('c.grupo IS NULL');
+            }
+        }
+
+        if ($dateInicio && $dateFin) {
+            $dateFin23 = $dateFin . ' 23:59:59';
+            switch ($tipoFecha) {
+                case 1: // filtrar por FechaEncuesta (almacenada en contrato)
+                    $qb->andWhere('c.FechaEncuesta BETWEEN :dateInicio AND :dateFin')
+                       ->setParameter('dateInicio', $dateInicio)
+                       ->setParameter('dateFin', $dateFin23)
+                       ->andWhere('ee.id = 2');
+                    break;
+                case 2: // filtrar por fecha de la última gestión (en tabla encuesta)
+                    $qb->andWhere('EXISTS(SELECT ge.id FROM App\Entity\Encuesta ge WHERE ge.contrato = c AND ge.FechaCreacion BETWEEN :dateInicio AND :dateFin AND ge.funcionRespuesta != 1 AND ge.estado = 2)')
+                       ->setParameter('dateInicio', $dateInicio)
+                       ->setParameter('dateFin', $dateFin23)
+                       ->andWhere('ee.id = 2');
+                    break;
+                default: // filtrar por fechaCreacion del contrato
+                    $qb->andWhere('c.fechaCreacion BETWEEN :dateInicio AND :dateFin')
+                       ->setParameter('dateInicio', $dateInicio)
+                       ->setParameter('dateFin', $dateFin23);
+                    break;
+            }
+        }
+
+        if (!is_null($status)) {
+            if ($status === 0) {
+                $qb->andWhere('c.FechaEncuesta IS NOT NULL');
+            } elseif ($status === 1) {
+                $qb->andWhere('EXISTS(SELECT ge2.id FROM App\Entity\Encuesta ge2 WHERE ge2.contrato = c AND ge2.funcionRespuesta != 1 AND ge2.estado = 2)');
+            }
+        }
+
+        return $qb->orderBy('c.id', 'DESC')->getQuery();
+    }
+
+    /**
+     * Retorna un mapa [contrato_id => ultimaNota] para un conjunto de IDs.
+     * Ejecuta 1 sola query batch en lugar de N+1.
+     */
+    public function getUltimaNotaByContratoIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+        $rows = $this->getEntityManager()->createQuery(
+            'SELECT IDENTITY(e.contrato) as contrato_id, MAX(ep.nota) as nota
+             FROM App\Entity\EncuestaPreguntas ep
+             JOIN ep.encuesta e
+             WHERE IDENTITY(e.contrato) IN (:ids) AND ep.tipoPregunta = 1
+             GROUP BY e.contrato'
+        )->setParameter('ids', $ids)->getResult();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(int)$row['contrato_id']] = $row['nota'] !== null ? (int)$row['nota'] : null;
+        }
+        return $map;
+    }
+
+    /**
+     * Retorna un mapa [contrato_id => DateTime] con la fecha de la última gestión.
+     * Ejecuta 1 sola query batch en lugar de N+1.
+     */
+    public function getFechaGestionByContratoIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+        $rows = $this->getEntityManager()->createQuery(
+            'SELECT IDENTITY(ge.contrato) as contrato_id, MAX(ge.FechaCreacion) as fecha
+             FROM App\Entity\Encuesta ge
+             WHERE IDENTITY(ge.contrato) IN (:ids) AND ge.funcionRespuesta != 1 AND ge.estado = 2
+             GROUP BY ge.contrato'
+        )->setParameter('ids', $ids)->getResult();
+
+        $map = [];
+        foreach ($rows as $row) {
+            $map[(int)$row['contrato_id']] = $row['fecha'] !== null ? new \DateTime($row['fecha']) : null;
+        }
+        return $map;
+    }
 }

@@ -338,75 +338,6 @@ class TramitadoresController extends AbstractController
 
             $entityManager->persist($usuario);
             $entityManager->flush();
-            if(isset($_POST['cboCarteras'])){                
-                $carteras=$_POST['cboCarteras'];        
-              
-                $carterasInt=array_map('intval',$carteras);
-               
-                //Primero eliminamos la o las carteras
-                $usuarioCarteras=$usuario->getUsuarioCarteras();
-                $carterasOriginales[]="";
-
-                foreach($usuarioCarteras as $usuarioCartera){
-                    $carterasOriginales[]= $usuarioCartera->getCartera()->getId();
-                  
-                    if(!in_array($usuarioCartera->getCartera()->getId(),$carterasInt)){
-                        $movimiento = new UsuarioCarteraMovimiento();
-                        $movimiento->setUsuarioRegistro($user);
-                        $movimiento->setCartera($usuarioCartera->getCartera());
-                        $movimiento->setUsuario($usuario);
-                        $movimiento->setFechaRegistro(new DateTime(date('d-m-Y H:i:s')));
-                        $movimiento->setAccion("Elimina");
-                        $entityManager->persist($movimiento);
-                        $entityManager->flush();  
-
-                        $cartera=$usuarioCartera->getCartera();
-                        $entityManager->remove($usuarioCartera);
-                        $entityManager->flush();
-
-                        $cartera->setAsignado(false);
-                        $cartera->setEstado(1);
-                        $entityManager->persist($cartera);
-                        $entityManager->flush();   
-
-                       
-                    }
-
-                }
-               
-                //Segundo agregamos la o las carteras
-                foreach($carterasInt as $_cartera){
-
-                    if(!in_array($_cartera,$carterasOriginales)){
-                        
-                        $cartera=$carteraRepository->find($_cartera);
-                        $usuarioCartera=new UsuarioCartera();
-                        $usuarioCartera->setUsuario($usuario);
-                        $usuarioCartera->setCartera($cartera);
-
-                        $entityManager->persist($usuarioCartera);
-                        $entityManager->flush();
-
-                        $movimiento = new UsuarioCarteraMovimiento();
-                        $movimiento->setUsuarioRegistro($user);
-                        $movimiento->setCartera($usuarioCartera->getCartera());
-                        $movimiento->setUsuario($usuario);
-                        $movimiento->setFechaRegistro(new DateTime(date('d-m-Y H:i:s')));
-                        $movimiento->setAccion("Agrega");
-                        $entityManager->persist($movimiento);
-                        $entityManager->flush();  
-
-                        $cartera->setAsignado(true);
-
-                        $entityManager->persist($cartera);
-                        $entityManager->flush();
-                        $contratoRepository->updateTicketPorCartera($usuario->getId(),$cartera->getId(),$user->getNombre(),new DateTime(date('d-m-Y H:i:s')));
-                        $contratoRepository->updateTramitadorCartera($usuario->getId(),$cartera->getId());
-                    }
-                }
-               
-            }
-            
             if($usuario->getEstadoCartera()==true){
                 $usuarioCarteras=$usuarioCarteraRepository->findBy(['usuario'=>$usuario]);
                 foreach ($usuarioCarteras as $usuarioCartera) {
@@ -426,6 +357,76 @@ class TramitadoresController extends AbstractController
                     $entityManager->flush();
                 }
             }
+       
+            if(isset($_POST['cboCarteras'])){                
+                $carteras=$_POST['cboCarteras'];        
+                
+                $carterasInt=array_map('intval',$carteras);
+            }else{
+                $carterasInt=array();
+            }
+            //Primero eliminamos la o las carteras
+            $usuarioCarteras=$usuario->getUsuarioCarteras();
+            $carterasOriginales[]="";
+
+            foreach($usuarioCarteras as $usuarioCartera){
+                $carterasOriginales[]= $usuarioCartera->getCartera()->getId();
+                
+                if(!in_array($usuarioCartera->getCartera()->getId(),$carterasInt)){
+                    $movimiento = new UsuarioCarteraMovimiento();
+                    $movimiento->setUsuarioRegistro($user);
+                    $movimiento->setCartera($usuarioCartera->getCartera());
+                    $movimiento->setUsuario($usuario);
+                    $movimiento->setFechaRegistro(new DateTime(date('d-m-Y H:i:s')));
+                    $movimiento->setAccion("Elimina");
+                    $entityManager->persist($movimiento);
+                    $entityManager->flush();  
+
+                    $cartera=$usuarioCartera->getCartera();
+                    $entityManager->remove($usuarioCartera);
+                    $entityManager->flush();
+
+                    $cartera->setAsignado(false);
+                    $cartera->setEstado(1);
+                    $entityManager->persist($cartera);
+                    $entityManager->flush();   
+
+                    
+                }
+
+            }
+            
+            //Segundo agregamos la o las carteras
+            foreach($carterasInt as $_cartera){
+
+                if(!in_array($_cartera,$carterasOriginales)){
+                    
+                    $cartera=$carteraRepository->find($_cartera);
+                    $usuarioCartera=new UsuarioCartera();
+                    $usuarioCartera->setUsuario($usuario);
+                    $usuarioCartera->setCartera($cartera);
+
+                    $entityManager->persist($usuarioCartera);
+                    $entityManager->flush();
+
+                    $movimiento = new UsuarioCarteraMovimiento();
+                    $movimiento->setUsuarioRegistro($user);
+                    $movimiento->setCartera($usuarioCartera->getCartera());
+                    $movimiento->setUsuario($usuario);
+                    $movimiento->setFechaRegistro(new DateTime(date('d-m-Y H:i:s')));
+                    $movimiento->setAccion("Agrega");
+                    $entityManager->persist($movimiento);
+                    $entityManager->flush();  
+
+                    $cartera->setAsignado(true);
+
+                    $entityManager->persist($cartera);
+                    $entityManager->flush();
+                    $contratoRepository->updateTicketPorCartera($usuario->getId(),$cartera->getId(),$user->getNombre(),new DateTime(date('d-m-Y H:i:s')));
+                    $contratoRepository->updateTramitadorCartera($usuario->getId(),$cartera->getId());
+                }
+            }
+                                   
             //exit;
             return $this->redirectToRoute('tramitadores_index');
         }

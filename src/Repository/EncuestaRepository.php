@@ -61,6 +61,16 @@ class EncuestaRepository extends ServiceEntityRepository
         return $query->getQuery()
             ->getResult();
     }
+    public function countEncuestasByContrato(int $contratoId): int
+    {
+        return (int) $this->createQueryBuilder('e')
+            ->select('COUNT(e.id)')
+            ->where('e.contrato = :contratoId')
+            ->setParameter('contratoId', $contratoId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     public function findGestionesByFechaRange(\DateTime $fechaInicio, \DateTime $fechaFin): array
     {
 

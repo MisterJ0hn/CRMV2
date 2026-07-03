@@ -1,0 +1,14 @@
+{% for resumen in resumenes %}
+<div class="col-sm-6 col-md-3">
+    <div class="info-box">
+        <span class="info-box-icon bg-success"><i class="fas fa-handshake"></i></span>
+        <div class="info-box-content">
+            <span class="info-box-text">{{ resumen.tipo }}</span>
+            <span class="info-box-number">{{ resumen.cantidad }}</span>
+            <a href="#" class="small-box-footer" onclick="buscar('{{ resumen.tipo }}'); return false;">
+                Ver Más <i class="fas fa-arrow-circle-right"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{% endfor %}

@@ -48,6 +48,9 @@
                 <div class="info-box-content">
                 <span class="info-box-text">{{vencimiento.nombre}}</span>
                 <span class="info-box-number">{{vencimiento.min}} -  {{vencimiento.max}} </span>
+                {% if sesion.getSesion.usuarioTipo.id == 1 %}
+                <span class="info-box-text">Sin Equipo</span>
+                {% endif %}
                 
                 
                 </div>

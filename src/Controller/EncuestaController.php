@@ -34,158 +34,158 @@ class EncuestaController extends AbstractController
     /**
      * @Route("/", name="encuesta_index")
      */
-    public function index(Request $request,  
-                        PaginatorInterface $paginator,
-                        VwContratoRepository $contratoRepository,
+    public function index(Request $request,
                         CuentaRepository $cuentaRepository,
                         UsuarioTipoRepository $usuarioTipoRepository
                         ): Response
     {
         $this->denyAccessUnlessGranted('view','Encuesta');
-        $user=$this->getUser();
-        $perfiles = $usuarioTipoRepository->findBy([],['nombre'=>'Asc']);
-         $perfil=0;
-        $filtro=null;
-        $error='';
-        $error_toast="";
-        $otros="";
-        $folio="";
-        $tipoFecha=0;
-        $status=null;
-        $statusNombre=null;
-        $resumen=null;
-        if(null !== $request->query->get('error_toast')){
-            $error_toast=$request->query->get('error_toast');
+        $user = $this->getUser();
+        $perfiles = $usuarioTipoRepository->findBy([], ['nombre' => 'Asc']);
+        $perfil = 0;
+        $filtro = null;
+        $error_toast = '';
+        $folio = '';
+        $tipoFecha = 0;
+        $statusNombre = null;
+        $dateInicio = '';
+        $dateFin = '';
+
+        if (null !== $request->query->get('error_toast')) {
+            $error_toast = $request->query->get('error_toast');
         }
-        $compania=null;
-        if(null !== $request->query->get('bFolio') && $request->query->get('bFolio')!=''){
-            $folio=$request->query->get('bFolio');
-            $otros=" (c.folioContrato= '$folio' or c.agenda=$folio) ";
+        $compania = null;
 
-            $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
-            $dateFin=date('Y-m-d');
-            $fecha=$otros. " and a.status in (7,14)";
-
-        }else{
-            if(null !== $request->query->get('bFiltro') && $request->query->get('bFiltro')!=''){
-                $filtro=$request->query->get('bFiltro');
+        if (null !== $request->query->get('bFolio') && $request->query->get('bFolio') !== '') {
+            $folio = $request->query->get('bFolio');
+            $dateInicio = date('Y-m-d', mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
+            $dateFin = date('Y-m-d');
+        } else {
+            if (null !== $request->query->get('bFiltro') && $request->query->get('bFiltro') !== '') {
+                $filtro = $request->query->get('bFiltro');
             }
-            if(null !== $request->query->get('bCompania') && $request->query->get('bCompania')!=0){
-                $compania=$request->query->get('bCompania');
+            if (null !== $request->query->get('bCompania') && $request->query->get('bCompania') != 0) {
+                $compania = $request->query->get('bCompania');
             }
-            if(null !== $request->query->get('bFecha')){
-                $aux_fecha=explode(" - ",$request->query->get('bFecha'));
-                $dateInicio=$aux_fecha[0];
-                $dateFin=$aux_fecha[1];
-            }else{
-                $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*1);
-                //$dateInicio=date('Y-m-d');
-                
-                $dateFin=date('Y-m-d');
+            if (null !== $request->query->get('bFecha')) {
+                $aux_fecha = explode(' - ', $request->query->get('bFecha'));
+                $dateInicio = $aux_fecha[0];
+                $dateFin = $aux_fecha[1];
+            } else {
+                $dateInicio = date('Y-m-d', mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*1);
+                $dateFin = date('Y-m-d');
             }
-            if(null !== $request->query->get('bTipoFecha')){
-                $tipoFecha = $request->query->get('bTipoFecha');
-     
+            if (null !== $request->query->get('bTipoFecha')) {
+                $tipoFecha = (int) $request->query->get('bTipoFecha');
             }
-
-            
-
-            switch($tipoFecha){
-                case 0:
-                    $fecha="c.fechaCreacion between '$dateInicio' and '$dateFin 23:59:59' and a.status in (7,14)" ;
-                    break;
-                case 1:
-                    $fecha="c.FechaEncuesta between '$dateInicio' and '$dateFin 23:59:59' and a.status in (7,14) and e.id=2" ;
-                    $status=0;
-                    $statusNombre='Encuestas';
-                 
-                    break;
-                case 2:
-                    $fecha="c.FechaGestion between '$dateInicio' and '$dateFin 23:59:59' and a.status in (7,14) and e.id=2" ;
-                    $status=1;
-                    $statusNombre='Gestiones';
-                  
-                    break;
+            switch ($tipoFecha) {
+                case 1: $statusNombre = 'Encuestas'; break;
+                case 2: $statusNombre = 'Gestiones'; break;
             }
-
-            if(null !== $request->query->get('bStatus') && trim($request->query->get('bStatus')!='')){
-                if(trim($request->query->get('bStatus'))=='Encuestas'){
-                    $status=0;
-                    $statusNombre='Encuestas';
-                }
-                if(trim($request->query->get('bStatus'))=='Gestiones'){
-                    $status=1;
-                    $statusNombre='Gestiones';
-                }       
-                
+            if (null !== $request->query->get('bStatus') && trim($request->query->get('bStatus')) !== '') {
+                $statusNombre = trim($request->query->get('bStatus'));
             }
         }
-      
-        switch($user->getUsuarioTipo()->getId()){
-            case 3:
-            case 1:
-            case 8:
-            case 13:
-                $query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha,false,$status);
-                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
-                //$resumen=$contratoRepository->findByEncuestaResumenFechas(null,$user->getEmpresaActual(),$compania,$fecha,$filtro,$tipoFecha,$status,$dateInicio,$dateFin);
-                break;
-            case 4://Cobradores
-                $grupos;
-                foreach($user->getUsuarioGrupos() as $usuarioGrupo){
-                    $grupos[]=$usuarioGrupo->getGrupo()->getId();
-                }
-                if($grupos == null){
-                    $fecha.=" and c.grupo is null ";
-                }else{
-                    if(count($grupos)>0){
-                        $fecha.=" and c.grupo in (".implode(",",$grupos).") ";
-                    }else{
-                        $fecha.=" and c.grupo is null ";
-                    }
-                }
-                //$fecha.=" and c.idLote in (".implode(",",$lotes).") ";
-                $query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha,false,$status);
-                $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
-                
-                $resumen=$contratoRepository->findByEncuestaResumenFechas(null,$user->getEmpresaActual(),$compania,$fecha,$filtro,$tipoFecha,$status,$dateInicio,$dateFin);
+
+        switch ($user->getUsuarioTipo()->getId()) {
+            case 3: case 1: case 8: case 13: case 4:
+                $companias = $cuentaRepository->findByPers(null, $user->getEmpresaActual());
                 break;
             default:
-                $query=$contratoRepository->findByPers($user->getId(),null,$compania,$filtro,null,$fecha,false,$status);
-                $companias=$cuentaRepository->findByPers($user->getId());
-                
-                $resumen=$contratoRepository->findByEncuestaResumenFechas($user->getId(),$user->getEmpresaActual(),$compania,$fecha,$filtro,$tipoFecha,$status,$dateInicio,$dateFin);
-                
-            break;
+                $companias = $cuentaRepository->findByPers($user->getId());
+                break;
         }
-        //$resumen=null;
-        //$companias=$cuentaRepository->findByPers($user->getId());
-        //$query=$contratoRepository->findAll();
-        $contratos=$paginator->paginate(
-            $query, /* query NOT result */
-            $request->query->getInt('page', 1), /*page number*/
-            20 /*limit per page*/,
-            array('defaultSortFieldName' => 'id', 'defaultSortDirection' => 'desc'));
-    
+
         return $this->render('encuesta/index.html.twig', [
             'controller_name' => 'EncuestaController',
-            'contratos' => $contratos,
-            'bFiltro'=>$filtro,
-            'bFolio'=>$folio,
-            'tipoFecha'=>$tipoFecha,
-            'companias'=>$companias,
-            'bCompania'=>$compania,
-            'dateInicio'=>$dateInicio,
-            'dateFin'=>$dateFin,
-            'pagina'=>"Calidad",
-            'error'=>$error,
-            'error_toast'=>$error_toast,
-            'resumenes'=>$resumen,
-            "bStatus"=>$statusNombre,
-            'perfiles'=>$perfiles,
-            'bPerfil'=>$perfil,
-            'TipoFiltro'=>'Encuestas',
+            'bFiltro' => $filtro,
+            'bFolio' => $folio,
+            'tipoFecha' => $tipoFecha,
+            'companias' => $companias,
+            'bCompania' => $compania,
+            'dateInicio' => $dateInicio,
+            'dateFin' => $dateFin,
+            'pagina' => 'Calidad',
+            'error_toast' => $error_toast,
+            'bStatus' => $statusNombre,
+            'perfiles' => $perfiles,
+            'bPerfil' => $perfil,
+            'TipoFiltro' => 'Encuestas',
         ]);
+    }
+
+    /**
+     * @Route("/obtenerResumen", name="encuesta_obtener_resumen", methods={"GET"})
+     */
+    public function obtenerResumen(Request $request, VwContratoRepository $vwContratoRepository): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('view', 'Encuesta');
+        $user = $this->getUser();
+
+        $folio = '';
+        $filtro = null;
+        $compania = null;
+        $tipoFecha = 0;
+        $status = null;
+        $dateInicio = date('Y-m-d', mktime(0,0,0,date('m'),date('d'),date('Y'))-86400);
+        $dateFin = date('Y-m-d');
+
+        if (null !== $request->query->get('bFolio') && $request->query->get('bFolio') !== '') {
+            $folio = $request->query->get('bFolio');
+            $dateInicio = date('Y-m-d', mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
+            $dateFin = date('Y-m-d');
+        } else {
+            if (null !== $request->query->get('bFiltro') && $request->query->get('bFiltro') !== '') {
+                $filtro = $request->query->get('bFiltro');
+            }
+            if (null !== $request->query->get('bCompania') && $request->query->get('bCompania') != 0) {
+                $compania = $request->query->get('bCompania');
+            }
+            $bFecha = $request->query->get('bFecha', '');
+            if ($bFecha !== '') {
+                $parts = explode(' - ', $bFecha, 2);
+                $dateInicio = $parts[0] ?? $dateInicio;
+                $dateFin    = $parts[1] ?? $dateFin;
+            }
+            if (null !== $request->query->get('bTipoFecha')) {
+                $tipoFecha = (int) $request->query->get('bTipoFecha');
+            }
+            if ($tipoFecha === 1) { $status = 0; }
+            if ($tipoFecha === 2) { $status = 1; }
+            if (null !== $request->query->get('bStatus') && trim($request->query->get('bStatus')) !== '') {
+                if (trim($request->query->get('bStatus')) === 'Encuestas') { $status = 0; }
+                if (trim($request->query->get('bStatus')) === 'Gestiones') { $status = 1; }
+            }
+        }
+
+        if ($folio !== '') {
+            $fechaResumen = "(c.folioContrato= '$folio' or c.agenda=$folio) and a.status in (7,14)";
+        } else {
+            switch ($tipoFecha) {
+                case 1: $fechaResumen = "c.FechaEncuesta between '$dateInicio' and '$dateFin 23:59:59' and a.status in (7,14) and e.id=2"; break;
+                case 2: $fechaResumen = "c.FechaGestion between '$dateInicio' and '$dateFin 23:59:59' and a.status in (7,14) and e.id=2"; break;
+                default: $fechaResumen = "c.fechaCreacion between '$dateInicio' and '$dateFin 23:59:59' and a.status in (7,14)"; break;
+            }
+        }
+
+        $resumen = [];
+        switch ($user->getUsuarioTipo()->getId()) {
+            case 3: case 1: case 8: case 13:
+                break;
+            case 4:
+                $resumen = $vwContratoRepository->findByEncuestaResumenFechas(
+                    null, $user->getEmpresaActual(), $compania, $fechaResumen, $filtro, $tipoFecha, $status, $dateInicio, $dateFin
+                ) ?? [];
+                break;
+            default:
+                $resumen = $vwContratoRepository->findByEncuestaResumenFechas(
+                    $user->getId(), $user->getEmpresaActual(), $compania, $fechaResumen, $filtro, $tipoFecha, $status, $dateInicio, $dateFin
+                ) ?? [];
+                break;
+        }
+
+        $html = $this->renderView('encuesta/_resumen.html.twig', ['resumenes' => $resumen]);
+        return new JsonResponse(['html' => $html]);
     }
     /**
      * @Route("/indextest", name="encuesta_indextest")
@@ -344,100 +344,91 @@ class EncuestaController extends AbstractController
      */
     public function obtenerContenido(Request $request,
                         PaginatorInterface $paginator,
-                        VwContratoRepository $contratoRepository
+                        ContratoRepository $contratoRepository
                         ): JsonResponse
     {
         $this->denyAccessUnlessGranted('view','Encuesta');
-        $user=$this->getUser();
-        $filtro=null;
-        $folio="";
-        $tipoFecha=0;
-        $status=null;
-        $compania=null;
-        $fecha="a.status in (7,14)";
+        $user = $this->getUser();
+        $filtro = null;
+        $folio = '';
+        $tipoFecha = 0;
+        $status = null;
+        $compania = null;
+        $dateInicio = '';
+        $dateFin = '';
 
-        if(null !== $request->query->get('bFolio') && $request->query->get('bFolio')!=''){
-            $folio=$request->query->get('bFolio');
-            $otros=" (c.folioContrato= '$folio' or c.agenda=$folio) ";
-            $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
-            $dateFin=date('Y-m-d');
-            $fecha=$otros. " and a.status in (7,14)";
-        }else{
-            if(null !== $request->query->get('bFiltro') && $request->query->get('bFiltro')!=''){
-                $filtro=$request->query->get('bFiltro');
+        if (null !== $request->query->get('bFolio') && $request->query->get('bFolio') !== '') {
+            $folio = $request->query->get('bFolio');
+            $dateInicio = date('Y-m-d', mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30);
+            $dateFin = date('Y-m-d');
+        } else {
+            if (null !== $request->query->get('bFiltro') && $request->query->get('bFiltro') !== '') {
+                $filtro = $request->query->get('bFiltro');
             }
-            if(null !== $request->query->get('bCompania') && $request->query->get('bCompania')!=0){
-                $compania=$request->query->get('bCompania');
+            if (null !== $request->query->get('bCompania') && $request->query->get('bCompania') != 0) {
+                $compania = $request->query->get('bCompania');
             }
-            if(null !== $request->query->get('bFecha')){
-                $aux_fecha=explode(" - ",$request->query->get('bFecha'));
-                $dateInicio=$aux_fecha[0];
-                $dateFin=$aux_fecha[1];
-            }else{
-                $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*1);
-                $dateFin=date('Y-m-d');
+            if (null !== $request->query->get('bFecha')) {
+                [$dateInicio, $dateFin] = explode(' - ', $request->query->get('bFecha'));
+            } else {
+                $dateInicio = date('Y-m-d', mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*1);
+                $dateFin = date('Y-m-d');
             }
-            if(null !== $request->query->get('bTipoFecha')){
-                $tipoFecha = $request->query->get('bTipoFecha');
+            if (null !== $request->query->get('bTipoFecha')) {
+                $tipoFecha = (int) $request->query->get('bTipoFecha');
             }
-
-            switch($tipoFecha){
-                case 1:
-                    $fecha="c.FechaEncuesta between '$dateInicio' and '$dateFin 23:59:59' and a.status in (7,14) and e.id=2" ;
-                    $status=0;
-                    break;
-                case 2:
-                    $fecha="c.FechaGestion between '$dateInicio' and '$dateFin 23:59:59' and a.status in (7,14) and e.id=2" ;
-                    $status=1;
-                    break;
-                default:
-                    $fecha="c.fechaCreacion between '$dateInicio' and '$dateFin 23:59:59' and a.status in (7,14)" ;
-                    break;
-            }
-
-            if(null !== $request->query->get('bStatus') && trim($request->query->get('bStatus')!='')){
-                if(trim($request->query->get('bStatus'))=='Encuestas'){
-                    $status=0;
-                }
-                if(trim($request->query->get('bStatus'))=='Gestiones'){
-                    $status=1;
-                }
+            if ($tipoFecha === 1) { $status = 0; }
+            if ($tipoFecha === 2) { $status = 1; }
+            if (null !== $request->query->get('bStatus') && trim($request->query->get('bStatus')) !== '') {
+                if (trim($request->query->get('bStatus')) === 'Encuestas') { $status = 0; }
+                if (trim($request->query->get('bStatus')) === 'Gestiones') { $status = 1; }
             }
         }
 
-        switch($user->getUsuarioTipo()->getId()){
-            case 3:
-            case 1:
-            case 8:
-            case 13:
-                $query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha,false,$status);
+        $grupos = null;
+        switch ($user->getUsuarioTipo()->getId()) {
+            case 3: case 1: case 8: case 13:
+                $query = $contratoRepository->findEncuestaQuery(
+                    null, $user->getEmpresaActual(), $compania, $filtro,
+                    $folio !== '' ? $folio : null, $dateInicio, $dateFin, $tipoFecha, $status
+                );
                 break;
             case 4:
-                $grupos=null;
-                foreach($user->getUsuarioGrupos() as $usuarioGrupo){
-                    $grupos[]=$usuarioGrupo->getGrupo()->getId();
+                foreach ($user->getUsuarioGrupos() as $usuarioGrupo) {
+                    $grupos[] = $usuarioGrupo->getGrupo()->getId();
                 }
-                if($grupos == null){
-                    $fecha.=" and c.grupo is null ";
-                }else{
-                    if(count($grupos)>0){
-                        $fecha.=" and c.grupo in (".implode(",",$grupos).") ";
-                    }else{
-                        $fecha.=" and c.grupo is null ";
-                    }
-                }
-                $query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha,false,$status);
+                $query = $contratoRepository->findEncuestaQuery(
+                    null, $user->getEmpresaActual(), $compania, $filtro,
+                    null, $dateInicio, $dateFin, $tipoFecha, $status, $grupos
+                );
                 break;
             default:
-                $query=$contratoRepository->findByPers($user->getId(),null,$compania,$filtro,null,$fecha,false,$status);
+                $query = $contratoRepository->findEncuestaQuery(
+                    $user->getId(), null, $compania, $filtro,
+                    $folio !== '' ? $folio : null, $dateInicio, $dateFin, $tipoFecha, $status
+                );
                 break;
         }
 
-        $contratos=$paginator->paginate(
+        $contratos = $paginator->paginate(
             $query,
             $request->query->getInt('page', 1),
             20,
-            array('defaultSortFieldName' => 'id', 'defaultSortDirection' => 'desc'));
+            ['defaultSortFieldName' => 'c.id', 'defaultSortDirection' => 'desc']
+        );
+
+        // Enriquecer los 20 resultados con ultimaNota y fechaGestion (2 queries batch)
+        $items = [];
+        $ids = [];
+        foreach ($contratos as $c) { $items[] = $c; $ids[] = $c->getId(); }
+        if ($ids) {
+            $ultimaNotas = $contratoRepository->getUltimaNotaByContratoIds($ids);
+            $fechasGestion = $contratoRepository->getFechaGestionByContratoIds($ids);
+            foreach ($items as $c) {
+                $c->setUltimaNota($ultimaNotas[$c->getId()] ?? null);
+                $c->setFechaGestion($fechasGestion[$c->getId()] ?? null);
+            }
+        }
 
         $html = $this->renderView('encuesta/_tabla.html.twig', ['contratos' => $contratos]);
         return new JsonResponse(['html' => $html]);
@@ -446,7 +437,7 @@ class EncuestaController extends AbstractController
     /**
      * @Route("/obtenerResumenEncuestadores", name="encuesta_obtener_resumen_encuestadores", methods={"GET"})
      */
-    public function resumenencuestadores(Request $request, VwContratoRepository $vwContratoRepository): JsonResponse
+    public function resumenencuestadores(Request $request, VwContratoRepository $vwContratoRepository): Response
     {
         $user=$this->getUser();
 
@@ -477,12 +468,17 @@ class EncuestaController extends AbstractController
 
         $queryresumen=$vwContratoRepository->findByEncuestaResumenEncuestador($fecha,$idstatus);
 
-        $html = $this->renderView('encuesta/_resumenEncuestadores.html.twig',[
+        /*$html = $this->renderView('encuesta/_resumenEncuestadores.html.twig',[
+            'encuestadores'=>$queryresumen,
+            'total'=>1000,
+            'nombre_status'=>$nombre_status,
+        ]);*/
+        //return new JsonResponse(['html' => $html]);
+        return $this->render('encuesta/_resumenEncuestadores.html.twig',[
             'encuestadores'=>$queryresumen,
             'total'=>1000,
             'nombre_status'=>$nombre_status,
         ]);
-        return new JsonResponse(['html' => $html]);
     }
 
     /**
@@ -504,9 +500,9 @@ class EncuestaController extends AbstractController
      */
     public function newGestion(Request $request,
                             Contrato $contrato,
-                            EstadoEncuestaRepository $estadoEncuestaRepository, 
+                            EstadoEncuestaRepository $estadoEncuestaRepository,
                             FuncionRespuestaRepository $funcionRespuestaRepository,
-                            VwContratoRepository $vwContratoRepository): Response
+                            EncuestaRepository $encuestaRepository): Response
     {
         $user=$this->getUser();
         $encuesta = new Encuesta();
@@ -550,15 +546,12 @@ class EncuestaController extends AbstractController
                 }
             }
         }
-        $vwContrato = $vwContratoRepository->find($contrato->getId());
-        
         return $this->render('encuesta/funcionEncuesta.html.twig', [
             'controller_name' => 'EncuestaController',
-            'contrato'=>$contrato,
+            'contrato' => $contrato,
             'form' => $form->createView(),
-            "encuesta"=>$encuesta,
-            "tieneEncuestas"=>$vwContrato->getQtyEncuesta()
-            
+            'encuesta' => $encuesta,
+            'tieneEncuestas' => $encuestaRepository->countEncuestasByContrato($contrato->getId()),
         ]);
     }
     /**

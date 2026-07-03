@@ -5,20 +5,20 @@
         <table class="table table-head-fixed text-nowrap table-striped table-sm">
             <thead>
                 <tr>
-                    <th>{{ knp_pagination_sortable(contratos, 'Compañia', 'agenda.cuenta') }} {% if contratos.isSorted('agenda.cuenta') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                    <th>{{ knp_pagination_sortable(contratos, 'Folio', 'folio') }} {% if contratos.isSorted('folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                    <th>{{ knp_pagination_sortable(contratos, 'AgendaId', 'agenda.id') }} {% if contratos.isSorted('agenda.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                    <th>{{ knp_pagination_sortable(contratos, 'Grupo', 'grupo.id') }} {% if contratos.isSorted('grupo.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Compañia', 'cu.nombre') }} {% if contratos.isSorted('cu.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Folio', 'c.folio') }} {% if contratos.isSorted('c.folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'AgendaId', 'a.id') }} {% if contratos.isSorted('a.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Grupo', 'g.id') }} {% if contratos.isSorted('g.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>Calidad</th>
-                    <th>{{ knp_pagination_sortable(contratos, 'Cliente', 'nombre') }} {% if contratos.isSorted('nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                    <th>{{ knp_pagination_sortable(contratos, 'Fecha Contrato', 'fechaCreacion') }} {% if contratos.isSorted('fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                    <th>{{ knp_pagination_sortable(contratos, 'Fecha Ult. Encuesta', 'fechaEncuesta') }} {% if contratos.isSorted('fechaEncuesta') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                    <th>{{ knp_pagination_sortable(contratos, 'Fecha Ult. Gestión', 'fechaGestion') }} {% if contratos.isSorted('fechaGestion') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                    <th>{{ knp_pagination_sortable(contratos, 'Q. Encuesta', 'qtyEncuesta') }} {% if contratos.isSorted('qtyEncuesta') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                    <th>{{ knp_pagination_sortable(contratos, 'Q. Gestión', 'qtyGestionEncuesta') }} {% if contratos.isSorted('qtyGestionEncuesta') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Cliente', 'c.nombre') }} {% if contratos.isSorted('c.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Fecha Contrato', 'c.fechaCreacion') }} {% if contratos.isSorted('c.fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Fecha Ult. Encuesta', 'c.FechaEncuesta') }} {% if contratos.isSorted('c.FechaEncuesta') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>Fecha Ult. Gestión</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Q. Encuesta', 'c.qtyEncuesta') }} {% if contratos.isSorted('c.qtyEncuesta') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Q. Gestión', 'c.qtyGestionEncuesta') }} {% if contratos.isSorted('c.qtyGestionEncuesta') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>Días Mora</th>
                     <th>C.Pgda</th>
-                    <th>{{ knp_pagination_sortable(contratos, 'Ultima Nota', 'ultimaNota') }} {% if contratos.isSorted('ultimaNota') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>Ultima Nota</th>
                     <th>Acciones</th>
                 </tr>
             </thead>

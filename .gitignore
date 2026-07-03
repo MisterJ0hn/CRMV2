@@ -4,3 +4,4 @@
 /1.-\ entregables/
 /public
 .env
+.env.local.php

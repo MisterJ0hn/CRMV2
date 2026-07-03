@@ -3,7 +3,8 @@
 
 <div class="col-sm-12 col-md-3">
     <small class="text-muted">Monto Deuda</small>
-    {{form_row(form.montoNivelDeuda,{'label':false,'attr':{'class':'form-control nivel-deuda','autocomplete':"ÑÖcompletes"}})}}
+    {{form_row(form.montoNivelDeuda,{'label':false,'attr':{'class':'form-control nivel-deuda number','autocomplete':"ÑÖcompletes"}})}}
+    <strong><label id="m-nivel-deuda"></label></strong>
 </div>
 <div class="col-sm-12 col-md-3">
     <small class="text-muted t-pago-actual" >Pago Mensual Deuda</small>
@@ -548,6 +549,12 @@
         recalcula();
         
         $("#m-monto-contrato").html($.number( $(this).val(), 0, ',', '.' ));
+    });
+    $('.nivel-deuda').change(function(){    
+        $("#m-nivel-deuda").html($.number( $(this).val(), 0, ',', '.' ));
+    });
+    $('.pago-actual').change(function(){    
+        $("#m-pago-actual").html($.number( $(this).val(), 0, ',', '.' ));
     });
     $('.primera-cuota').change(function(){
         recalcula();
