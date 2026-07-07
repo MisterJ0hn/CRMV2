@@ -123,7 +123,9 @@
                             {% endif %}
                             <a href="{{ path('contrato_show', {'id': contrato.id}) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>
                             <a href="{{ path('contrato_edit', {'id': contrato.id}) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
-                            <a href="#" class="btn btn-dark btn-sm" onclick="javascript:editarObservacion({{contrato.id}})" ><i class="fas fa-edit"></i></a>
+                            {% if is_granted('create','modificar_contrato') %}
+                                <a href="#" class="btn btn-dark btn-sm" onclick="javascript:editarObservacion({{contrato.id}})" ><i class="fas fa-edit"></i></a>
+                            {% endif %}
                             {% if contrato.agenda.status.id == 14 %}
                                 <a href="#" class="btn btn-warning btn-sm"><i class="fas fa-retweet"></i></a>
                             {% else %}
