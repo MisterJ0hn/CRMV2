@@ -1,0 +1,41 @@
+
+<form action="{{path('contrato_observacion_editar',{'id':contrato.id})}}" method="post" class="form-observacion">
+    <div class="row">
+        <div class="col-sm-4">
+            <small class="text-muted">Folio</small>
+            <p>{{contrato.folio}}</p>
+        </div>
+        <div class="col-sm-4">
+            <small class="text-muted">Rut</small>
+            <p>{{contrato.rut}}</p>
+        </div>
+        <div class="col-sm-4">
+            <small class="text-muted">Cliente</small>
+            <p>{{contrato.nombre}}</p>
+        </div>
+        {% set estado_modificar = '' %}
+        {% if tieneObservaciones %}
+            <div class="row">
+                    <div class="col-sm-12">
+                <p class="text-danger mb-0">No es posible modificar la observación porque el contrato ya tiene observaciones registradas.</p>
+                </div>
+            </div>
+             {% set estado_modificar = 'disabled' %}
+        {% else %}
+            <div class="col-sm-12">
+                <label class="text-muted">Observación</label>
+                <textarea name="txtObservacion" class="form-control" rows="4">{{contrato.observacion}}</textarea>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="row mt-3">
+        <div class="col-sm-12">
+
+            <button class="btn btn-primary" id="btnGuardarObservacion" {{ estado_modificar }}>Guardar</button>
+        
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+        </div>
+    </div>
+</form>
+

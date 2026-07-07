@@ -1289,11 +1289,54 @@ class ContratoController extends AbstractController
         }
         return $this->render('contrato/_reasignar.html.twig', [
             'contrato' => $contrato,
-            'cerradores'=>$cerradores,         
+            'cerradores'=>$cerradores,
         ]);
     }
 
-   
+    /**
+     * @Route("/{id}/observacion_modal", name="contrato_observacion_modal", methods={"GET"})
+     */
+    public function observacionModal(Contrato $contrato,
+                                    ContratoObservacionRepository $contratoObservacionRepository,
+                                    CausaObservacionRepository $causaObservacionRepository): Response
+    {
+        $this->denyAccessUnlessGranted('edit','contrato');
+
+        $tieneObservaciones = $contratoObservacionRepository->count(['contrato'=>$contrato]) > 0
+            || $causaObservacionRepository->count(['contrato'=>$contrato]) > 0;
+
+        return $this->render('contrato/_observacion.html.twig', [
+            'contrato' => $contrato,
+            'tieneObservaciones' => $tieneObservaciones,
+        ]);
+    }
+
+    /**
+     * @Route("/{id}/editar_observacion", name="contrato_observacion_editar", methods={"POST"})
+     */
+    public function editarObservacion(Request $request,
+                                    Contrato $contrato,
+                                    ContratoObservacionRepository $contratoObservacionRepository,
+                                    CausaObservacionRepository $causaObservacionRepository): Response
+    {
+        $this->denyAccessUnlessGranted('edit','contrato');
+
+        $tieneObservaciones = $contratoObservacionRepository->count(['contrato'=>$contrato]) > 0
+            || $causaObservacionRepository->count(['contrato'=>$contrato]) > 0;
+
+        if ($tieneObservaciones) {
+            return new JsonResponse(['success' => false, 'message' => 'No es posible modificar la observación porque el contrato ya tiene observaciones registradas.'], 409);
+        }
+
+        $entityManager = $this->getDoctrine()->getManager();
+        $contrato->setObservacion($request->request->get('txtObservacion'));
+        $entityManager->persist($contrato);
+        $entityManager->flush();
+
+        return new JsonResponse(['success' => true]);
+    }
+
+
     /**
      * @Route("/{id}/pdf", name="contrato_pdf", methods={"GET","POST"})
      */

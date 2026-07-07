@@ -875,6 +875,14 @@
 
         if($('.cboSubMateria').val()!=""){
             if($('.txtLetra').val()!="" || $('.txtRol').val()!="" || $('.txtAnio').val()!=""){
+                if(!/^\d+$/.test($('.txtAnio').val())){
+                    alert("El año debe contener solo números");
+                    return;
+                }
+                if(!/^\d+$/.test($('.txtRol').val())){
+                    alert("El rol debe contener solo números");
+                    return;
+                }
                 if($('.txtLetra').val()=="" || $('.txtRol').val()=="" || $('.txtAnio').val()==""){
                     alert("Debe ingresar letra, rol y año completos");
                     return;
