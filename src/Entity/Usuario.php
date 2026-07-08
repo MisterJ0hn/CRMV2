@@ -25,6 +25,11 @@ class Usuario implements UserInterface
      */
     private $username;
 
+    /**
+     * @ORM\Column(type="string", length=180, unique=true)
+     */
+    private $usernameOriginal;
+
 
     /**
      * @var string The hashed password
@@ -455,6 +460,17 @@ class Usuario implements UserInterface
         return $this;
     }
 
+    public function getUsernameOriginal(): string
+    {
+        return (string) $this->usernameOriginal;
+    }
+
+    public function setUsernameOriginal(string $usernameOriginal): self
+    {
+        $this->usernameOriginal = $usernameOriginal;
+
+        return $this;
+    }
     /**
      * @see UserInterface
      */
