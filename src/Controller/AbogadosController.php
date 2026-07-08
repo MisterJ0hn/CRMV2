@@ -454,10 +454,21 @@ class AbogadosController extends AbstractController
     /**
      * @Route("/{id}/restore", name="abogados_restore", methods={"GET"})
      */
-    public function restore(Request $request, Usuario $usuario): Response
+    public function restore(Request $request, Usuario $usuario, UsuarioRepository $usuarioRepository): Response
     {
         $this->denyAccessUnlessGranted('full','abogados');
-      
+            try{
+                $usuarioRepository->restaurarUsername($usuario);
+            } catch (\Exception $e) {
+                $usuarioexistente=$usuarioRepository->findOneBy(['username'=>$usuario->getUsernameOriginal()]);
+                if($usuarioexistente){
+                    $this->addFlash('error', 'No se puede restaurar el username original del usuario porque ya existe otro usuario con ese username. Nombre Usuario: '.$usuarioexistente->getNombre().' - Perfil: '.$usuarioexistente->getUsuarioTipo()->getNombre());
+
+                }else{
+                    $this->addFlash('error', 'Error al restaurar el username original del usuario. Por favor, contacte al administrador del sistema. Error: '.$e->getMessage());
+                }
+                 return $this->redirectToRoute('abogados_index');
+            }
             $entityManager = $this->getDoctrine()->getManager();
             $usuario->setEstado(1);
             $entityManager->persist($usuario);
@@ -470,10 +481,11 @@ class AbogadosController extends AbstractController
     /**
      * @Route("/{id}", name="abogados_delete", methods={"DELETE"})
      */
-    public function delete(Request $request, Usuario $usuario): Response
+    public function delete(Request $request, Usuario $usuario, UsuarioRepository $usuarioRepository): Response
     {
         $this->denyAccessUnlessGranted('full','abogados');
         if ($this->isCsrfTokenValid('delete'.$usuario->getId(), $request->request->get('_token'))) {
+            $usuarioRepository->respaldarUsername($usuario);
             $entityManager = $this->getDoctrine()->getManager();
             $usuario->setEstado(0);
            

@@ -86,6 +86,30 @@ class UsuarioRepository extends ServiceEntityRepository implements PasswordUpgra
 
     }
 
+    public function respaldarUsername(UserInterface $user): void
+    {
+        if (!$user instanceof Usuario) {
+            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', \get_class($user)));
+        }
+
+        $user->setUsernameOriginal($user->getUsername());
+        $user->setUsername($user->getUsername()."_".date("YmdHis"));
+        $this->_em->persist($user);
+        $this->_em->flush();
+    }
+
+    public function restaurarUsername(UserInterface $user): void
+    {
+        if (!$user instanceof Usuario) {
+            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', \get_class($user)));
+        }
+       
+        $user->setUsername($user->getUsernameOriginal());       
+        $this->_em->persist($user);
+        $this->_em->flush();
+         
+    }
+
     // /**
     //  * @return Usuario[] Returns an array of Usuario objects
     //  */
