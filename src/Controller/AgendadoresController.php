@@ -71,6 +71,7 @@ class AgendadoresController extends AbstractController
                         ModuloPerRepository $moduloPerRepository,
                         PrivilegioTipousuarioRepository $privilegioTipousuarioRepository,
                         PrivilegioRepository $privilegioRepository,
+                        UsuarioRepository $usuarioRepository,
                         UsuarioTipoDocumentoRepository $tipoDocumento): Response
     {
         $this->denyAccessUnlessGranted('create','agendadores');
@@ -116,58 +117,67 @@ class AgendadoresController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager = $this->getDoctrine()->getManager();
-            $password=$usuario->getPassword();
-            $encoded=$encoder->encodePassword($usuario,$password);
-            $usuario->setPassword($encoded);
+            try{
+                $password=$usuario->getPassword();
+                $encoded=$encoder->encodePassword($usuario,$password);
+                $usuario->setPassword($encoded);
 
-           
-            $usuarioCuenta=new UsuarioCuenta();
-            $usuario->setTipoDocumento($tipoDocumento->find($request->request->get('cboTipoDocumento')));
-            $usuario->setFechaNacimiento(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_nacimiento')))));
-            $usuario->setFechaActivacion(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_ingreso')))));
-
-            $categoria=$this->getDoctrine()->getRepository(UsuarioCategoria::class)->find($request->request->get('cboUsuarioCategoria'));
-            $usuario->setCategoria($categoria);
-
-            $status=$this->getDoctrine()->getRepository(UsuarioStatus::class)->find($request->request->get('cboStatues'));
-            $usuario->setStatus($status);
-            $entityManager->persist($usuario);
-            $entityManager->flush();
-
-            $getcuentas=$_POST['cboEmpresa'];
-         
-            foreach($getcuentas as $getcuenta){
-                $cuenta=$this->getDoctrine()->getRepository(Cuenta::class)->find($getcuenta);
-                
+            
                 $usuarioCuenta=new UsuarioCuenta();
+                $usuario->setTipoDocumento($tipoDocumento->find($request->request->get('cboTipoDocumento')));
+                $usuario->setFechaNacimiento(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_nacimiento')))));
+                $usuario->setFechaActivacion(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_ingreso')))));
 
-                $usuarioCuenta->setCuenta($cuenta);
-                $usuarioCuenta->setUsuario($usuario);
-                
-                $entityManager->persist($usuarioCuenta);
-                $entityManager->flush();
-                $usuario->setEmpresaActual($cuenta->getEmpresa()->getId());
+                $categoria=$this->getDoctrine()->getRepository(UsuarioCategoria::class)->find($request->request->get('cboUsuarioCategoria'));
+                $usuario->setCategoria($categoria);
+
+                $status=$this->getDoctrine()->getRepository(UsuarioStatus::class)->find($request->request->get('cboStatues'));
+                $usuario->setStatus($status);
                 $entityManager->persist($usuario);
                 $entityManager->flush();
-            }
+
+                $getcuentas=$_POST['cboEmpresa'];
             
-            $privilegioTipousuarios=$privilegioTipousuarioRepository->findBy(['tipousuario'=>$usuario->getUsuarioTipo()->getId()]);
-            foreach($privilegioTipousuarios as $privilegioTipousuario){
-                $privilegio=$privilegioRepository->findBy(["moduloPer"=>$privilegioTipousuario->getModuloPer()->getId(),"usuario"=>$usuario->getId()]);
-                if(!$privilegio){
-    
-                    $privilegioNew=new Privilegio();
-                    $privilegioNew->setUsuario($usuario);
-                    $privilegioNew->setModuloPer($privilegioTipousuario->getModuloPer());
-                    $privilegioNew->setAccion($privilegioTipousuario->getAccion());
-    
-                    $entityManager = $this->getDoctrine()->getManager();
-                    $entityManager->persist($privilegioNew);
+                foreach($getcuentas as $getcuenta){
+                    $cuenta=$this->getDoctrine()->getRepository(Cuenta::class)->find($getcuenta);
+                    
+                    $usuarioCuenta=new UsuarioCuenta();
+
+                    $usuarioCuenta->setCuenta($cuenta);
+                    $usuarioCuenta->setUsuario($usuario);
+                    
+                    $entityManager->persist($usuarioCuenta);
                     $entityManager->flush();
-    
+                    $usuario->setEmpresaActual($cuenta->getEmpresa()->getId());
+                    $entityManager->persist($usuario);
+                    $entityManager->flush();
                 }
+                
+                $privilegioTipousuarios=$privilegioTipousuarioRepository->findBy(['tipousuario'=>$usuario->getUsuarioTipo()->getId()]);
+                foreach($privilegioTipousuarios as $privilegioTipousuario){
+                    $privilegio=$privilegioRepository->findBy(["moduloPer"=>$privilegioTipousuario->getModuloPer()->getId(),"usuario"=>$usuario->getId()]);
+                    if(!$privilegio){
+        
+                        $privilegioNew=new Privilegio();
+                        $privilegioNew->setUsuario($usuario);
+                        $privilegioNew->setModuloPer($privilegioTipousuario->getModuloPer());
+                        $privilegioNew->setAccion($privilegioTipousuario->getAccion());
+        
+                        $entityManager = $this->getDoctrine()->getManager();
+                        $entityManager->persist($privilegioNew);
+                        $entityManager->flush();
+        
+                    }
+                }
+            }catch(\Exception $e){
+                $usuarioexistente=$usuarioRepository->findOneBy(['username'=>$usuario->getUsername()]);
+                if($usuarioexistente){
+                    $this->addFlash('error', 'No se puede crear el usuario porque ya existe otro usuario con ese username. Nombre Usuario: '.$usuarioexistente->getNombre().' - Perfil: '.$usuarioexistente->getUsuarioTipo()->getNombre());
+                }else{
+                    $this->addFlash('error', 'Error al crear el usuario. Por favor, contacte al administrador del sistema. <div class="jumbotron"><p class="lead">Código error: '.$e->getTraceAsString().'</p></div>');
+                }
+                return $this->redirectToRoute('agendadores_index');
             }
-   
 
             return $this->redirectToRoute('agendadores_index');
         }

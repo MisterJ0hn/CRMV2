@@ -84,6 +84,7 @@ class TramitadoresController extends AbstractController
                         UsuarioTipoDocumentoRepository $tipoDocumento,
                         CarteraRepository $carteraRepository,
                         ContratoRepository $contratoRepository,
+                        UsuarioRepository $usuarioRepository,
                         PrivilegioTipousuarioRepository $privilegioTipousuarioRepository,
                         PrivilegioRepository $privilegioRepository
                         ): Response
@@ -131,70 +132,80 @@ class TramitadoresController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager = $this->getDoctrine()->getManager();
-            $password=$usuario->getPassword();
-            $encoded=$encoder->encodePassword($usuario,$password);
-            $usuario->setPassword($encoded);
+            try{
+                $password=$usuario->getPassword();
+                $encoded=$encoder->encodePassword($usuario,$password);
+                $usuario->setPassword($encoded);
 
-            
-            $usuario->setTipoDocumento($tipoDocumento->find($request->request->get('cboTipoDocumento')));
-
-            $usuario->setFechaNacimiento(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_nacimiento')))));
-            $usuario->setFechaActivacion(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_ingreso')))));
-            
-            $entityManager->persist($usuario);
-            $entityManager->flush();
-
-            $getcuentas=$_POST['cboEmpresa'];
-         
-            foreach($getcuentas as $getcuenta){
-                $cuenta=$this->getDoctrine()->getRepository(Cuenta::class)->find($getcuenta);
                 
-                $usuarioCuenta=new UsuarioCuenta();
+                $usuario->setTipoDocumento($tipoDocumento->find($request->request->get('cboTipoDocumento')));
 
-                $usuarioCuenta->setCuenta($cuenta);
-                $usuarioCuenta->setUsuario($usuario);
+                $usuario->setFechaNacimiento(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_nacimiento')))));
+                $usuario->setFechaActivacion(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_ingreso')))));
                 
-                $entityManager->persist($usuarioCuenta);
-                $entityManager->flush();
-                $usuario->setEmpresaActual($cuenta->getEmpresa()->getId());
                 $entityManager->persist($usuario);
                 $entityManager->flush();
-            }
-       
-           if(isset($_POST['cboCarteras'])){
-                $carteras=$_POST['cboCarteras'];
-                
-                foreach($carteras as $cartera){
-                    $usuarioCartera=new UsuarioCartera();
-                    $usuarioCartera->setUsuario($usuario);
-                    $usuarioCartera->setCartera($carteraRepository->find($cartera));
 
-                    $entityManager->persist($usuarioCartera);
+                $getcuentas=$_POST['cboEmpresa'];
+            
+                foreach($getcuentas as $getcuenta){
+                    $cuenta=$this->getDoctrine()->getRepository(Cuenta::class)->find($getcuenta);
+                    
+                    $usuarioCuenta=new UsuarioCuenta();
+
+                    $usuarioCuenta->setCuenta($cuenta);
+                    $usuarioCuenta->setUsuario($usuario);
+                    
+                    $entityManager->persist($usuarioCuenta);
                     $entityManager->flush();
-
-                
-                   
-                    $contratoRepository->updateTramitadorCartera($usuario->getId(),$cartera->getId());
-
-
-                }
-            }
-
-            $privilegioTipousuarios=$privilegioTipousuarioRepository->findBy(['tipousuario'=>$usuario->getUsuarioTipo()->getId()]);
-            foreach($privilegioTipousuarios as $privilegioTipousuario){
-                $privilegio=$privilegioRepository->findBy(["moduloPer"=>$privilegioTipousuario->getModuloPer()->getId(),"usuario"=>$usuario->getId()]);
-                if(!$privilegio){
-    
-                    $privilegioNew=new Privilegio();
-                    $privilegioNew->setUsuario($usuario);
-                    $privilegioNew->setModuloPer($privilegioTipousuario->getModuloPer());
-                    $privilegioNew->setAccion($privilegioTipousuario->getAccion());
-    
-                    $entityManager = $this->getDoctrine()->getManager();
-                    $entityManager->persist($privilegioNew);
+                    $usuario->setEmpresaActual($cuenta->getEmpresa()->getId());
+                    $entityManager->persist($usuario);
                     $entityManager->flush();
-    
                 }
+        
+            if(isset($_POST['cboCarteras'])){
+                    $carteras=$_POST['cboCarteras'];
+                    
+                    foreach($carteras as $cartera){
+                        $usuarioCartera=new UsuarioCartera();
+                        $usuarioCartera->setUsuario($usuario);
+                        $usuarioCartera->setCartera($carteraRepository->find($cartera));
+
+                        $entityManager->persist($usuarioCartera);
+                        $entityManager->flush();
+
+                    
+                    
+                        $contratoRepository->updateTramitadorCartera($usuario->getId(),$cartera->getId());
+
+
+                    }
+                }
+
+                $privilegioTipousuarios=$privilegioTipousuarioRepository->findBy(['tipousuario'=>$usuario->getUsuarioTipo()->getId()]);
+                foreach($privilegioTipousuarios as $privilegioTipousuario){
+                    $privilegio=$privilegioRepository->findBy(["moduloPer"=>$privilegioTipousuario->getModuloPer()->getId(),"usuario"=>$usuario->getId()]);
+                    if(!$privilegio){
+        
+                        $privilegioNew=new Privilegio();
+                        $privilegioNew->setUsuario($usuario);
+                        $privilegioNew->setModuloPer($privilegioTipousuario->getModuloPer());
+                        $privilegioNew->setAccion($privilegioTipousuario->getAccion());
+        
+                        $entityManager = $this->getDoctrine()->getManager();
+                        $entityManager->persist($privilegioNew);
+                        $entityManager->flush();
+        
+                    }
+                }
+            }catch(\Exception $e){
+                $usuarioexistente=$usuarioRepository->findOneBy(['username'=>$usuario->getUsername()]);
+                if($usuarioexistente){
+                    $this->addFlash('error', 'No se puede crear el usuario porque ya existe otro usuario con ese username. Nombre Usuario: '.$usuarioexistente->getNombre().' - Perfil: '.$usuarioexistente->getUsuarioTipo()->getNombre());
+                }else{
+                    $this->addFlash('error', 'Error al crear el usuario. Por favor, contacte al administrador del sistema. <div class="jumbotron"><p class="lead">Código error: '.$e->getTraceAsString().'</p></div>');
+                }
+                return $this->redirectToRoute('tramitadores_index');
             }
 
             return $this->redirectToRoute('tramitadores_index');

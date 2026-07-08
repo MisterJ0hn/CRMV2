@@ -72,6 +72,7 @@ class JefeAbogadosController extends AbstractController
                         PrivilegioTipousuarioRepository $privilegioTipousuarioRepository,
                         PrivilegioRepository $privilegioRepository,
                         UsuarioTipoDocumentoRepository $tipoDocumento,
+                        UsuarioRepository $usuarioRepository,
                         GrupoRepository $grupoRepository): Response
     {
         $this->denyAccessUnlessGranted('create','jefe_abogados');
@@ -110,6 +111,7 @@ class JefeAbogadosController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            try{
             $entityManager = $this->getDoctrine()->getManager();
             $password=$usuario->getPassword();
             $encoded=$encoder->encodePassword($usuario,$password);
@@ -174,6 +176,15 @@ class JefeAbogadosController extends AbstractController
                     $entityManager->flush();
     
                 }
+            }
+            }catch(\Exception $e){
+                $usuarioexistente=$usuarioRepository->findOneBy(['username'=>$usuario->getUsername()]);
+                if($usuarioexistente){
+                    $this->addFlash('error', 'No se puede crear el usuario porque ya existe otro usuario con ese username. Nombre Usuario: '.$usuarioexistente->getNombre().' - Perfil: '.$usuarioexistente->getUsuarioTipo()->getNombre());
+                }else{
+                    $this->addFlash('error', 'Error al crear el usuario. Por favor, contacte al administrador del sistema. <div class="jumbotron"><p class="lead">Código error: '.$e->getTraceAsString().'</p></div>');
+                }
+                return $this->redirectToRoute('jefe_abogados_index');
             }
 
             return $this->redirectToRoute('jefe_abogados_index');

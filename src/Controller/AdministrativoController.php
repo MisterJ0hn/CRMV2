@@ -70,6 +70,7 @@ class AdministrativoController extends AbstractController
                         ModuloPerRepository $moduloPerRepository,
                         UsuarioTipoDocumentoRepository $tipoDocumento,
                         PrivilegioTipousuarioRepository $privilegioTipousuarioRepository,
+                        UsuarioRepository $usuarioRepository,
                         PrivilegioRepository $privilegioRepository): Response
     {
         $this->denyAccessUnlessGranted('create','administrativo');
@@ -108,51 +109,62 @@ class AdministrativoController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            
             $entityManager = $this->getDoctrine()->getManager();
-            $password=$usuario->getPassword();
-            $encoded=$encoder->encodePassword($usuario,$password);
-            $usuario->setPassword($encoded);
+            try{
+                $password=$usuario->getPassword();
+                $encoded=$encoder->encodePassword($usuario,$password);
+                $usuario->setPassword($encoded);
 
-            $usuario->setFechaNacimiento(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_nacimiento')))));
-            $usuario->setFechaActivacion(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_ingreso')))));
+                $usuario->setFechaNacimiento(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_nacimiento')))));
+                $usuario->setFechaActivacion(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_ingreso')))));
 
-            $usuario->setTipoDocumento($tipoDocumento->find($request->request->get('cboTipoDocumento')));
+                $usuario->setTipoDocumento($tipoDocumento->find($request->request->get('cboTipoDocumento')));
 
-           
-            $entityManager->persist($usuario);
-            $entityManager->flush();
-
-            $getcuentas=$_POST['cboEmpresa'];
-         
-            foreach($getcuentas as $getcuenta){
-                $cuenta=$this->getDoctrine()->getRepository(Cuenta::class)->find($getcuenta);
-                
-                $usuarioCuenta=new UsuarioCuenta();
-
-                $usuarioCuenta->setCuenta($cuenta);
-                $usuarioCuenta->setUsuario($usuario);
-                
-                $entityManager->persist($usuarioCuenta);
-                $entityManager->flush();
-                $usuario->setEmpresaActual($cuenta->getEmpresa()->getId());
+            
                 $entityManager->persist($usuario);
                 $entityManager->flush();
-            }
-            $privilegioTipousuarios=$privilegioTipousuarioRepository->findBy(['tipousuario'=>$usuario->getUsuarioTipo()->getId()]);
-            foreach($privilegioTipousuarios as $privilegioTipousuario){
-                $privilegio=$privilegioRepository->findBy(["moduloPer"=>$privilegioTipousuario->getModuloPer()->getId(),"usuario"=>$usuario->getId()]);
-                if(!$privilegio){
-    
-                    $privilegioNew=new Privilegio();
-                    $privilegioNew->setUsuario($usuario);
-                    $privilegioNew->setModuloPer($privilegioTipousuario->getModuloPer());
-                    $privilegioNew->setAccion($privilegioTipousuario->getAccion());
-    
-                    $entityManager = $this->getDoctrine()->getManager();
-                    $entityManager->persist($privilegioNew);
+
+                $getcuentas=$_POST['cboEmpresa'];
+            
+                foreach($getcuentas as $getcuenta){
+                    $cuenta=$this->getDoctrine()->getRepository(Cuenta::class)->find($getcuenta);
+                    
+                    $usuarioCuenta=new UsuarioCuenta();
+
+                    $usuarioCuenta->setCuenta($cuenta);
+                    $usuarioCuenta->setUsuario($usuario);
+                    
+                    $entityManager->persist($usuarioCuenta);
                     $entityManager->flush();
-    
+                    $usuario->setEmpresaActual($cuenta->getEmpresa()->getId());
+                    $entityManager->persist($usuario);
+                    $entityManager->flush();
                 }
+                $privilegioTipousuarios=$privilegioTipousuarioRepository->findBy(['tipousuario'=>$usuario->getUsuarioTipo()->getId()]);
+                foreach($privilegioTipousuarios as $privilegioTipousuario){
+                    $privilegio=$privilegioRepository->findBy(["moduloPer"=>$privilegioTipousuario->getModuloPer()->getId(),"usuario"=>$usuario->getId()]);
+                    if(!$privilegio){
+        
+                        $privilegioNew=new Privilegio();
+                        $privilegioNew->setUsuario($usuario);
+                        $privilegioNew->setModuloPer($privilegioTipousuario->getModuloPer());
+                        $privilegioNew->setAccion($privilegioTipousuario->getAccion());
+        
+                        $entityManager = $this->getDoctrine()->getManager();
+                        $entityManager->persist($privilegioNew);
+                        $entityManager->flush();
+        
+                    }
+                }
+            }catch(\Exception $e){
+                $usuarioexistente=$usuarioRepository->findOneBy(['username'=>$usuario->getUsername()]);
+                if($usuarioexistente){
+                    $this->addFlash('error', 'No se puede crear el usuario porque ya existe otro usuario con ese username. Nombre Usuario: '.$usuarioexistente->getNombre().' - Perfil: '.$usuarioexistente->getUsuarioTipo()->getNombre());
+                }else{
+                    $this->addFlash('error', 'Error al crear el usuario. Por favor, contacte al administrador del sistema. <div class="jumbotron"><p class="lead">Código error: '.$e->getTraceAsString().'</p></div>');
+                }
+                return $this->redirectToRoute('administrativo_index');
             }
 
             return $this->redirectToRoute('administrativo_index');

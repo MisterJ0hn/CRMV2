@@ -81,6 +81,7 @@ class CobradoresController extends AbstractController
                         ConfiguracionRepository $configuracionRepository,
                         UsuarioTipoDocumentoRepository $tipoDocumento,
                         EquipoTrabajoRepository $equipoTrabajoRepository,
+                        UsuarioRepository $usuarioRepository,
                         EquipoTrabajoUsuarioRepository $equipoTrabajoUsuarioRepository): Response
     {
         $this->denyAccessUnlessGranted('create','cobradores');
@@ -125,82 +126,91 @@ class CobradoresController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager = $this->getDoctrine()->getManager();
-            $password=$usuario->getPassword();
-            $encoded=$encoder->encodePassword($usuario,$password);
-            $usuario->setPassword($encoded);
+            try{
+                $password=$usuario->getPassword();
+                $encoded=$encoder->encodePassword($usuario,$password);
+                $usuario->setPassword($encoded);
 
-           
-            $usuarioCuenta=new UsuarioCuenta();
-            $usuario->setTipoDocumento($tipoDocumento->find($request->request->get('cboTipoDocumento')));
             
-            
-            $usuario->setFechaNacimiento(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_nacimiento')))));
-            $usuario->setFechaActivacion(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_ingreso')))));
-            
-           /* $status=$this->getDoctrine()->getRepository(UsuarioStatus::class)->find($request->request->get('cboStatues'));
-            $usuario->setStatus($status);*/
-            $entityManager->persist($usuario);
-            $entityManager->flush();
-            
-            $equipo = $equipoTrabajoRepository->find($request->request->get('cboEquipo'));
-            
-            if($equipo){
-                $equipoTrabajoUsuarios = $equipoTrabajoUsuarioRepository->findBy(['usuario'=>$usuario->getId()]);
-                foreach($equipoTrabajoUsuarios as $equipoTrabajoUsuario){
-                    $entityManager->remove($equipoTrabajoUsuario);
-                    $entityManager->flush();
-                }
-                $equipoTrabajoUsuario=new EquipoTrabajoUsuario();
-                $equipoTrabajoUsuario->setUsuario($usuario);
-                $equipoTrabajoUsuario->setEquipoTrabajo($equipo);
-                $entityManager->persist($equipoTrabajoUsuario);
-                $entityManager->flush();
-            }
-            $getcuentas=$_POST['cboEmpresa'];
-         
-            foreach($getcuentas as $getcuenta){
-                $cuenta=$this->getDoctrine()->getRepository(Cuenta::class)->find($getcuenta);
-                
                 $usuarioCuenta=new UsuarioCuenta();
-
-                $usuarioCuenta->setCuenta($cuenta);
-                $usuarioCuenta->setUsuario($usuario);
+                $usuario->setTipoDocumento($tipoDocumento->find($request->request->get('cboTipoDocumento')));
                 
-                $entityManager->persist($usuarioCuenta);
-                $entityManager->flush();
-                $usuario->setEmpresaActual($cuenta->getEmpresa()->getId());
+                
+                $usuario->setFechaNacimiento(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_nacimiento')))));
+                $usuario->setFechaActivacion(new \DateTime(date('Y-m-d H:i',strtotime($request->request->get('fecha_ingreso')))));
+                
+            /* $status=$this->getDoctrine()->getRepository(UsuarioStatus::class)->find($request->request->get('cboStatues'));
+                $usuario->setStatus($status);*/
                 $entityManager->persist($usuario);
                 $entityManager->flush();
-            }
-            $lotes=$_POST['cboLotes'];
-            
-            
-            foreach($lotes as $lote){
                 
-                $usuarioLote=new UsuarioLote();            
-                $usuarioLote->setUsuario($usuario);
-                $usuarioLote->setLote($lotesRepository->find($lote));
-                $usuarioLote->setEquipoTrabajo($equipo);
-                $entityManager->persist($usuarioLote);
-                $entityManager->flush();
-            }
-            $privilegioTipousuarios=$privilegioTipousuarioRepository->findBy(['tipousuario'=>$usuario->getUsuarioTipo()->getId()]);
-            foreach($privilegioTipousuarios as $privilegioTipousuario){
-                $privilegio=$privilegioRepository->findBy(["moduloPer"=>$privilegioTipousuario->getModuloPer()->getId(),"usuario"=>$usuario->getId()]);
-                if(!$privilegio){
-    
-                    $privilegioNew=new Privilegio();
-                    $privilegioNew->setUsuario($usuario);
-                    $privilegioNew->setModuloPer($privilegioTipousuario->getModuloPer());
-                    $privilegioNew->setAccion($privilegioTipousuario->getAccion());
-    
-                    $entityManager = $this->getDoctrine()->getManager();
-                    $entityManager->persist($privilegioNew);
+                $equipo = $equipoTrabajoRepository->find($request->request->get('cboEquipo'));
+                
+                if($equipo){
+                    $equipoTrabajoUsuarios = $equipoTrabajoUsuarioRepository->findBy(['usuario'=>$usuario->getId()]);
+                    foreach($equipoTrabajoUsuarios as $equipoTrabajoUsuario){
+                        $entityManager->remove($equipoTrabajoUsuario);
+                        $entityManager->flush();
+                    }
+                    $equipoTrabajoUsuario=new EquipoTrabajoUsuario();
+                    $equipoTrabajoUsuario->setUsuario($usuario);
+                    $equipoTrabajoUsuario->setEquipoTrabajo($equipo);
+                    $entityManager->persist($equipoTrabajoUsuario);
                     $entityManager->flush();
-    
                 }
+                $getcuentas=$_POST['cboEmpresa'];
+            
+                foreach($getcuentas as $getcuenta){
+                    $cuenta=$this->getDoctrine()->getRepository(Cuenta::class)->find($getcuenta);
+                    
+                    $usuarioCuenta=new UsuarioCuenta();
+
+                    $usuarioCuenta->setCuenta($cuenta);
+                    $usuarioCuenta->setUsuario($usuario);
+                    
+                    $entityManager->persist($usuarioCuenta);
+                    $entityManager->flush();
+                    $usuario->setEmpresaActual($cuenta->getEmpresa()->getId());
+                    $entityManager->persist($usuario);
+                    $entityManager->flush();
+                }
+                $lotes=$_POST['cboLotes'];
+                
+                
+                foreach($lotes as $lote){
+                    
+                    $usuarioLote=new UsuarioLote();            
+                    $usuarioLote->setUsuario($usuario);
+                    $usuarioLote->setLote($lotesRepository->find($lote));
+                    $usuarioLote->setEquipoTrabajo($equipo);
+                    $entityManager->persist($usuarioLote);
+                    $entityManager->flush();
+                }
+                $privilegioTipousuarios=$privilegioTipousuarioRepository->findBy(['tipousuario'=>$usuario->getUsuarioTipo()->getId()]);
+                foreach($privilegioTipousuarios as $privilegioTipousuario){
+                    $privilegio=$privilegioRepository->findBy(["moduloPer"=>$privilegioTipousuario->getModuloPer()->getId(),"usuario"=>$usuario->getId()]);
+                    if(!$privilegio){
+        
+                        $privilegioNew=new Privilegio();
+                        $privilegioNew->setUsuario($usuario);
+                        $privilegioNew->setModuloPer($privilegioTipousuario->getModuloPer());
+                        $privilegioNew->setAccion($privilegioTipousuario->getAccion());
+        
+                        $entityManager = $this->getDoctrine()->getManager();
+                        $entityManager->persist($privilegioNew);
+                        $entityManager->flush();
+        
+                    }
+                }
+            }catch(\Exception $e){
+                $usuarioexistente=$usuarioRepository->findOneBy(['username'=>$usuario->getUsername()]);
+                if($usuarioexistente){
+                    $this->addFlash('error', 'No se puede crear el usuario porque ya existe otro usuario con ese username. Nombre Usuario: '.$usuarioexistente->getNombre().' - Perfil: '.$usuarioexistente->getUsuarioTipo()->getNombre());
+                }else{
+                    $this->addFlash('error', 'Error al crear el usuario. Por favor, contacte al administrador del sistema. <div class="jumbotron"><p class="lead">Código error: '.$e->getTraceAsString().'</p></div>');
+                }
+                return $this->redirectToRoute('cobradores_index');
             }
-   
 
             return $this->redirectToRoute('cobradores_index');
         }
