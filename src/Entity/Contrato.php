@@ -965,6 +965,14 @@ class Contrato
         return $this;
     }
 
+    //Total de cuotas
+    public function getCuotasNoAnuladas(): int
+    {
+        return $this->detalleCuotas->filter(function (Cuota $cuota) {
+            return $cuota->getAnular() !== true;
+        })->count();
+    }
+
     public function removeDetalleCuota(Cuota $detalleCuota): self
     {
         if ($this->detalleCuotas->removeElement($detalleCuota)) {

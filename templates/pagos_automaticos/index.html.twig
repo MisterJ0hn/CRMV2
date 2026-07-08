@@ -123,7 +123,7 @@
                     <input type="text" class="form-control" name="bFolio" placeholder="" value="{{ bFolio }}">
                 </div>
 
-                <div class="col-sm-12 col-md-3">
+                <div class="col-sm-12 col-md-2">
                     <label>Nombre/Teléfono</label>
                     <input type="text" class="form-control" name="bFiltro" placeholder="" value="{{ bFiltro }}">
                 </div>
@@ -137,7 +137,13 @@
                     <button type="submit" class="btn btn-primary btn-buscar" style="margin-top: 30px;">
                         <i class="fas fa-search"></i>
                     </button>
+                    {% if is_granted('full','exportar_pago_automatico') %}
+                    <button type="button" class="btn btn-success btn-excel" style="margin-top: 30px;" title="Descargar Excel">
+                        <i class="fas fa-file-excel"></i>
+                    </button>
+                    {% endif %}
                 </div>
+                
             </div>
         </div>
     </div>
@@ -155,6 +161,7 @@
                     <th>{{ knp_pagination_sortable(contratos, 'Abogado', 'contrato.agenda.abogado') }} {% if contratos.isSorted('contrato.agenda.abogado') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>{{ knp_pagination_sortable(contratos, 'Cto/Anexo', 'fechaCreacion') }} {% if contratos.isSorted('fechaCreacion') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>{{ knp_pagination_sortable(contratos, 'Estado', 'EstadoSuscripcion') }} {% if contratos.isSorted('EstadoSuscripcion') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th style="text-align: center !important;" title="N°Cuotas">N°Cuotas</th>
                     <th style="text-align: center !important;">{{ knp_pagination_sortable(contratos, 'Cuota', 'numeroCuota') }} {% if contratos.isSorted('numeroCuota') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th style="text-align: center !important;">ValorCuota</th>
                     <th style="text-align: center !important;">VctoCuota</th>
@@ -183,6 +190,7 @@
                     </td>
                     <td align="left">{{ vwContrato.fechaCreacion|date('Y-m-d H:i') }}</td>
                     <td align="left">{{ vwContrato.estadoSuscripcion }}</td>
+                    <td align="center">{{ contrato.cuotasNoAnuladas }}</td>
                     <td align="center">{{ vwContrato.numeroCuota }}</td>
                     <td  align="center">${{ vwContrato.montoCuota|number_format(0, ',', '.') }}</td>
                     
@@ -228,7 +236,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="16">No hay registros</td>
+                    <td colspan="17">No hay registros</td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -296,6 +304,14 @@
     $(".btn-buscar").on("click", function () {
         $(".form-envio").attr("action", "/pagos_automaticos/");
         $(".form-envio").submit();
+    });
+
+    $(".btn-excel").on("click", function () {
+        $(".form-envio").attr("action", "/pagos_automaticos/excel");
+        $(".form-envio").submit();
+        $(".form-envio").attr("action", "/pagos_automaticos/");
+
+        $("button").prop("disabled", false);
     });
 
     // Handle historico button click
