@@ -32,7 +32,8 @@ class ContratoRepository extends ServiceEntityRepository
         $conPlus  = '+' . $sinPlus;
         $query=$this->createQueryBuilder('c')
             ->leftJoin('c.cartera', 'car')
-            ->leftJoin('car.materia', 'mat')->addSelect('car', 'mat')->where('c.telefono IN (:variantes) OR c.telefonoRecado IN (:variantes)')
+            ->leftJoin('c.cliente', 'cli')
+            ->leftJoin('car.materia', 'mat')->addSelect('car', 'mat')->where('cli.telefono IN (:variantes) OR c.telefonoRecado IN (:variantes)')
             ->setParameter('variantes', [$sinPlus, $conPlus]);
 
         $query->andWhere(" ((c.fechaCreacion between  date_sub(current_timestamp(),c.vigencia,'month') and current_timestamp()) )
@@ -49,7 +50,8 @@ class ContratoRepository extends ServiceEntityRepository
     public function findActiveByRut(string $rut): array
     {
         return $this->createQueryBuilder('c')
-            ->where(" REPLACE(REPLACE(c.rut, '.', ''), '-', '') = REPLACE(REPLACE(:rut, '.', ''), '-', '') ")
+            ->leftJoin('c.cliente', 'cli')
+            ->where(" REPLACE(REPLACE(cli.rut, '.', ''), '-', '') = REPLACE(REPLACE(:rut, '.', ''), '-', '') ")
             ->andWhere('c.isFinalizado = false OR c.isFinalizado IS NULL')
             ->setParameter('rut', $rut)
             ->orderBy('c.fechaCreacion', 'DESC')
@@ -94,6 +96,7 @@ class ContratoRepository extends ServiceEntityRepository
         $query = $this->createQueryBuilder('c');
         $query->join('c.agenda', 'a');
         $query->join('a.cuenta', 'cu');
+        $query->leftJoin('c.cliente', 'cli');
         $query->andWhere('a.status IN (7,14)');
         $query->andWhere('c.isFinalizado = false OR c.isFinalizado IS NULL');
         $query->andWhere('c.esVip=false');
@@ -104,7 +107,7 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere('a.abogado = ' . $usuario);
         }
         if (!is_null($filtro)) {
-            $query->andWhere("(c.nombre LIKE '%$filtro%' OR c.telefono LIKE '%$filtro%' OR c.email LIKE '%$filtro%')");
+            $query->andWhere("(cli.nombre LIKE '%$filtro%' OR cli.telefono LIKE '%$filtro%' OR cli.correo LIKE '%$filtro%')");
         }
         if (!is_null($compania)) {
             $query->andWhere('a.cuenta in (' . $compania.')');
@@ -125,7 +128,8 @@ class ContratoRepository extends ServiceEntityRepository
         ->join('a.agendador','ag')
         ->join('a.abogado','ab')
         ->leftJoin('c.tramitador', 't')
-        ->leftJoin('c.sucursal','s');
+        ->leftJoin('c.sucursal','s')
+        ->leftJoin('c.cliente','cli');
 
         if (!is_null($empresa)) {
             $query->andWhere('cu.empresa = ' . $empresa);
@@ -137,7 +141,7 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere('a.agendador = ' . $agendador);
         }
         if (!is_null($filtro)) {
-            $query->andWhere("(c.nombre like '%$filtro%' or c.telefono like '%$filtro%' or c.email like '%$filtro%')");
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')");
         }
         if (!is_null($compania)) {
             $query->andWhere('a.cuenta = ' . $compania);
@@ -154,6 +158,7 @@ class ContratoRepository extends ServiceEntityRepository
         $query = $this->createQueryBuilder('c');
         $query->join('c.agenda', 'a');
         $query->join('a.cuenta', 'cu');
+        $query->leftJoin('c.cliente', 'cli');
 
         $query->andWhere(" EXISTS(
         SELECT 1 
@@ -174,7 +179,7 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere('a.agendador = ' . $agendador);
         }
         if (!is_null($filtro)) {
-            $query->andWhere("(c.nombre like '%$filtro%' or c.telefono like '%$filtro%' or c.email like '%$filtro%')");
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')");
         }
         if (!is_null($compania)) {
             $query->andWhere('a.cuenta = ' . $compania);
@@ -194,20 +199,21 @@ class ContratoRepository extends ServiceEntityRepository
         $query->join('c.agenda','a');
         $query->join('a.cuenta','cu');
         $query->leftJoin('c.estadoEncuesta','e');
+        $query->leftJoin('c.cliente','cli');
         //$query->andWhere('(DATEDIFF(now(), c.fechaPrimerPago)/30)<c.vigencia');
         if(!is_null($empresa)){
-            
+
             $query->andWhere('cu.empresa = '.$empresa);
         }
         if(!is_null($usuario)){
             $query->andWhere('a.abogado = '.$usuario);
         }
         if(!is_null($agendador)){
-            
+
             $query->andWhere('a.agendador = '.$agendador);
         }
-        if(!is_null($filtro)){ 
-            $query->andWhere("(c.nombre like '%$filtro%' or c.telefono like '%$filtro%' or c.email like '%$filtro%')")
+        if(!is_null($filtro)){
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')")
          ;
 
         }
@@ -287,26 +293,27 @@ class ContratoRepository extends ServiceEntityRepository
         $query=$this->createQueryBuilder('c');
         $query->join('c.agenda','a');
         $query->join('a.cuenta','cu');
+        $query->leftJoin('c.cliente','cli');
         if(!is_null($empresa)){
-            
+
             $query->andWhere('cu.empresa = '.$empresa);
         }
         if(!is_null($usuario)){
             $query->andWhere('a.abogado = '.$usuario);
         }
         if(!is_null($agendador)){
-            
+
             $query->andWhere('a.agendador = '.$agendador);
         }
-        if(!is_null($filtro)){ 
-            $query->andWhere("(c.nombre like '%$filtro%' or c.telefono like '%$filtro%' or c.email like '%$filtro%')")
+        if(!is_null($filtro)){
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')")
          ;
 
         }
         if(!is_null($compania)){
             $query->andWhere('a.cuenta = '.$compania);
         }
-        if(!is_null($otros)){ 
+        if(!is_null($otros)){
             $query->andWhere($otros)
          ;
 
@@ -434,7 +441,8 @@ class ContratoRepository extends ServiceEntityRepository
     }
     public function findNombreRut($texto){
         $query=$this->createQueryBuilder('c')
-        ->where("c.nombre like '%".$texto."%' or c.rut like '%".$texto."%' ");
+        ->leftJoin('c.cliente', 'cli')
+        ->where("cli.nombre like '%".$texto."%' or cli.rut like '%".$texto."%' ");
 
         return $query
             ->getQuery()
@@ -451,23 +459,24 @@ class ContratoRepository extends ServiceEntityRepository
         $query->join('a.cuenta','cu');
         $query->join('cu.cuentaMaterias','cm');
         $query->join('cm.materia','m');
+        $query->leftJoin('c.cliente','cli');
 
        // $query->andWhere('(DATEDIFF(now(), c.fechaCreacion)/30)>'.$vigencia);
 
        $query->andWhere('timestampdiff(month,c.fechaCreacion,now())>'.$vigencia);
         if(!is_null($empresa)){
-            
+
             $query->andWhere('cu.empresa = '.$empresa);
         }
         if(!is_null($usuario)){
             $query->andWhere('a.abogado = '.$usuario);
         }
         if(!is_null($agendador)){
-            
+
             $query->andWhere('a.agendador = '.$agendador);
         }
-        if(!is_null($filtro)){ 
-            $query->andWhere("(c.nombre like '%$filtro%' or c.telefono like '%$filtro%' or c.email like '%$filtro%')")
+        if(!is_null($filtro)){
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')")
          ;
 
         }
@@ -495,20 +504,21 @@ class ContratoRepository extends ServiceEntityRepository
         $query->join('a.cuenta','cu');
         $query->join('cu.cuentaMaterias','cm');
         $query->join('cm.materia','m');
-    
+        $query->leftJoin('c.cliente','cli');
+
         if(!is_null($empresa)){
-            
+
             $query->andWhere('cu.empresa = '.$empresa);
         }
         if(!is_null($usuario)){
             $query->andWhere('a.abogado = '.$usuario);
         }
         if(!is_null($agendador)){
-            
+
             $query->andWhere('a.agendador = '.$agendador);
         }
-        if(!is_null($filtro)){ 
-            $query->andWhere("(c.nombre like '%$filtro%' or c.telefono like '%$filtro%' or c.email like '%$filtro%')")
+        if(!is_null($filtro)){
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')")
          ;
 
         }
@@ -533,16 +543,17 @@ class ContratoRepository extends ServiceEntityRepository
         ->select(array('c','e','count(c) as cantidad'))
         ->join('c.agenda','a')
         ->leftJoin('c.estadoEncuesta','e')
+        ->leftJoin('c.cliente','cli')
         ->where('c.estadoEncuesta in (1,2)');
-        
+
         if($otros != null){
             $query->andWhere($otros);
         }
         if($usuario != null){
             $query->andWhere("a.abodado=$usuario");
         }
-        if(!is_null($filtro)){ 
-            $query->andWhere("(c.nombre like '%$filtro%' or c.telefono like '%$filtro%' or c.email like '%$filtro%')")
+        if(!is_null($filtro)){
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')")
          ;
 
         }
@@ -728,6 +739,7 @@ class ContratoRepository extends ServiceEntityRepository
         $query = $this->createQueryBuilder('c');
         $query->join('c.agenda', 'a');
         $query->join('a.cuenta', 'cu')
+        ->leftJoin('c.cliente', 'cli')
         ->andWhere('c.fechaDesiste is null');
 
 
@@ -775,8 +787,8 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere('c.tramitador = ' . $tramitador);
         }
         if (!is_null($filtro)) {
-            $query->andWhere("(c.nombre LIKE :filtro OR REPLACE(REPLACE(c.rut, '.', ''), '-', '') = REPLACE(REPLACE(:filtroRut, '.', ''), '-', '') OR c.folio LIKE :filtro)")
-               ->setParameter('filtro', '%' . $filtro . '%') 
+            $query->andWhere("(cli.nombre LIKE :filtro OR REPLACE(REPLACE(cli.rut, '.', ''), '-', '') = REPLACE(REPLACE(:filtroRut, '.', ''), '-', '') OR c.folio LIKE :filtro)")
+               ->setParameter('filtro', '%' . $filtro . '%')
                ->setParameter('filtroRut', $filtro);
         }
         if (!is_null($materia)) {
@@ -936,6 +948,7 @@ class ContratoRepository extends ServiceEntityRepository
             ->join('a.cuenta', 'cu')
             ->leftJoin('c.estadoEncuesta', 'ee')
             ->leftJoin('c.grupo', 'g')
+            ->leftJoin('c.cliente', 'cli')
             ->andWhere('a.status IN (7, 14)');
 
         if (!is_null($empresa)) {
@@ -948,7 +961,7 @@ class ContratoRepository extends ServiceEntityRepository
             $qb->andWhere('a.cuenta = :compania')->setParameter('compania', $compania);
         }
         if (!is_null($filtro)) {
-            $qb->andWhere('(c.nombre LIKE :filtro OR c.telefono LIKE :filtro OR c.email LIKE :filtro)')
+            $qb->andWhere('(cli.nombre LIKE :filtro OR cli.telefono LIKE :filtro OR cli.correo LIKE :filtro)')
                ->setParameter('filtro', '%' . $filtro . '%');
         }
         if (!is_null($folio) && $folio !== '') {

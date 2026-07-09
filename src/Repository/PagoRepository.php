@@ -200,7 +200,7 @@ class PagoRepository extends ServiceEntityRepository
         $sql = "
             SELECT
                 c.folio,
-                c.nombre AS contrato_nombre,
+                cli.nombre AS contrato_nombre,
                 rp.anio,
                 rp.mes,
                 rp.fecha_pago,
@@ -256,6 +256,7 @@ class PagoRepository extends ServiceEntityRepository
                 GROUP BY p.contrato_id, YEAR(p.fecha_pago), MONTH(p.fecha_pago)
             ) rp
             INNER JOIN contrato c ON rp.contrato_id = c.id
+            LEFT JOIN cliente cli ON cli.id = c.cliente_id
             LEFT JOIN usuario u ON u.id = c.tramitador_id
             INNER JOIN agenda ON c.agenda_id = agenda.id
             INNER JOIN cuenta ON agenda.cuenta_id = cuenta.id
