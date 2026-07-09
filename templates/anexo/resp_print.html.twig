@@ -10,7 +10,7 @@
   <p align="justify">En Santiago de Chile a {{anexo.fechaCreacion|date("d-m-Y")}}, entre Estudio Jur&iacute;dico Alfaro y Madariaga Spa., rol &uacute;nico tributario 76.638.999-6 
   empresa de servicios Jur&iacute;dicos con domicilio en casa matriz <strong>Hu&eacute;rfanos 1147, 
   oficina 501</strong>, comuna de Santiago, Regi&oacute;n Metropolitana, quien en adelante se denominar&aacute; indistintamente <strong>&quot;Estudio Jur&iacute;dico&quot;</strong> y por la otra don 
-  (&ntilde;a) <strong>{{anexo.contrato.nombre|title|special_chars|raw}}</strong>, C&eacute;dula de identidad N&deg; {{anexo.contrato.rut}}, 
+  (&ntilde;a) <strong>{{anexo.contrato.cliente.nombre|title|special_chars|raw}}</strong>, C&eacute;dula de identidad N&deg; {{anexo.contrato.cliente.rut}}, 
   han celebrado con fecha de hoy, de manera libre y espont&aacute;nea, un anexo de contrato, desglosando su contenido en lo siguiente.</p>
   
   <p align="justify"><strong>PRIMERO:</strong> El cliente contrat&oacute; {{anexo.contrato.agenda.reunion|special_chars|raw}} los Servicios Profesionales con El 
@@ -94,8 +94,8 @@
       <tr>
           <td><p align="center"><strong>ESTUDIO JURIDICO ALFARO Y MADARIAGA</strong></p>
               <p align="center"><strong>R.U.T.: 76.638.999-6</strong></p>            </td>
-              <td><p align="center"><strong>{{anexo.contrato.nombre|special_chars|raw}}</strong></p>
-                  <p align="center"><strong>RUT: {{anexo.contrato.rut}}</strong></p>
+              <td><p align="center"><strong>{{anexo.contrato.cliente.nombre|special_chars|raw}}</strong></p>
+                  <p align="center"><strong>RUT: {{anexo.contrato.cliente.rut}}</strong></p>
                   </td>
   
       </tr>

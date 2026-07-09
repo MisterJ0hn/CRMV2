@@ -39,12 +39,12 @@
                 <select name="cboSexo" required class="form-control">
                     <option></option>
                     <option value="Masculino" 
-                    {% if contrato.sexo == "Masculino" %}
+                    {% if contrato.cliente.sexo == "Masculino" %}
                         selected
                     {% endif %}
                     >Masculino</option>
                     <option value="Femenino" 
-                    {% if contrato.sexo == "Femenino" %}
+                    {% if contrato.cliente.sexo == "Femenino" %}
                         selected
                     {% endif %}
                     >Femenino</option>

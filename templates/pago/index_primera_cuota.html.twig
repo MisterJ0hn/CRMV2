@@ -45,7 +45,7 @@
                         <td>{{ contrato.agenda.abogado.nombre }}</td>
                         <td>{{ contrato.tramitador.nombre|default('') }}</td>
                        
-                        <td>{{ contrato.nombre }}</td>
+                        <td>{{ contrato.cliente.nombre }}</td>
                        
                         <td align="center">{{ contrato.fechaCreacion|date('d-m-Y') }}</td>
                         <td align="center">${{ contrato.montoContrato|number_format(0, ',', '.') }}</td>

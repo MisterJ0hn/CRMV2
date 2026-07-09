@@ -44,14 +44,14 @@
                         <td>{{ contrato.agenda.id }}</td>
                          
                         
-                       <!-- <td><a href="https://api.whatsapp.com/send?phone={{ contrato.telefono }}&text=" target="_blank">{{ contrato.telefono }}</a></td>-->
+                       <!-- <td><a href="https://api.whatsapp.com/send?phone={{ contrato.cliente.telefono }}&text=" target="_blank">{{ contrato.cliente.telefono }}</a></td>-->
                         <td>
                             {% if cuota.cobrador %}
                                 {{ cuota.cobrador.nombre }}
                             {% endif %}
                         </td>
-                        <td>{{ contrato.nombre }}</td>
-                       <!-- <td align="center">{{ contrato.rut }}</td>-->
+                        <td>{{ contrato.cliente.nombre }}</td>
+                       <!-- <td align="center">{{ contrato.cliente.rut }}</td>-->
                         <!--<td align="center">{{ contrato.fechaCreacionVista|date('d-m-Y H:i') }}</td>-->
                         <td align="center">{{ cuota.fechaPago|date('d-m-Y') }}</td>
                         <!--<td align="center">{{ diasmora(cuota.contrato.proximoVencimiento|date('Y-m-d')) }} dias</td>-->

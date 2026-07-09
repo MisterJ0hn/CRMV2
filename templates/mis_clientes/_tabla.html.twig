@@ -73,9 +73,9 @@
 
                 {# ── Cliente ── #}
                 <td>
-                    <strong style="color:#fff;">{{ contrato.nombre }}</strong>
-                    {% if contrato.rut %}
-                        <br><small style="color:#666;">{{ contrato.rut }}</small>
+                    <strong style="color:#fff;">{{ contrato.cliente.nombre }}</strong>
+                    {% if contrato.cliente.rut %}
+                        <br><small style="color:#666;">{{ contrato.cliente.rut }}</small>
                     {% endif %}
                 </td>
                  

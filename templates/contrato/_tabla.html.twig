@@ -7,7 +7,7 @@
                     <th>{{ knp_pagination_sortable(contratos, 'Compañia', 'cu.id') }} {% if contratos.isSorted('cu.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>{{ knp_pagination_sortable(contratos, 'Folio', 'c.folio') }} {% if contratos.isSorted('c.folio') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>{{ knp_pagination_sortable(contratos, 'AgendaId', 'a.id') }} {% if contratos.isSorted('a.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
-                    <th>{{ knp_pagination_sortable(contratos, 'Cliente', 'c.nombre') }} {% if contratos.isSorted('c.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
+                    <th>{{ knp_pagination_sortable(contratos, 'Cliente', 'cli.nombre') }} {% if contratos.isSorted('cli.nombre') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>{{ knp_pagination_sortable(contratos, 'Agendador', 'ag.id') }} {% if contratos.isSorted('ag.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>{{ knp_pagination_sortable(contratos, 'Abogado', 'ab.id') }} {% if contratos.isSorted('ab.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
                     <th>{{ knp_pagination_sortable(contratos, 'Tramitador', 't.id') }} {% if contratos.isSorted('t.id') %} <i class="fas fa-sort"></i>{% endif %}</th>
@@ -26,7 +26,7 @@
                     <td>{{contrato.agenda.cuenta.nombre}}</td>
                     <td>{{ contrato.folioContrato }}</td>
                     <td>{{ contrato.agenda.id }}</td>
-                    <td>{{ contrato.nombre }}</td>
+                    <td>{{ contrato.cliente.nombre }}</td>
                     <td>{{ contrato.agenda.agendador.nombre }}</td>
                     <td>{{ contrato.agenda.abogado.nombre }}</td>
                     <td>{{ contrato.tramitador ? contrato.tramitador.nombre : '' }}</td>

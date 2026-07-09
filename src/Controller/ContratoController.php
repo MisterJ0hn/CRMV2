@@ -502,6 +502,7 @@ class ContratoController extends AbstractController
     {
         $this->denyAccessUnlessGranted('create','contrato');
         $contrato = new Contrato();
+        $contrato->setCliente(new Cliente());
         $form = $this->createForm(ContratoType::class, $contrato, ['cliente' => $contrato->getCliente()]);
         $form->handleRequest($request);
 

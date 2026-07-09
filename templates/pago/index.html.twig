@@ -48,8 +48,8 @@
                         <td>
                             {{ cuota.cobrador?cuota.cobrador.nombre:"No Aplica" }}
                         </td>
-                        <td>{{ contrato.nombre }}</td>
-                        <td align="center">{{ contrato.rut }}</td>
+                        <td>{{ contrato.cliente.nombre }}</td>
+                        <td align="center">{{ contrato.cliente.rut }}</td>
                         <td align="center">{{ contrato.fechaCreacion|date('d-m-Y H:i') }}</td>
                         <td align="center">{{ cuota.fechaPago|date('d-m-Y') }}</td>
                         <td align="center">{{ ultimoPago(contrato.id) ? ultimoPago(contrato.id) |date('d-m-Y H:i') : '' }}

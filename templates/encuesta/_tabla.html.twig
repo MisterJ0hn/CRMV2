@@ -36,7 +36,7 @@
                         {% endfor %}
                     {% endif %}
                     </td>
-                    <td>{{ contrato.nombre }}</td>
+                    <td>{{ contrato.cliente.nombre }}</td>
                     <td>{{ contrato.fechaCreacion|date('d-m-Y H:i') }}</td>
                     <td align="center">{{ contrato.fechaEncuesta?contrato.fechaEncuesta|date('d-m-Y H:i') : '' }}</td>
                     <td align="center">{{ contrato.fechaGestion?contrato.fechaGestion|date('d-m-Y H:i') : '' }}</td>

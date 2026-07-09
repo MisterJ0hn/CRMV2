@@ -7,11 +7,11 @@
         </div>
         <div class="col-sm-4">
             <small class="text-muted">Rut</small>
-            <p>{{contrato.rut}}</p>
+            <p>{{contrato.cliente.rut}}</p>
         </div>
         <div class="col-sm-4">
             <small class="text-muted">Cliente</small>
-            <p>{{contrato.nombre}}</p>
+            <p>{{contrato.cliente.nombre}}</p>
         </div>
         {% set estado_modificar = '' %}
         {% if tieneObservaciones %}

@@ -22,7 +22,7 @@
                     <div class="col-sm-12 col-md-4">
                         <small class="text-muted">Clave Unica</small>
                         <div class="input-group">
-                            <input type="password" name="txtClaveUnica" id="txtClaveUnica" value="{{contrato.claveUnica}}">  
+                            <input type="password" name="txtClaveUnica" id="txtClaveUnica" value="{{contrato.cliente.claveUnica}}">
                             <div class="input-group-append">
                                 <button type="button" class="btn btn-primary btn-ver" ><i class="fa fa-eye"></i></button>
                                 <button type="button" class="btn btn-danger btn-ocultar" ><i class="fa fa-eye-slash"></i></button>
@@ -48,15 +48,15 @@
                     
                     <div class="col-sm-12 col-md-4">
                         <small class="text-muted">Nombre</small><br>
-                        <p>{{contrato.nombre}}</p>                    
+                        <p>{{contrato.cliente.nombre}}</p>
                     </div>
                     <div class="col-sm-12 col-md-4">
                         <small class="text-muted">Rut</small><br>
-                        <p>{{contrato.rut}}</p>    
+                        <p>{{contrato.cliente.rut}}</p>
                     </div>
                     <div class="col-sm-12 col-md-4">
                         <small class="text-muted">Teléfono</small><br>
-                        <p>{{contrato.telefono}}</p>   
+                        <p>{{contrato.cliente.telefono}}</p>
                     </div>
                     <div class="col-sm-12 col-md-4">
                         <small class="text-muted">Fecha Contrato</small><br>
@@ -65,7 +65,7 @@
                     </div>
                     <div class="col-sm-12 col-md-4">
                         <small class="text-muted">Email</small><br>
-                        <p>{{contrato.email}}</p>   
+                        <p>{{contrato.cliente.correo}}</p>
                     </div>
 
                     <div class="col-sm-12 col-md-3">

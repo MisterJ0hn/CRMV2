@@ -9,8 +9,8 @@
 <p align="justify" >En Santiago de Chile a {{contrato.fechaCreacion|date("d-m-Y")}}, entre Estudio Jur&iacute;dico Alfaro y Madariaga Spa., rol &uacute;nico tributario 76.638.999-6 
 empresa de servicios Jur&iacute;dicos, representada por don <strong>Fernando Cort&eacute;s Salinas</strong>, c&eacute;dula de identidad N&deg; 9.704.412-0, domiciliado  en <strong>Hu&eacute;rfanos 1147, 
 oficina 501</strong>, comuna de Santiago, Regi&oacute;n Metropolitana, quien en adelante se denominar&aacute; indistintamente <strong>&quot;Estudio Jur&iacute;dico&quot;</strong> y por la otra don 
-(&ntilde;a) <strong>{{contrato.nombre|title|special_chars|raw}}</strong>, Nacionalidad  {{contrato.pais}}, C&eacute;dula de identidad N&deg; {{contrato.rut}}, Tel&eacute;fono: {{contrato.telefono}}, 
-Recado: {{contrato.telefonoRecado}}, Domicilio: {{contrato.direccion|special_chars|raw}}, Comuna: {{contrato.ccomuna.nombre|special_chars|raw}}, Ciudad: {{contrato.cciudad.nombre|special_chars|raw}}, Correo electr&oacute;nico: {{contrato.email|special_chars|raw}}, Estado civil: {{contrato.estadoCivil|special_chars|raw}}; 
+(&ntilde;a) <strong>{{contrato.cliente.nombre|title|special_chars|raw}}</strong>, Nacionalidad  {{contrato.pais}}, C&eacute;dula de identidad N&deg; {{contrato.cliente.rut}}, Tel&eacute;fono: {{contrato.cliente.telefono}},
+Recado: {{contrato.telefonoRecado}}, Domicilio: {{contrato.direccion|special_chars|raw}}, Comuna: {{contrato.ccomuna.nombre|special_chars|raw}}, Ciudad: {{contrato.cciudad.nombre|special_chars|raw}}, Correo electr&oacute;nico: {{contrato.cliente.correo|special_chars|raw}}, Estado civil: {{contrato.estadoCivil|special_chars|raw}};
 Situaci&oacute;n laboral: {{contrato.situacionLaboral|special_chars|raw}}, han celebrado con fecha de hoy, de manera libre y espont&aacute;nea, 
 un contrato de prestaci&oacute;n de servicios jur&iacute;dicos, desglosando su contenido en las siguientes cl&aacute;usulas.</p>
 
@@ -187,7 +187,7 @@ un contrato de prestaci&oacute;n de servicios jur&iacute;dicos, desglosando su c
 <li><strong>Cuenta corriente</strong></li>
 <li><strong>N&deg; de cuenta: 800-51698-02</strong></li>
 <li><strong>Correo:</strong> <a href="mailto:recaudacion@asistenciadeudores.cl">recaudacion@asistenciadeudores.cl</a></li>
-<li><strong>Comentarios: {{contrato.nombre|title|special_chars|raw}} </strong></li>
+<li><strong>Comentarios: {{contrato.cliente.nombre|title|special_chars|raw}} </strong></li>
 </ul>
 
 <ul style="list-style:none;">
@@ -197,7 +197,7 @@ un contrato de prestaci&oacute;n de servicios jur&iacute;dicos, desglosando su c
 <li><strong>Cuenta vista o chequera electr&oacute;nica</strong></li>
 <li><strong>N&deg; de cuenta: 291 7 068 468-9</strong></li>
 <li><strong>Correo:</strong> <a href="mailto:recaudacion@asistenciadeudores.cl">recaudacion@asistenciadeudores.cl</a></li>
-<li><strong>Comentarios: {{contrato.nombre|title|special_chars|raw}} </strong></li>
+<li><strong>Comentarios: {{contrato.cliente.nombre|title|special_chars|raw}} </strong></li>
 </ul>
 
 <p><strong>*Al realizar dep&oacute;sito o transferencia, debe ponerse en contacto con nuestra oficina e informar los datos del 
@@ -221,7 +221,7 @@ obligaci&oacute;n de este solicitarlas mes a mes.</p>
 <li><strong>Cuenta corriente</strong></li>
 <li><strong>N&deg; de cuenta: 800-51698-02</strong></li>
 <li><strong>Correo:</strong> <a href="mailto:recaudacion@asistenciadeudores.cl">recaudacion@asistenciadeudores.cl</a></li>
-<li><strong>Comentarios: {{contrato.nombre|title|special_chars|raw}} </strong></li>
+<li><strong>Comentarios: {{contrato.cliente.nombre|title|special_chars|raw}} </strong></li>
 </ul>
 
 <ul style="list-style:none;">
@@ -231,7 +231,7 @@ obligaci&oacute;n de este solicitarlas mes a mes.</p>
 <li><strong>Cuenta vista o chequera electr&oacute;nica</strong></li>
 <li><strong>N&deg; de cuenta: 291 7 068 468-9</strong></li>
 <li><strong>Correo:</strong> <a href="mailto:recaudacion@asistenciadeudores.cl">recaudacion@asistenciadeudores.cl</a></li>
-<li><strong>Comentarios: {{contrato.nombre|title|special_chars|raw}} </strong></li>
+<li><strong>Comentarios: {{contrato.cliente.nombre|title|special_chars|raw}} </strong></li>
 </ul>
 
 <p><strong>*Al realizar dep&oacute;sito o transferencia, debe ponerse en contacto con nuestra oficina e informar los datos del 
@@ -255,8 +255,8 @@ obligaci&oacute;n de este solicitarlas mes a mes.</p>
     <tr>
         <td><p align="center"><strong>ESTUDIO JURIDICO ALFARO Y MADARIAGA</strong></p>
         <p align="center"><strong>R.U.T.: 76.638.999-6</strong></p>            </td>
-        <td><p align="center"><strong>{{contrato.nombre|special_chars|raw}}</strong></p>
-        <p align="center"><strong>RUT: {{contrato.rut}}</strong></p>
+        <td><p align="center"><strong>{{contrato.cliente.nombre|special_chars|raw}}</strong></p>
+        <p align="center"><strong>RUT: {{contrato.cliente.rut}}</strong></p>
         </td>
     </tr>
 </table>

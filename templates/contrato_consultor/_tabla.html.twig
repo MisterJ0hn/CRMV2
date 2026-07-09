@@ -26,7 +26,7 @@
                 <td>{{ contrato.agenda.id }}</td>
                 <td>{{ contrato.grupo ? contrato.grupo.id : '' }}</td>
                 <td>{{ contrato.consultorNombre ?? '' }}</td>
-                <td>{{ contrato.nombre }}</td>
+                <td>{{ contrato.cliente.nombre }}</td>
                 <td>{{ contrato.tramitador ? contrato.tramitador.nombre : '' }}</td>
                 <td>{{ contrato.fechaCreacionVista ? contrato.fechaCreacionVista|date('d-m-Y H:i') : contrato.fechaCreacion|date('d-m-Y H:i') }}</td>
                 <td>{{ contrato.fechaUltimaObservacion ? contrato.fechaUltimaObservacion|date('d-m-Y H:i') : '' }}</td>

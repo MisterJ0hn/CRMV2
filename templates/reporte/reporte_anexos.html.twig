@@ -58,7 +58,7 @@
                         <td>{{ reporte.contrato.agenda.id }}</td>
                         <td>{{ reporte.contrato.fechaCreacion ? reporte.contrato.fechaCreacion|date('d-m-Y') : ''}}</td>
                         <td>{{ reporte.fechaCreacion ? reporte.fechaCreacion|date('d-m-Y') : ''}}</td>
-                        <td>{{ reporte.contrato.nombre }}</td>
+                        <td>{{ reporte.contrato.cliente.nombre }}</td>
                         <td>{{ reporte.contrato.agenda.cuenta.nombre }}</td>
                         <td>
                             {% if reporte.tipoAnexo == 1 %}Agregar Causa

@@ -71,7 +71,7 @@
                                 ,
                             {% endif %}
                         {% endfor %}</td>
-                        <td>{{ pago.contrato.nombre }}
+                        <td>{{ pago.contrato.cliente.nombre }}
                         <td>{{ pago.usuarioRegistro.nombre}}</td>
                         <td>{{ pago.fechaPago|date("Y-m-d H:i")}}</td>
                         <td>{{ pago.fechaRegistro|date("Y-m-d H:i") }}</td>
