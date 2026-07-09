@@ -727,7 +727,7 @@ class ComisionController extends AbstractController
             }
              
             $sheet->setCellValue("A$i",$contrato[0]->getAgenda()->getAbogado()->getNombre());
-            $sheet->setCellValue("B$i",$contrato[0]->getNombre());
+            $sheet->setCellValue("B$i",$contrato[0]->getCliente()->getNombre());
             $sheet->setCellValue("C$i",$tipoDcto);
             $sheet->setCellValue("D$i",$contrato[0]->getFolio());
             $sheet->setCellValue("E$i",$contrato[0]->getFechaCreacion());

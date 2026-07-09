@@ -685,13 +685,13 @@ class SuscripcionController extends AbstractController
         
         $nombre="";
         $apellido="";
-        $nombreSeparado=$this->separarNombreApellido($contrato->getNombre());
+        $nombreSeparado=$this->separarNombreApellido($contrato->getCliente()->getNombre());
         $nombre=$nombreSeparado["nombres"];
         $apellido=$nombreSeparado["apellidos"];
 
-        $telefono = str_replace("+","",$contrato->getTelefono());
-        $response = $virtualPos->crearSuscripcion($contrato->getEmail(),
-                                                $contrato->getRut(),
+        $telefono = str_replace("+","",$contrato->getCliente()->getTelefono());
+        $response = $virtualPos->crearSuscripcion($contrato->getCliente()->getCorreo(),
+                                                $contrato->getCliente()->getRut(),
                                                 $nombre,
                                                 $apellido,
                                                 $telefono,

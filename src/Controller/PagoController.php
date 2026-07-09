@@ -1446,17 +1446,10 @@ class PagoController extends AbstractController
 
                 
                 
-                if($primeraCuotaVigente != null ){
-                    $errorSistema = new ErrorSistemaLog();            
-                    $errorSistema->setMensaje("primera cuota vigente: ".$primeraCuotaVigente->getId());
-                    $errorSistema->setFecha(new \DateTime(date("Y-m-d H:i:s")));
-                    $errorSistema->setModulo("pago_new_".$pago->getId());
-                    $entityManager->persist($errorSistema);
-                    $entityManager->flush();
+                if($primeraCuotaVigente != null ){                   
                     $contrato->setProximoVencimiento($primeraCuotaVigente->getFechaPago());
                     $dias_morosidad = $primeraCuotaVigente->getFechaPago()->diff(new \DateTime())->days;
                     $contrato->setDiasMorosidad($dias_morosidad);
-
                     $entityManager->persist($contrato);
                     $entityManager->flush();
 

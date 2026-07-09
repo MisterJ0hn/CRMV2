@@ -6,6 +6,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Entity\Agenda;
 use App\Entity\AgendaContacto;
 use App\Entity\Usuario;
+use App\Entity\Cliente;
 use App\Entity\ContratoRol;
 use App\Entity\AgendaObservacion;
 use App\Entity\Causa;
@@ -478,10 +479,12 @@ class PanelAbogadoController extends AbstractController
             
             $contrato=new Contrato();
             $contrato->setAgenda($agenda);
-            $contrato->setNombre($agenda->getNombreCliente());
-            $contrato->setTelefono($agenda->getTelefonoCliente());
-            $contrato->setEmail($agenda->getEmailCliente());
-            $contrato->setRut($agenda->getRutCliente());
+            $cliente=new Cliente();
+            $cliente->setNombre($agenda->getNombreCliente());
+            $cliente->setTelefono($agenda->getTelefonoCliente());
+            $cliente->setCorreo($agenda->getEmailCliente());
+            $cliente->setRut($agenda->getRutCliente());
+            $contrato->setCliente($cliente);
             $contrato->setTelefonoRecado($agenda->getTelefonoRecadoCliente());
             $contrato->setReunion($agenda->getReunion());
             $contrato->setCarteraOrden(0);
@@ -505,7 +508,8 @@ class PanelAbogadoController extends AbstractController
         $contrato->setFechaPrimeraCuota(new \DateTime(date('Y-m-d')));
         $contrato->setVigencia($agenda->getCuenta()->getVigenciaContratos());
         $form = $this->createForm(ContratoType::class, $contrato, [
-            'action' =>$this->generateUrl('panel_abogado_contrata',['id'=>$agenda->getId()])
+            'action' =>$this->generateUrl('panel_abogado_contrata',['id'=>$agenda->getId()]),
+            'cliente' => $contrato->getCliente(),
         ]);
         $form->add('fechaPrimeraCuota',DateType::class,array('widget'=>'single_text','html5'=>false));
         
@@ -544,9 +548,18 @@ class PanelAbogadoController extends AbstractController
         $form->handleRequest($request);
         $cuenta_materia = $cuentaMateriaRepository->findBy(['cuenta'=>$agenda->getCuenta(),'estado'=>1]);
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager = $this->getDoctrine()->getManager();                    
+            $entityManager = $this->getDoctrine()->getManager();
             try{
                 //$this->getDoctrine()->getManager()->flush();
+                $cliente = $contrato->getCliente() ?? new Cliente();
+                $cliente->setNombre($form->get('nombre')->getData());
+                $cliente->setCorreo($form->get('email')->getData());
+                $cliente->setTelefono($form->get('telefono')->getData());
+                $cliente->setRut($form->get('rut')->getData());
+                $cliente->setClaveUnica($form->get('claveUnica')->getData());
+                $contrato->setCliente($cliente);
+                $entityManager->persist($cliente);
+
                 $agenda->setStatus($agendaStatusRepository->find('7'));
                 $contrato->setDiaPago($request->request->get('chkDiasPago'));
                 $contrato->setFechaCreacion(new \DateTime(date("Y-m-d H:i:s")));
@@ -578,16 +591,16 @@ class PanelAbogadoController extends AbstractController
                 $contrato->setCregion($regionRepository->find($request->request->get('cboRegion')));
                 $contrato->setCciudad($ciudadRepository->find($request->request->get('cboCiudad')));
                 $contrato->setCcomuna($comunaRepository->find($request->request->get('cboComuna')));
-                $contrato->setSexo($request->request->get('cboSexo'));
-                
-                
-                
+                $cliente->setSexo($request->request->get('cboSexo'));
+
+
+
                 $entityManager->persist($contrato);
                 $entityManager->flush();
 
-                $agenda->setNombreCliente($contrato->getNombre());
-                $agenda->setTelefonoCliente($contrato->getTelefono());
-                $agenda->setEmailCliente($contrato->getEmail());
+                $agenda->setNombreCliente($contrato->getCliente()->getNombre());
+                $agenda->setTelefonoCliente($contrato->getCliente()->getTelefono());
+                $agenda->setEmailCliente($contrato->getCliente()->getCorreo());
                 $agenda->setFechaContrato($contrato->getFechaCreacion());
                 $agenda->setAbogado($user);
 
@@ -862,9 +875,9 @@ class PanelAbogadoController extends AbstractController
                         $materiaNombre = $cm->getMateria()->getNombre();
                     }
 
-                    $tramitacion->agendarTramitacion($contrato->getNombre(),
-                        $contrato->getTelefono(),
-                        $contrato->getEmail(),
+                    $tramitacion->agendarTramitacion($contrato->getCliente()->getNombre(),
+                        $contrato->getCliente()->getTelefono(),
+                        $contrato->getCliente()->getCorreo(),
                         $contrato->getTramitador()->getCorreo(),
                         $contrato->getAgenda()->getIdGhl(),
                         $materiaNombre,

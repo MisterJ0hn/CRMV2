@@ -20,29 +20,9 @@ class Contrato
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $nombre;
-
-    /**
-     * @ORM\Column(type="string", length=255,nullable=true)
-     */
-    private $email;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $telefono;
-
-    /**
      * @ORM\Column(type="string", length=255,nullable=true)
      */
     private $ciudad;
-
-    /**
-     * @ORM\Column(type="string", length=255,nullable=true)
-     */
-    private $rut;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -138,14 +118,10 @@ class Contrato
     private $tramitador;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Usuario::class, inversedBy="usuarioContratos")
+     * @ORM\ManyToOne(targetEntity=Cliente::class, inversedBy="contratos")
      */
     private $cliente;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $claveUnica;
 
     /**
      * @ORM\ManyToOne(targetEntity=Pais::class, inversedBy="contratos")
@@ -296,11 +272,6 @@ class Contrato
      * @ORM\ManyToOne(targetEntity=Region::class, inversedBy="contratos")
      */
     private $cregion;
-
-    /**
-     * @ORM\Column(type="string", length=20, nullable=true)
-     */
-    private $sexo;
 
     /**
      * @ORM\OneToMany(targetEntity=ContratoMee::class, mappedBy="contrato")
@@ -493,43 +464,6 @@ class Contrato
     {
         return $this->id;
     }
-
-    public function getNombre(): ?string
-    {
-        return $this->nombre;
-    }
-
-    public function setNombre(string $nombre): self
-    {
-        $this->nombre = $nombre;
-
-        return $this;
-    }
-
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(?string $email): self
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    public function getTelefono(): ?string
-    {
-        return $this->telefono;
-    }
-
-    public function setTelefono(?string $telefono): self
-    {
-        $this->telefono = $telefono;
-
-        return $this;
-    }
-
     public function getCiudad(): ?string
     {
         return $this->ciudad;
@@ -542,17 +476,7 @@ class Contrato
         return $this;
     }
 
-    public function getRut(): ?string
-    {
-        return $this->rut;
-    }
-
-    public function setRut(?string $rut): self
-    {
-        $this->rut = $rut;
-
-        return $this;
-    }
+  
 
     public function getDireccion(): ?string
     {
@@ -752,7 +676,7 @@ class Contrato
         return $this;
     }
     public function __toString(){
-        return $this->getId()." ".$this->getNombre();
+        return $this->getFolio();
     }
 
     public function getFechaCreacion(): ?\DateTimeInterface
@@ -791,29 +715,19 @@ class Contrato
         return $this;
     }
 
-    public function getCliente(): ?Usuario
+    public function getCliente(): ?Cliente
     {
         return $this->cliente;
     }
 
-    public function setCliente(?Usuario $cliente): self
+    public function setCliente(?Cliente $cliente): self
     {
         $this->cliente = $cliente;
 
         return $this;
     }
 
-    public function getClaveUnica(): ?string
-    {
-        return $this->claveUnica;
-    }
-
-    public function setClaveUnica(?string $claveUnica): self
-    {
-        $this->claveUnica = $claveUnica;
-
-        return $this;
-    }
+    
 
     public function getPais(): ?Pais
     {
@@ -1237,17 +1151,6 @@ class Contrato
         return $this;
     }
 
-    public function getSexo(): ?string
-    {
-        return $this->sexo;
-    }
-
-    public function setSexo(?string $sexo): self
-    {
-        $this->sexo = $sexo;
-
-        return $this;
-    }
 
     /**
      * @return Collection|ContratoMee[]

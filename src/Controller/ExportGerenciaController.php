@@ -67,7 +67,7 @@ class ExportGerenciaController extends AbstractController
         foreach($query as $contrato){
 
             $sheet->setCellValue("A$i",$contrato->getId());
-            $sheet->setCellValue("B$i",$contrato->getNombre());
+            $sheet->setCellValue("B$i",$contrato->getCliente()->getNombre());
             $sheet->setCellValue("C$i",$contrato->getMontoContrato());
             $sheet->setCellValue("D$i",$contrato->getCuotas());
             $sheet->setCellValue("E$i",$contrato->getFechaCreacion());

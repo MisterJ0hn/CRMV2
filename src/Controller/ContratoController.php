@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Actuacion;
 use App\Entity\AgendaContacto;
+use App\Entity\Cliente;
 use App\Entity\Contrato;
 use App\Entity\ContratoRol;
 use App\Entity\Usuario;
@@ -469,7 +470,7 @@ class ContratoController extends AbstractController
 
             $sheet->setCellValue("A$i",$contrato->getFechaCreacion());
             $sheet->setCellValue("B$i",$contrato->getAgenda()->getId());
-            $sheet->setCellValue("C$i",$contrato->getTelefono());
+            $sheet->setCellValue("C$i",$contrato->getCliente()->getTelefono());
             $sheet->setCellValue("D$i",$contrato->getFolio());
             
             $i++;
@@ -501,11 +502,21 @@ class ContratoController extends AbstractController
     {
         $this->denyAccessUnlessGranted('create','contrato');
         $contrato = new Contrato();
-        $form = $this->createForm(ContratoType::class, $contrato);
+        $form = $this->createForm(ContratoType::class, $contrato, ['cliente' => $contrato->getCliente()]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager = $this->getDoctrine()->getManager();
+
+            $cliente = new Cliente();
+            $cliente->setNombre($form->get('nombre')->getData());
+            $cliente->setCorreo($form->get('email')->getData());
+            $cliente->setTelefono($form->get('telefono')->getData());
+            $cliente->setRut($form->get('rut')->getData());
+            $cliente->setClaveUnica($form->get('claveUnica')->getData());
+            $contrato->setCliente($cliente);
+
+            $entityManager->persist($cliente);
             $entityManager->persist($contrato);
             $entityManager->flush();
 
@@ -688,12 +699,12 @@ class ContratoController extends AbstractController
 
         $pagina=$moduloPerRepository->findOneByName('contrato',$user->getEmpresaActual());
         $juzgados=$juzgadoRepository->findAll();
-        $form = $this->createForm(ContratoType::class, $contrato);
+        $form = $this->createForm(ContratoType::class, $contrato, ['cliente' => $contrato->getCliente()]);
         $form->add('fechaPrimeraCuota',DateType::class,array('widget'=>'single_text','html5'=>false));
         $form->add('vigencia');
         $form->add('pagoActual');
         $form->add('isIncorporacion');
-        
+
         $form->add('cuotas', ChoiceType::class,[
             'choices'=>[
                 0,
@@ -741,6 +752,16 @@ class ContratoController extends AbstractController
             $entityManager = $this->getDoctrine()->getManager();
             try{
             $compania=$_POST['cboCompanias'];
+
+            $cliente = $contrato->getCliente() ?? new Cliente();
+            $cliente->setNombre($form->get('nombre')->getData());
+            $cliente->setCorreo($form->get('email')->getData());
+            $cliente->setTelefono($form->get('telefono')->getData());
+            $cliente->setRut($form->get('rut')->getData());
+            $cliente->setClaveUnica($form->get('claveUnica')->getData());
+            $contrato->setCliente($cliente);
+            $entityManager->persist($cliente);
+
             $contrato->setSucursal($sucursalRepository->find($request->request->get('cboSucursal')));
             $contrato->setDiaPago($request->request->get('chkDiasPago'));
             $contrato->setUsuarioUltmaModificacion($user->getNombre());
@@ -767,19 +788,19 @@ class ContratoController extends AbstractController
             $contrato->setCregion($regionRepository->find($request->request->get('cboRegion')));
             $contrato->setCciudad($ciudadRepository->find($request->request->get('cboCiudad')));
             $contrato->setCcomuna($comunaRepository->find($request->request->get('cboComuna')));
-            $contrato->setSexo($request->request->get('cboSexo'));
-           
+            $cliente->setSexo($request->request->get('cboSexo'));
+
             $contrato->setPdf(null);
             $entityManager->persist($contrato);
             $entityManager->flush();
-            
+
             $agenda=$contrato->getAgenda();
             //se agrega el canal de contacto
             $agenda->setAgendaContacto($agendaContactoRepository->find($request->request->get('cboContacto')));
-            
-            $agenda->setNombreCliente($contrato->getNombre());
-            $agenda->setTelefonoCliente($contrato->getTelefono());
-            $agenda->setEmailCliente($contrato->getEmail());
+
+            $agenda->setNombreCliente($contrato->getCliente()->getNombre());
+            $agenda->setTelefonoCliente($contrato->getCliente()->getTelefono());
+            $agenda->setEmailCliente($contrato->getCliente()->getCorreo());
             $agenda->setReunion($contrato->getReunion());
             
             $materiaAcual=0;
@@ -2395,9 +2416,9 @@ class ContratoController extends AbstractController
             $entityManager = $this->getDoctrine()->getManager();
 
             $clave = $request->query->get("txtClaveUnica");
-            $contrato->setClaveUnica($clave);
+            $contrato->getCliente()->setClaveUnica($clave);
 
-            $entityManager->persist($contrato);
+            $entityManager->persist($contrato->getCliente());
             $entityManager->flush();
         }
         return $this->json("{ok:ok}");

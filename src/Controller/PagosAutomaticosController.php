@@ -145,7 +145,7 @@ class PagosAutomaticosController extends AbstractController
             $sheet->setCellValue("A$i", $vwContrato->getFolio());
             $sheet->setCellValue("B$i", $contrato->getAgenda() ? $contrato->getAgenda()->getId() : null);
             $sheet->setCellValue("C$i", $contrato->getSuscripcionId());
-            $sheet->setCellValue("D$i", $contrato->getNombre());
+            $sheet->setCellValue("D$i", $contrato->getCliente()->getNombre());
             $sheet->setCellValue("E$i", $contrato->getAgenda() && $contrato->getAgenda()->getAbogado() ? $contrato->getAgenda()->getAbogado()->getNombre() : '');
             $sheet->setCellValue("F$i", $vwContrato->getFechaCreacion() ? $vwContrato->getFechaCreacion()->format('Y-m-d H:i') : null);
             $sheet->setCellValue("G$i", $vwContrato->getEstadoSuscripcion());

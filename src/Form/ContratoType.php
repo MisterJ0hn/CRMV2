@@ -2,6 +2,7 @@
 
 namespace App\Form;
 
+use App\Entity\Cliente;
 use App\Entity\Contrato;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -13,11 +14,25 @@ class ContratoType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
+        $cliente = $options['cliente'];
+
         $builder
-            ->add('nombre')
-            ->add('email')
-            ->add('telefono')
-            ->add('rut')
+            ->add('nombre', TextType::class, [
+                'mapped' => false,
+                'data' => $cliente ? $cliente->getNombre() : null,
+            ])
+            ->add('email', TextType::class, [
+                'mapped' => false,
+                'data' => $cliente ? $cliente->getCorreo() : null,
+            ])
+            ->add('telefono', TextType::class, [
+                'mapped' => false,
+                'data' => $cliente ? $cliente->getTelefono() : null,
+            ])
+            ->add('rut', TextType::class, [
+                'mapped' => false,
+                'data' => $cliente ? $cliente->getRut() : null,
+            ])
             ->add('direccion')
             ->add('montoNivelDeuda')
             ->add('MontoContrato')
@@ -28,7 +43,11 @@ class ContratoType extends AbstractType
             ->add('valorCuota')
             ->add('estadoCivil')
             ->add('situacionLaboral')
-            ->add('claveUnica')
+            ->add('claveUnica', TextType::class, [
+                'mapped' => false,
+                'required' => false,
+                'data' => $cliente ? $cliente->getClaveUnica() : null,
+            ])
             ->add('pais')
             ->add('telefonoRecado')
             ->add('vehiculo')
@@ -43,6 +62,8 @@ class ContratoType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Contrato::class,
+            'cliente' => null,
         ]);
+        $resolver->setAllowedTypes('cliente', [Cliente::class, 'null']);
     }
 }

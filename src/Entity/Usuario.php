@@ -175,11 +175,6 @@ class Usuario implements UserInterface
     private $contratos;
 
     /**
-     * @ORM\OneToMany(targetEntity=Contrato::class, mappedBy="cliente")
-     */
-    private $usuarioContratos;
-
-    /**
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $lunes;
@@ -418,7 +413,6 @@ class Usuario implements UserInterface
         $this->importacions = new ArrayCollection();
         $this->agendaObservacions = new ArrayCollection();
         $this->contratos = new ArrayCollection();
-        $this->usuarioContratos = new ArrayCollection();
         $this->usuarioNoDisponibles = new ArrayCollection();
         $this->usuarioLotes = new ArrayCollection();
         $this->reportes = new ArrayCollection();
@@ -1008,37 +1002,7 @@ class Usuario implements UserInterface
         return $this;
     }
 
-    /**
-     * @return Collection|Contrato[]
-     */
-    public function getUsuarioContratos(): Collection
-    {
-        return $this->usuarioContratos;
-    }
-
-    public function addUsuarioContrato(Contrato $usuarioContrato): self
-    {
-        if (!$this->usuarioContratos->contains($usuarioContrato)) {
-            $this->usuarioContratos[] = $usuarioContrato;
-            $usuarioContrato->setCliente($this);
-        }
-
-        return $this;
-    }
-
-    public function removeUsuarioContrato(Contrato $usuarioContrato): self
-    {
-        if ($this->usuarioContratos->removeElement($usuarioContrato)) {
-            // set the owning side to null (unless already changed)
-            if ($usuarioContrato->getCliente() === $this) {
-                $usuarioContrato->setCliente(null);
-            }
-        }
-
-        return $this;
-    }
-
-    public function getLunes(): ?bool
+public function getLunes(): ?bool
     {
         return $this->lunes;
     }
