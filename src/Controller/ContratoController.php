@@ -1327,7 +1327,7 @@ class ContratoController extends AbstractController
                                     ContratoObservacionRepository $contratoObservacionRepository,
                                     CausaObservacionRepository $causaObservacionRepository): Response
     {
-        $this->denyAccessUnlessGranted('edit','contrato');
+        $this->denyAccessUnlessGranted('edit','modificar_contrato');
 
         $tieneObservaciones = $contratoObservacionRepository->count(['contrato'=>$contrato]) > 0
             || $causaObservacionRepository->count(['contrato'=>$contrato]) > 0;
@@ -1346,7 +1346,7 @@ class ContratoController extends AbstractController
                                     ContratoObservacionRepository $contratoObservacionRepository,
                                     CausaObservacionRepository $causaObservacionRepository): Response
     {
-        $this->denyAccessUnlessGranted('edit','contrato');
+        $this->denyAccessUnlessGranted('edit','modificar_contrato');
         $user = $this->getUser();
 
         $tieneObservaciones = $contratoObservacionRepository->count(['contrato'=>$contrato]) > 0
