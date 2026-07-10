@@ -12,6 +12,7 @@ parameters:
     pdf_contratos: '/build/contratos/pdf/'
     logos_empresa: '%kernel.project_dir%/public/build/img/empresas/'
     csv_importacion: '%kernel.project_dir%/public/build/csv/'
+    estado_diario_importacion: '%kernel.project_dir%/public/build/estado_diario/'
     img_pagos: '/build/contratos/pagos/'
     audio_contratos: '/build/contratos/audios/'
     archivos_contratos: '/build/contratos/archivos/'

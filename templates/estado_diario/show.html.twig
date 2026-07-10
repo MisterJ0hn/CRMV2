@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Estado Diario{% endblock %}
+
+{% block body %}
+
+<a href="{{ path('estado_diario_index') }}" class="btn btn-secondary mb-2"><i class="fas fa-arrow-left"></i> Volver</a>
+
+<div class="card mb-3">
+    <div class="card-header">Archivo: {{ estadoDiarioOrigen.nombreArchivo }}</div>
+    <div class="card-body">
+        <p><strong>Rut:</strong> {{ estadoDiarioOrigen.rut }}</p>
+        <p><strong>Fecha Estado Diario:</strong> {{ estadoDiarioOrigen.fecha ? estadoDiarioOrigen.fecha|date('d-m-Y') : '' }}</p>
+        <p><strong>Usuario carga:</strong> {{ estadoDiarioOrigen.usuarioCarga ? estadoDiarioOrigen.usuarioCarga.nombre : '' }}</p>
+        <p><strong>Fecha carga:</strong> {{ estadoDiarioOrigen.fechaCarga ? estadoDiarioOrigen.fechaCarga|date('Y-m-d H:i:s') : '' }}</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Jurisdicción</th>
+                    <th>Rol</th>
+                    <th>Rol Único</th>
+                    <th>Fecha Ingreso</th>
+                    <th>Caratulado</th>
+                    <th>Tribunal</th>
+                    <th>Estado</th>
+                    <th>Tipo Causa</th>
+                    <th>Ubicación</th>
+                    <th>Corte</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for detalle in detalles %}
+                <tr>
+                    <td>{{ detalle.jurisdiccion ? detalle.jurisdiccion.nombre : '' }}</td>
+                    <td>{{ detalle.rol }}</td>
+                    <td>{{ detalle.rolUnico }}</td>
+                    <td>{{ detalle.fechaIngreso ? detalle.fechaIngreso|date('d-m-Y') : '' }}</td>
+                    <td>{{ detalle.caratulado }}</td>
+                    <td>{{ detalle.tribunal }}</td>
+                    <td>{{ detalle.estado }}</td>
+                    <td>{{ detalle.tipoCausa }}</td>
+                    <td>{{ detalle.ubicacion }}</td>
+                    <td>{{ detalle.corte }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="10">no hay filas importadas</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <div class="navigation">
+            {{ knp_pagination_render(detalles,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
+            'position': 'centered',
+            'rounded': true,
+            }) }}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
