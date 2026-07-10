@@ -13,6 +13,7 @@ parameters:
     logos_empresa: '%kernel.project_dir%/public/build/img/empresas/'
     csv_importacion: '%kernel.project_dir%/public/build/csv/'
     estado_diario_importacion: '%kernel.project_dir%/public/build/estado_diario/'
+    estado_diario_carpeta_origen: '%kernel.project_dir%/public/build/estado_diario/origen/'
     img_pagos: '/build/contratos/pagos/'
     audio_contratos: '/build/contratos/audios/'
     archivos_contratos: '/build/contratos/archivos/'
@@ -57,5 +58,10 @@ services:
             $secret: '%env(AWS_SECRET_ACCESS_KEY)%'
             $region: '%env(AWS_S3_REGION)%'
             $bucket: '%env(AWS_S3_BUCKET)%'
+
+    App\Command\ImportarEstadoDiarioCommand:
+        arguments:
+            $carpetaOrigen: '%estado_diario_carpeta_origen%'
+            $carpetaDestino: '%estado_diario_importacion%'
 
     # Log de actividad de usuarios (EventSubscriber, se registra automáticamente)

@@ -42,14 +42,21 @@ class EstadoDiarioImportService
     /**
      * Extrae rut, fecha y guid desde el nombre del archivo.
      * Formato esperado: EstadoDiario{RUT}-{DV}_{DD}_{MM}_{AAAA}-{guid}.xlsx
+     * Tolera el sufijo " (1)", " (2)", etc. que agrega el navegador cuando el
+     * archivo se descarga duplicado, ej: EstadoDiario16952077-1_23_07_2024 (1)-66a1134a5ff38.xlsx
      *
      * @return array{rut:?string,fecha:?\DateTimeInterface,guid:?string}
      */
     public function parseNombreArchivo(string $nombreSinExtension): array
     {
+        // Quita el sufijo "(1)", "(2)", etc. que agregan los navegadores en descargas
+        // duplicadas, tolerando cualquier tipo de espacio (normal, non-breaking, etc.)
+        // o ninguno, antes del paréntesis.
+        $nombreLimpio = preg_replace('/[\s\x{00A0}]*\(\d+\)(?=-)/u', '', $nombreSinExtension);
+
         $patron = '/^EstadoDiario(?<rut>\d{1,9}-[\dkK])_(?<dd>\d{2})_(?<mm>\d{2})_(?<yyyy>\d{4})-(?<guid>[a-zA-Z0-9]+)$/';
 
-        if (!preg_match($patron, $nombreSinExtension, $m)) {
+        if (!preg_match($patron, $nombreLimpio, $m)) {
             return ['rut' => null, 'fecha' => null, 'guid' => null];
         }
 

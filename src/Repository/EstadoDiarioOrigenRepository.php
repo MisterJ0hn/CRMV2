@@ -18,4 +18,9 @@ class EstadoDiarioOrigenRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, EstadoDiarioOrigen::class);
     }
+
+    public function existeGuid(string $guid): bool
+    {
+        return null !== $this->findOneBy(['guid' => $guid]);
+    }
 }
