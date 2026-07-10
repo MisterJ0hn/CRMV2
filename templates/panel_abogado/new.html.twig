@@ -47,24 +47,24 @@
                 </div>
                 <div class="col-sm-12 col-md-6">
                     <small class="text-muted">Nombre Cliente</small><br>
-                    <label>{{agenda.nombreCliente}}</label>
+                    <label>{{agenda.contrato ? agenda.contrato.cliente.nombre : agenda.nombreCliente}}</label>
                 </div>
                 <div class="col-sm-12 col-md-3">
                     <small class="text-muted">Rut Cliente</small><br>
-                    <label>{{agenda.rutCliente}}</label>
+                    <label>{{agenda.contrato ? agenda.contrato.cliente.rut : agenda.rutCliente}}</label>
                 </div>
                 <div class="col-sm-12 col-md-3">
                     <small class="text-muted">Telefono Cliente</small><br>
-                    <label><a href="https://api.whatsapp.com/send?phone={{ agenda.telefonoCliente|replace({'+':''}) }}&text=''" target="_blank"><i class="fa fa-whatsapp"></i>{{ agenda.telefonoCliente }}</a></label>
+                    <label><a href="https://api.whatsapp.com/send?phone={{ agenda.contrato ? agenda.contrato.cliente.telefono|replace({'+':''}) : agenda.telefonoCliente|replace({'+':''}) }}&text=''" target="_blank"><i class="fa fa-whatsapp"></i>{{ agenda.contrato ? agenda.contrato.cliente.telefono : agenda.telefonoCliente }}</a></label>
                     
                 </div>
                 <div class="col-sm-12 col-md-3">
                     <small class="text-muted">Telefono Recado Cliente</small><br>
-                    <label>{{agenda.telefonoRecadoCliente}}</label>
+                    <label>{{agenda.contrato ? agenda.contrato.cliente.telefono : agenda.telefonoRecadoCliente}}</label>
                 </div>
                 <div class="col-sm-12 col-md-6">
                     <small class="text-muted">Correo Cliente</small><br>
-                    <label>{{agenda.emailCliente}}</label>
+                    <label>{{agenda.contrato ? agenda.contrato.cliente.correo : agenda.emailCliente}}</label>
                 </div>
                 <div class="col-sm-12 col-md-2">
                     <small class="text-muted">Monto Deuda</small>

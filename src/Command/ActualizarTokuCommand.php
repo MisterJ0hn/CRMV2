@@ -80,18 +80,18 @@ class ActualizarTokuCommand extends Command
                     error_log("\n Agenda: ".$agenda->getId(),3,"/home/micrm.cl/test/TokuWebhook_log");
                     
                     error_log("\n Usuario : ".$usuario->getNombre()." agenda: ".$agenda->getId(),3,"/home/micrm.cl/test/TokuWebhook_log");
-                    error_log("\n Usuario : ".$contrato->getEmail()." ".$contrato->getRut()." agenda: ".$agenda->getId(),3,"/home/micrm.cl/test/TokuWebhook_log");
+                    error_log("\n Usuario : ".$contrato->getCliente()->getCorreo()." ".$contrato->getRut()." agenda: ".$agenda->getId(),3,"/home/micrm.cl/test/TokuWebhook_log");
                     $resultToku=$toku->crearCustomer(true,
-                                                    $contrato->getEmail(),
-                                                    $contrato->getRut(),
-                                                    $contrato->getNombre(),
-                                                    $contrato->getTelefono(),
+                                                    $contrato->getCliente()->getCorreo(),
+                                                    $contrato->getCliente()->getRut(),
+                                                    $contrato->getCliente()->getNombre(),
+                                                    $contrato->getCliente()->getTelefono(),
                                                     $contrato->getFolio());
                     $cliente=json_decode($resultToku);
                 } catch (Exception $e){
-                    error_log("\n Antes de entrar Usuario : ".$contrato->getEmail()." ".$contrato->getRut()." agenda: ".$agenda->getId(),3,"/home/micrm.cl/test/customer_error_log");
-               
+                    error_log("\n Antes de entrar Usuario : ".$contrato->getCliente()->getCorreo()." ".$contrato->getRut()." agenda: ".$agenda->getId(),3,"/home/micrm.cl/test/customer_error_log");
                 }
+                
                 error_log("\n Usuario : ".print_r($resultToku,true),3,"/home/micrm.cl/test/TokuWebhook_log");
                 if($resultToku!=false){
                     $usuario->setTokuId($cliente->id);

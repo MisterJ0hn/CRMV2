@@ -90,17 +90,11 @@
     </div>
     <div class="card-footer">
     {% if contrato is not empty %}
-<<<<<<< Updated upstream
-        <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':4})}}" class="btn btn-success" >Ingresar Felicitación</a>
-        <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':3})}}" class="btn btn-primary" >Ingresar Requerimiento</a>  
-        <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':2})}}" class="btn btn-danger" >Ingresar Reclamo</a>
-=======
         <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':4,'tipo_solicitud':tipoSolicitud_default})}}" class="btn btn-success" >Felicitación</a>
         <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':3,'tipo_solicitud':tipoSolicitud_default})}}" class="btn btn-primary" >Requerimiento</a>  
         <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':2,'tipo_solicitud':tipoSolicitud_default})}}" class="btn btn-danger" >Reclamo</a>
         <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':5,'tipo_solicitud':tipoSolicitud_default})}}" class="btn btn-warning" >Retención</a>
         <a href="{{path('app_ticket_new',{'id':contrato.id,'tipo':6,'tipo_solicitud':tipoSolicitud_default})}}" class="btn btn-info" >Devolución cuota</a>
->>>>>>> Stashed changes
     {% endif %}
     </div>
 </div>
