@@ -484,8 +484,8 @@ class PanelAbogadoController extends AbstractController
             $cliente->setTelefono($agenda->getTelefonoCliente());
             $cliente->setCorreo($agenda->getEmailCliente());
             $cliente->setRut($agenda->getRutCliente());
+            $cliente->setTelefonoRecado($agenda->getTelefonoRecadoCliente());
             $contrato->setCliente($cliente);
-            $contrato->setTelefonoRecado($agenda->getTelefonoRecadoCliente());
             $contrato->setReunion($agenda->getReunion());
             $contrato->setCarteraOrden(0);
              $contrato->setEsVip(0);
@@ -557,6 +557,8 @@ class PanelAbogadoController extends AbstractController
                 $cliente->setTelefono($form->get('telefono')->getData());
                 $cliente->setRut($form->get('rut')->getData());
                 $cliente->setClaveUnica($form->get('claveUnica')->getData());
+                $cliente->setDireccion($form->get('direccion')->getData());
+                $cliente->setTelefonoRecado($form->get('telefonoRecado')->getData());
                 $contrato->setCliente($cliente);
                 $entityManager->persist($cliente);
 

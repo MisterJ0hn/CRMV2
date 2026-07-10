@@ -24,10 +24,7 @@ class Contrato
      */
     private $ciudad;
 
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $direccion;
+    
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -128,11 +125,7 @@ class Contrato
      */
     private $pais;
 
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $telefonoRecado;
-
+  
     /**
      * @ORM\Column(type="datetime", nullable=true)
      */
@@ -476,20 +469,6 @@ class Contrato
         return $this;
     }
 
-  
-
-    public function getDireccion(): ?string
-    {
-        return $this->direccion;
-    }
-
-    public function setDireccion(string $direccion): self
-    {
-        $this->direccion = $direccion;
-
-        return $this;
-    }
-
     public function getComuna(): ?string
     {
         return $this->comuna;
@@ -737,18 +716,6 @@ class Contrato
     public function setPais(?Pais $pais): self
     {
         $this->pais = $pais;
-
-        return $this;
-    }
-
-    public function getTelefonoRecado(): ?string
-    {
-        return $this->telefonoRecado;
-    }
-
-    public function setTelefonoRecado(?string $telefonoRecado): self
-    {
-        $this->telefonoRecado = $telefonoRecado;
 
         return $this;
     }

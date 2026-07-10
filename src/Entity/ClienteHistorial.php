@@ -2,16 +2,14 @@
 
 namespace App\Entity;
 
-use App\Repository\ClienteRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
+use App\Repository\ClienteHistorialRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass=ClienteRepository::class)
- * @ORM\Table(name="cliente")
+ * @ORM\Entity(repositoryClass=ClienteHistorialRepository::class)
+ * @ORM\Table(name="cliente_historial")
  */
-class Cliente
+class ClienteHistorial
 {
     /**
      * @ORM\Id()
@@ -19,6 +17,12 @@ class Cliente
      * @ORM\Column(type="integer")
      */
     private $id;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Cliente::class, inversedBy="clienteHistorials")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $cliente;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -51,14 +55,14 @@ class Cliente
     private $claveUnica;
 
     /**
-     * @ORM\OneToMany(targetEntity=Contrato::class, mappedBy="cliente")
+     * @ORM\Column(type="datetime")
      */
-    private $contratos;
+    private $fechaModificacion;
 
     /**
-     * @ORM\OneToMany(targetEntity=ClienteHistorial::class, mappedBy="cliente")
+     * @ORM\Column(type="string", length=255)
      */
-    private $clienteHistorials;
+    private $usuarioModificacion;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -68,17 +72,22 @@ class Cliente
      * @ORM\Column(type="string", length=255)
      */
     private $telefonoRecado;
-    
-
-    public function __construct()
-    {
-        $this->contratos = new ArrayCollection();
-        $this->clienteHistorials = new ArrayCollection();
-    }
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getCliente(): ?Cliente
+    {
+        return $this->cliente;
+    }
+
+    public function setCliente(?Cliente $cliente): self
+    {
+        $this->cliente = $cliente;
+
+        return $this;
     }
 
     public function getNombre(): ?string
@@ -153,60 +162,26 @@ class Cliente
         return $this;
     }
 
-    /**
-     * @return Collection|Contrato[]
-     */
-    public function getContratos(): Collection
+    public function getFechaModificacion(): ?\DateTimeInterface
     {
-        return $this->contratos;
+        return $this->fechaModificacion;
     }
 
-    public function addContrato(Contrato $contrato): self
+    public function setFechaModificacion(\DateTimeInterface $fechaModificacion): self
     {
-        if (!$this->contratos->contains($contrato)) {
-            $this->contratos[] = $contrato;
-            $contrato->setCliente($this);
-        }
+        $this->fechaModificacion = $fechaModificacion;
 
         return $this;
     }
 
-    public function removeContrato(Contrato $contrato): self
+    public function getUsuarioModificacion(): ?string
     {
-        if ($this->contratos->removeElement($contrato)) {
-            if ($contrato->getCliente() === $this) {
-                $contrato->setCliente(null);
-            }
-        }
-
-        return $this;
+        return $this->usuarioModificacion;
     }
 
-    /**
-     * @return Collection|ClienteHistorial[]
-     */
-    public function getClienteHistorials(): Collection
+    public function setUsuarioModificacion(?string $usuarioModificacion): self
     {
-        return $this->clienteHistorials;
-    }
-
-    public function addClienteHistorial(ClienteHistorial $clienteHistorial): self
-    {
-        if (!$this->clienteHistorials->contains($clienteHistorial)) {
-            $this->clienteHistorials[] = $clienteHistorial;
-            $clienteHistorial->setCliente($this);
-        }
-
-        return $this;
-    }
-
-    public function removeClienteHistorial(ClienteHistorial $clienteHistorial): self
-    {
-        if ($this->clienteHistorials->removeElement($clienteHistorial)) {
-            if ($clienteHistorial->getCliente() === $this) {
-                $clienteHistorial->setCliente(null);
-            }
-        }
+        $this->usuarioModificacion = $usuarioModificacion;
 
         return $this;
     }

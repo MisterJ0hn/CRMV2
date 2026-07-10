@@ -33,7 +33,7 @@ class ContratoRepository extends ServiceEntityRepository
         $query=$this->createQueryBuilder('c')
             ->leftJoin('c.cartera', 'car')
             ->leftJoin('c.cliente', 'cli')
-            ->leftJoin('car.materia', 'mat')->addSelect('car', 'mat')->where('cli.telefono IN (:variantes) OR c.telefonoRecado IN (:variantes)')
+            ->leftJoin('car.materia', 'mat')->addSelect('car', 'mat')->where('cli.telefono IN (:variantes) OR cli.telefonoRecado IN (:variantes)')
             ->setParameter('variantes', [$sinPlus, $conPlus]);
 
         $query->andWhere(" ((c.fechaCreacion between  date_sub(current_timestamp(),c.vigencia,'month') and current_timestamp()) )

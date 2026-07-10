@@ -6,34 +6,58 @@
             <p>{{contrato.folio}}</p>
         </div>
         <div class="col-sm-4">
-            <small class="text-muted">Rut</small>
-            <p>{{contrato.cliente.rut}}</p>
+            <small class="text-muted">Nombre</small>
+            <input type="text" name="txtNombre" class="form-control" value="{{contrato.cliente.nombre}}">
         </div>
         <div class="col-sm-4">
-            <small class="text-muted">Cliente</small>
-            <p>{{contrato.cliente.nombre}}</p>
+            <small class="text-muted">Rut</small>
+            <input type="text" name="txtRut" class="form-control format-rut" value="{{contrato.cliente.rut}}">
         </div>
-        {% set estado_modificar = '' %}
+        <div class="col-sm-4 mt-2">
+            <small class="text-muted">Teléfono</small>
+            <input type="text" name="txtTelefono" class="form-control" value="{{contrato.cliente.telefono}}">
+        </div>
+        <div class="col-sm-4 mt-2">
+            <small class="text-muted">Email</small>
+            <input type="email" name="txtEmail" class="form-control" value="{{contrato.cliente.correo}}">
+        </div>
+        <div class="col-sm-4 mt-2">
+            <small class="text-muted">Sexo</small>
+            <select name="cboSexo" class="form-control">
+                <option value=""></option>
+                <option value="Masculino" {% if contrato.cliente.sexo == "Masculino" %}selected{% endif %}>Masculino</option>
+                <option value="Femenino" {% if contrato.cliente.sexo == "Femenino" %}selected{% endif %}>Femenino</option>
+            </select>
+        </div>
+        <div class="col-sm-4 mt-2">
+            <small class="text-muted">Clave Única</small>
+            <input type="text" name="txtClaveUnica" class="form-control" value="{{contrato.cliente.claveUnica}}">
+        </div>
+        <div class="col-sm-4 mt-2">
+            <small class="text-muted">Teléfono Recado</small>
+            <input type="text" name="txtTelefonoRecado" class="form-control" value="{{contrato.cliente.telefonoRecado}}">
+        </div>
+        <div class="col-sm-8 mt-2">
+            <small class="text-muted">Dirección</small>
+            <input type="text" name="txtDireccion" class="form-control" value="{{contrato.cliente.direccion}}">
+        </div>
         {% if tieneObservaciones %}
-            <div class="row">
-                    <div class="col-sm-12">
+            <div class="col-sm-12 mt-2">
                 <p class="text-danger mb-0">No es posible modificar la observación porque el contrato ya tiene observaciones registradas.</p>
-                </div>
             </div>
-             {% set estado_modificar = 'disabled' %}
         {% else %}
-            <div class="col-sm-12">
+            <div class="col-sm-12 mt-2">
                 <label class="text-muted">Observación</label>
                 <textarea name="txtObservacion" class="form-control" rows="4">{{contrato.observacion}}</textarea>
             </div>
         {% endif %}
     </div>
-    
+
     <div class="row mt-3">
         <div class="col-sm-12">
 
-            <button class="btn btn-primary" id="btnGuardarObservacion" {{ estado_modificar }}>Guardar</button>
-        
+            <button class="btn btn-primary" id="btnGuardarObservacion">Guardar</button>
+
             <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
         </div>
     </div>

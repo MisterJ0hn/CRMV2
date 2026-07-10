@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Actuacion;
 use App\Entity\AgendaContacto;
 use App\Entity\Cliente;
+use App\Entity\ClienteHistorial;
 use App\Entity\Contrato;
 use App\Entity\ContratoRol;
 use App\Entity\Usuario;
@@ -515,6 +516,8 @@ class ContratoController extends AbstractController
             $cliente->setTelefono($form->get('telefono')->getData());
             $cliente->setRut($form->get('rut')->getData());
             $cliente->setClaveUnica($form->get('claveUnica')->getData());
+            $cliente->setDireccion($form->get('direccion')->getData());
+            $cliente->setTelefonoRecado($form->get('telefonoRecado')->getData());
             $contrato->setCliente($cliente);
 
             $entityManager->persist($cliente);
@@ -760,6 +763,8 @@ class ContratoController extends AbstractController
             $cliente->setTelefono($form->get('telefono')->getData());
             $cliente->setRut($form->get('rut')->getData());
             $cliente->setClaveUnica($form->get('claveUnica')->getData());
+            $cliente->setDireccion($form->get('direccion')->getData());
+            $cliente->setTelefonoRecado($form->get('telefonoRecado')->getData());
             $contrato->setCliente($cliente);
             $entityManager->persist($cliente);
 
@@ -1342,16 +1347,46 @@ class ContratoController extends AbstractController
                                     CausaObservacionRepository $causaObservacionRepository): Response
     {
         $this->denyAccessUnlessGranted('edit','contrato');
+        $user = $this->getUser();
 
         $tieneObservaciones = $contratoObservacionRepository->count(['contrato'=>$contrato]) > 0
             || $causaObservacionRepository->count(['contrato'=>$contrato]) > 0;
 
-        if ($tieneObservaciones) {
-            return new JsonResponse(['success' => false, 'message' => 'No es posible modificar la observación porque el contrato ya tiene observaciones registradas.'], 409);
+        $entityManager = $this->getDoctrine()->getManager();
+
+        $cliente = $contrato->getCliente();
+
+        $clienteHistorial = new ClienteHistorial();
+        $clienteHistorial->setCliente($cliente);
+        $clienteHistorial->setNombre($cliente->getNombre());
+        $clienteHistorial->setRut($cliente->getRut());
+        $clienteHistorial->setCorreo($cliente->getCorreo());
+        $clienteHistorial->setTelefono($cliente->getTelefono());
+        $clienteHistorial->setSexo($cliente->getSexo());
+        $clienteHistorial->setClaveUnica($cliente->getClaveUnica());
+        $clienteHistorial->setTelefonoRecado($cliente->getTelefonoRecado());
+        $clienteHistorial->setDireccion($cliente->getDireccion());
+        $clienteHistorial->setFechaModificacion(new \DateTime());
+        $clienteHistorial->setUsuarioModificacion($user->getNombre());
+        $entityManager->persist($clienteHistorial);
+
+        $cliente->setNombre($request->request->get('txtNombre'));
+        $cliente->setRut($request->request->get('txtRut'));
+        $cliente->setTelefono($request->request->get('txtTelefono'));
+        $cliente->setCorreo($request->request->get('txtEmail'));
+        $cliente->setSexo($request->request->get('cboSexo'));
+        $cliente->setClaveUnica($request->request->get('txtClaveUnica'));
+        $cliente->setTelefonoRecado($request->request->get('txtTelefonoRecado'));
+        $cliente->setDireccion($request->request->get('txtDireccion'));
+        $entityManager->persist($cliente);
+
+        if (!$tieneObservaciones) {
+
+            $contrato->setObservacion($request->request->get('txtObservacion'));
+            
         }
 
-        $entityManager = $this->getDoctrine()->getManager();
-        $contrato->setObservacion($request->request->get('txtObservacion'));
+        
         $entityManager->persist($contrato);
         $entityManager->flush();
 

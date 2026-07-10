@@ -33,7 +33,10 @@ class ContratoType extends AbstractType
                 'mapped' => false,
                 'data' => $cliente ? $cliente->getRut() : null,
             ])
-            ->add('direccion')
+            ->add('direccion', TextType::class, [
+                'mapped' => false,
+                'data' => $cliente ? $cliente->getDireccion() : null,
+            ])
             ->add('montoNivelDeuda')
             ->add('MontoContrato')
             ->add('primeraCuota')
@@ -49,7 +52,11 @@ class ContratoType extends AbstractType
                 'data' => $cliente ? $cliente->getClaveUnica() : null,
             ])
             ->add('pais')
-            ->add('telefonoRecado')
+            ->add('telefonoRecado', TextType::class, [
+                'mapped' => false,
+                'required' => false,
+                'data' => $cliente ? $cliente->getTelefonoRecado() : null,
+            ])
             ->add('vehiculo')
             ->add('vivienda')
             ->add('reunion')
