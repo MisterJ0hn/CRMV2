@@ -1,0 +1,46 @@
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Jurisdicción</th>
+            <th>Rol</th>
+            <th>Rol Único</th>
+            <th>Fecha Ingreso</th>
+            <th>Caratulado</th>
+            <th>Tribunal</th>
+            <th>Estado</th>
+            <th>Rut</th>
+            <th>Fecha Estado Diario</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for movimiento in movimientos %}
+        <tr>
+            <td>{{ movimiento.jurisdiccion ? movimiento.jurisdiccion.nombre : '' }}</td>
+            <td>{{ movimiento.rol }}</td>
+            <td>{{ movimiento.rolUnico }}</td>
+            <td>{{ movimiento.fechaIngreso ? movimiento.fechaIngreso|date('d-m-Y') : '' }}</td>
+            <td>{{ movimiento.caratulado }}</td>
+            <td>{{ movimiento.tribunal }}</td>
+            <td>{{ movimiento.estado }}</td>
+            <td>{{ movimiento.estadoDiarioOrigen.rut }}</td>
+            <td>{{ movimiento.estadoDiarioOrigen.fecha ? movimiento.estadoDiarioOrigen.fecha|date('d-m-Y') : '' }}</td>
+            <td>
+                <button type="button" class="btn btn-sm btn-success btn-marcar-leido" data-id="{{ movimiento.id }}">
+                    <i class="fas fa-check"></i>
+                </button>
+            </td>
+        </tr>
+    {% else %}
+        <tr>
+            <td colspan="10">No hay movimientos pendientes de revisión.</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<div class="navigation">
+    {{ knp_pagination_render(movimientos,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
+    'position': 'centered',
+    'rounded': true,
+    }) }}
+</div>

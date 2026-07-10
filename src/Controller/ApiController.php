@@ -6,6 +6,8 @@ use App\Entity\ApiLlamado;
 use App\Entity\ApiLlamadoAdereso;
 use App\Entity\ApiToken;
 use App\Entity\Contrato;
+use App\Entity\EstadoDiario;
+use App\Repository\EstadoDiarioRepository;
 use App\Entity\PjudAnexoCausa;
 use App\Entity\PjudAnexoMovimiento;
 use App\Entity\PjudCausa;
@@ -685,8 +687,8 @@ class ApiController extends AbstractController
             }, $contratos);
 
             $response = [
-                'nombre_cliente' => $primero->getNombre(),
-                'rut_cliente'    => $primero->getRut(),
+                'nombre_cliente' => $primero->getCliente()->getNombre(),
+                'rut_cliente'    => $primero->getCliente()->getRut(),
                 'contratos'      => $contratosData,
             ];
 
@@ -703,6 +705,71 @@ class ApiController extends AbstractController
             $em->persist($log);
             $em->flush();
             return $this->json(['error' => 'Error interno del servidor'], 500);
+        }
+    }
+
+    /**
+     * @Route("/api/estado-diario/no-leidos", methods={"GET"})
+     */
+    public function estadoDiarioNoLeidos(Request $request, EstadoDiarioRepository $estadoDiarioRepository): JsonResponse
+    {
+        try {
+            $jurisdiccion = $request->query->get('jurisdiccion') ?: null;
+            $fecha = $request->query->get('fecha') ?: null;
+            $rut = $request->query->get('rut') ?: null;
+
+            $movimientos = $estadoDiarioRepository->findConFiltro(
+                $jurisdiccion ? (int) $jurisdiccion : null,
+                $fecha,
+                $rut
+            )->getQuery()->getResult();
+
+            $data = array_map(function (EstadoDiario $m) {
+                return [
+                    'id' => $m->getId(),
+                    'jurisdiccion' => $m->getJurisdiccion() ? $m->getJurisdiccion()->getNombre() : null,
+                    'rol' => $m->getRol(),
+                    'rol_unico' => $m->getRolUnico(),
+                    'fecha_ingreso' => $m->getFechaIngreso() ? $m->getFechaIngreso()->format('Y-m-d') : null,
+                    'caratulado' => $m->getCaratulado(),
+                    'tribunal' => $m->getTribunal(),
+                    'estado' => $m->getEstado(),
+                    'tipo_causa' => $m->getTipoCausa(),
+                    'rut' => $m->getEstadoDiarioOrigen()->getRut(),
+                    'fecha_estado_diario' => $m->getEstadoDiarioOrigen()->getFecha() ? $m->getEstadoDiarioOrigen()->getFecha()->format('Y-m-d') : null,
+                ];
+            }, $movimientos);
+
+            return $this->json([
+                'exito' => true,
+                'total' => count($data),
+                'movimientos' => $data,
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'exito' => false,
+                'mensaje' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * @Route("/api/estado-diario/{id}/leido", methods={"POST"})
+     */
+    public function estadoDiarioMarcarLeido(EstadoDiario $estadoDiario, EntityManagerInterface $em): JsonResponse
+    {
+        try {
+            $estadoDiario->setLeido(true);
+            $estadoDiario->setFechaLeido(new \DateTime());
+
+            $em->flush();
+
+            return $this->json(['exito' => true]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'exito' => false,
+                'mensaje' => $e->getMessage(),
+            ], 500);
         }
     }
 

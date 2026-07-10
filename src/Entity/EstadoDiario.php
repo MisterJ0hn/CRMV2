@@ -79,6 +79,22 @@ class EstadoDiario
      */
     private $corte;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $leido = false;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $fechaLeido;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Usuario::class)
+     * @ORM\JoinColumn(nullable=true)
+     */
+    private $usuarioLeido;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -224,6 +240,42 @@ class EstadoDiario
     public function setCorte(?string $corte): self
     {
         $this->corte = $corte;
+
+        return $this;
+    }
+
+    public function getLeido(): bool
+    {
+        return $this->leido;
+    }
+
+    public function setLeido(bool $leido): self
+    {
+        $this->leido = $leido;
+
+        return $this;
+    }
+
+    public function getFechaLeido(): ?\DateTimeInterface
+    {
+        return $this->fechaLeido;
+    }
+
+    public function setFechaLeido(?\DateTimeInterface $fechaLeido): self
+    {
+        $this->fechaLeido = $fechaLeido;
+
+        return $this;
+    }
+
+    public function getUsuarioLeido(): ?Usuario
+    {
+        return $this->usuarioLeido;
+    }
+
+    public function setUsuarioLeido(?Usuario $usuarioLeido): self
+    {
+        $this->usuarioLeido = $usuarioLeido;
 
         return $this;
     }

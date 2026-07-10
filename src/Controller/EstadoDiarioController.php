@@ -2,16 +2,19 @@
 
 namespace App\Controller;
 
+use App\Entity\EstadoDiario;
 use App\Entity\EstadoDiarioOrigen;
 use App\Form\EstadoDiarioOrigenType;
 use App\Repository\EstadoDiarioOrigenRepository;
 use App\Repository\EstadoDiarioRepository;
+use App\Repository\JurisdiccionRepository;
 use App\Repository\ModuloPerRepository;
 use App\Service\EstadoDiarioImportService;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -107,6 +110,78 @@ class EstadoDiarioController extends AbstractController
             'form' => $form->createView(),
             'pagina' => $pagina->getNombre(),
         ]);
+    }
+
+    /**
+     * @Route("/movimientos", name="estado_diario_movimientos", methods={"GET"})
+     */
+    public function movimientos(ModuloPerRepository $moduloPerRepository, JurisdiccionRepository $jurisdiccionRepository): Response
+    {
+        $this->denyAccessUnlessGranted('view', 'estado_diario');
+        $user = $this->getUser();
+        $pagina = $moduloPerRepository->findOneByName('estado_diario', $user->getEmpresaActual());
+
+        return $this->render('estado_diario/movimientos.html.twig', [
+            'pagina' => $pagina->getNombre(),
+            'jurisdicciones' => $jurisdiccionRepository->findBy([], ['nombre' => 'ASC']),
+        ]);
+    }
+
+    /**
+     * @Route("/movimientos/obtenerContenido", name="estado_diario_movimientos_obtener_contenido", methods={"GET"})
+     */
+    public function obtenerContenidoMovimientos(Request $request, EstadoDiarioRepository $estadoDiarioRepository, PaginatorInterface $paginator): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('view', 'estado_diario');
+
+        try {
+            $jurisdiccion = $request->query->get('bJurisdiccion') ?: null;
+            $fecha = $request->query->get('bFecha') ?: null;
+            $rut = $request->query->get('bRut') ?: null;
+
+            $query = $estadoDiarioRepository->findConFiltro(
+                $jurisdiccion ? (int) $jurisdiccion : null,
+                $fecha,
+                $rut
+            );
+
+            $movimientos = $paginator->paginate(
+                $query,
+                $request->query->getInt('page', 1),
+                30
+            );
+
+            $html = $this->renderView('estado_diario/_tablaMovimientos.html.twig', [
+                'movimientos' => $movimientos,
+            ]);
+
+            return new JsonResponse([
+                'html' => $html,
+                'total' => $movimientos->getTotalItemCount(),
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * @Route("/movimientos/{id}/leido", name="estado_diario_movimientos_leido", methods={"POST"})
+     */
+    public function marcarLeido(Request $request, EstadoDiario $estadoDiario): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('view', 'estado_diario');
+
+        if (!$this->isCsrfTokenValid('estado_diario_leido', $request->request->get('_token'))) {
+            return new JsonResponse(['exito' => false, 'mensaje' => 'Token inválido'], 400);
+        }
+
+        $estadoDiario->setLeido(true);
+        $estadoDiario->setFechaLeido(new \DateTime());
+        $estadoDiario->setUsuarioLeido($this->getUser());
+
+        $this->getDoctrine()->getManager()->flush();
+
+        return new JsonResponse(['exito' => true]);
     }
 
     /**
