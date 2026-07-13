@@ -717,12 +717,19 @@ class ApiController extends AbstractController
             $jurisdiccion = $request->query->get('jurisdiccion') ?: null;
             $fecha = $request->query->get('fecha') ?: null;
             $rut = $request->query->get('rut') ?: null;
+            $limit = $request->query->get('limit') ?: null;
 
-            $movimientos = $estadoDiarioRepository->findConFiltro(
+            $query = $estadoDiarioRepository->findConFiltro(
                 $jurisdiccion ? (int) $jurisdiccion : null,
                 $fecha,
                 $rut
-            )->getQuery()->getResult();
+            )->getQuery();
+
+            if ($limit) {
+                $query->setMaxResults((int) $limit);
+            }
+
+            $movimientos = $query->getResult();
 
             $data = array_map(function (EstadoDiario $m) {
                 return [
