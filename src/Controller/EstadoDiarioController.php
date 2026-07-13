@@ -115,7 +115,7 @@ class EstadoDiarioController extends AbstractController
     /**
      * @Route("/movimientos", name="estado_diario_movimientos", methods={"GET"})
      */
-    public function movimientos(ModuloPerRepository $moduloPerRepository, JurisdiccionRepository $jurisdiccionRepository): Response
+    public function movimientos(Request $request, ModuloPerRepository $moduloPerRepository, JurisdiccionRepository $jurisdiccionRepository): Response
     {
         $this->denyAccessUnlessGranted('view', 'estado_diario');
         $user = $this->getUser();
@@ -124,6 +124,8 @@ class EstadoDiarioController extends AbstractController
         return $this->render('estado_diario/movimientos.html.twig', [
             'pagina' => $pagina->getNombre(),
             'jurisdicciones' => $jurisdiccionRepository->findBy([], ['nombre' => 'ASC']),
+            'tabInicial' => $request->query->get('tab', 'no-leidos'),
+            'fechaDefault' => date('Y-m-d', strtotime('-1 day')),
         ]);
     }
 
@@ -135,14 +137,18 @@ class EstadoDiarioController extends AbstractController
         $this->denyAccessUnlessGranted('view', 'estado_diario');
 
         try {
+            $tab = $request->query->get('tab', 'no-leidos');
+            $leido = ($tab === 'leidos');
+
             $jurisdiccion = $request->query->get('bJurisdiccion') ?: null;
-            $fecha = $request->query->get('bFecha') ?: null;
+            $fecha = $request->query->get('bFecha') ?: date('Y-m-d', strtotime('-1 day'));
             $rut = $request->query->get('bRut') ?: null;
 
             $query = $estadoDiarioRepository->findConFiltro(
                 $jurisdiccion ? (int) $jurisdiccion : null,
                 $fecha,
-                $rut
+                $rut,
+                $leido
             );
 
             $movimientos = $paginator->paginate(
@@ -153,6 +159,7 @@ class EstadoDiarioController extends AbstractController
 
             $html = $this->renderView('estado_diario/_tablaMovimientos.html.twig', [
                 'movimientos' => $movimientos,
+                'tab' => $tab,
             ]);
 
             return new JsonResponse([

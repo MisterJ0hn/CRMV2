@@ -10,7 +10,12 @@
             <th>Estado</th>
             <th>Rut</th>
             <th>Fecha Estado Diario</th>
-            <th></th>
+            {% if tab == 'leidos' %}
+                <th>Leído por</th>
+                <th>Fecha Leído</th>
+            {% else %}
+                <th></th>
+            {% endif %}
         </tr>
     </thead>
     <tbody>
@@ -25,15 +30,20 @@
             <td>{{ movimiento.estado }}</td>
             <td>{{ movimiento.estadoDiarioOrigen.rut }}</td>
             <td>{{ movimiento.estadoDiarioOrigen.fecha ? movimiento.estadoDiarioOrigen.fecha|date('d-m-Y') : '' }}</td>
-            <td>
-                <button type="button" class="btn btn-sm btn-success btn-marcar-leido" data-id="{{ movimiento.id }}">
-                    <i class="fas fa-check"></i>
-                </button>
-            </td>
+            {% if tab == 'leidos' %}
+                <td>{{ movimiento.usuarioLeido ? movimiento.usuarioLeido.nombre : '' }}</td>
+                <td>{{ movimiento.fechaLeido ? movimiento.fechaLeido|date('d-m-Y H:i') : '' }}</td>
+            {% else %}
+                <td>
+                    <button type="button" class="btn btn-sm btn-success btn-marcar-leido" data-id="{{ movimiento.id }}">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </td>
+            {% endif %}
         </tr>
     {% else %}
         <tr>
-            <td colspan="10">No hay movimientos pendientes de revisión.</td>
+            <td colspan="10">{{ tab == 'leidos' ? 'No hay movimientos leídos.' : 'No hay movimientos pendientes de revisión.' }}</td>
         </tr>
     {% endfor %}
     </tbody>

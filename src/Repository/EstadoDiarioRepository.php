@@ -19,13 +19,14 @@ class EstadoDiarioRepository extends ServiceEntityRepository
         parent::__construct($registry, EstadoDiario::class);
     }
 
-    public function findConFiltro(?int $jurisdiccion = null, ?string $fecha = null, ?string $rut = null)
+    public function findConFiltro(?int $jurisdiccion = null, ?string $fecha = null, ?string $rut = null, bool $leido = false)
     {
         $query = $this->createQueryBuilder('ed')
             ->addSelect('origen', 'j')
             ->join('ed.estadoDiarioOrigen', 'origen')
             ->leftJoin('ed.jurisdiccion', 'j')
-            ->andWhere('ed.leido = false')
+            ->andWhere('ed.leido = :leido')
+            ->setParameter('leido', $leido)
             ->orderBy('origen.fecha', 'DESC')
             ->addOrderBy('ed.id', 'DESC');
 

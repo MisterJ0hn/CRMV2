@@ -18,7 +18,7 @@
             </div>
             <div class="col-sm-6 col-md-3">
                 <small class="text-muted">Fecha Estado Diario</small>
-                <input type="date" class="form-control" name="bFecha" id="bFecha" value="">
+                <input type="date" class="form-control" name="bFecha" id="bFecha" value="{{ fechaDefault }}">
             </div>
             <div class="col-sm-6 col-md-3">
                 <small class="text-muted">Rut</small>
@@ -30,6 +30,16 @@
             </div>
         </div>
     </div>
+    <div class="card-header p-0 border-bottom-0">
+        <ul class="nav nav-tabs" id="tabs-movimientos" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link tab-link {% if tabInicial == 'no-leidos' %}active{% endif %}" href="#" data-tab="no-leidos">No leídos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link tab-link {% if tabInicial == 'leidos' %}active{% endif %}" href="#" data-tab="leidos">Leídos</a>
+            </li>
+        </ul>
+    </div>
     <div class="card-body">
         <div id="resultado">
             <div class="text-center py-5">
@@ -40,10 +50,24 @@
 </div>
 
 <script>
-var _filtrosActuales = '';
+var tabActivo = '{{ tabInicial|default('no-leidos') }}';
 var _csrfTokenLeido = '{{ csrf_token('estado_diario_leido') }}';
 
-function cargarMovimientos(url) {
+function buildFiltros() {
+    var jurisdiccion = $('#bJurisdiccion').val() || '';
+    var fecha = $('#bFecha').val() || '';
+    var rut = $('#bRut').val() || '';
+    return 'bJurisdiccion=' + encodeURIComponent(jurisdiccion) + '&bFecha=' + encodeURIComponent(fecha) + '&bRut=' + encodeURIComponent(rut);
+}
+
+function cargarMovimientos(tab, page) {
+    tabActivo = tab;
+
+    var url = '{{ path('estado_diario_movimientos_obtener_contenido') }}?tab=' + encodeURIComponent(tab) + '&' + buildFiltros();
+    if (page && page > 1) {
+        url += '&page=' + page;
+    }
+
     $('#resultado').html('<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i></div>');
     $.ajax({
         url: url,
@@ -62,39 +86,35 @@ function cargarMovimientos(url) {
     });
 }
 
-function buildFiltros() {
-    var jurisdiccion = $('#bJurisdiccion').val() || '';
-    var fecha = $('#bFecha').val() || '';
-    var rut = $('#bRut').val() || '';
-    return 'bJurisdiccion=' + encodeURIComponent(jurisdiccion) + '&bFecha=' + encodeURIComponent(fecha) + '&bRut=' + encodeURIComponent(rut);
-}
-
 $(document).ready(function() {
-    cargarMovimientos('{{ path('estado_diario_movimientos_obtener_contenido') }}');
+    cargarMovimientos(tabActivo);
+});
+
+$('.tab-link').on('click', function(e) {
+    e.preventDefault();
+    $('.tab-link').removeClass('active');
+    $(this).addClass('active');
+    cargarMovimientos($(this).data('tab'));
 });
 
 $('#btn-buscar').on('click', function() {
-    _filtrosActuales = buildFiltros();
-    cargarMovimientos('{{ path('estado_diario_movimientos_obtener_contenido') }}?' + _filtrosActuales);
+    cargarMovimientos(tabActivo);
 });
 
 $('#btn-limpiar').on('click', function() {
     $('#bJurisdiccion').val('');
-    $('#bFecha').val('');
+    $('#bFecha').val('{{ fechaDefault }}');
     $('#bRut').val('');
-    _filtrosActuales = '';
-    cargarMovimientos('{{ path('estado_diario_movimientos_obtener_contenido') }}');
+    cargarMovimientos(tabActivo);
 });
 
 $(document).on('click', '#resultado a.page-link', function(e) {
     e.preventDefault();
     var url = $(this).attr('href');
-    if (url && url !== '#') {
-        if (_filtrosActuales && url.indexOf('bJurisdiccion') === -1) {
-            url += (url.indexOf('?') === -1 ? '?' : '&') + _filtrosActuales;
-        }
-        cargarMovimientos(url);
-    }
+    var page = 1;
+    var match = url.match(/[?&]page=(\d+)/);
+    if (match) { page = parseInt(match[1]); }
+    cargarMovimientos(tabActivo, page);
 });
 
 $(document).on('click', '.btn-marcar-leido', function() {
