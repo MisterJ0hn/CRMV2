@@ -79,6 +79,21 @@ class DescargaTc
     private $vencimientoUltCuotaNopagada;
 
     /**
+     * @ORM\Column(type="integer", nullable=true, name="valor_cuota")
+     */
+    private $valorCuota;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true, name="vencimiento_prim_cuota_no_pagada")
+     */
+    private $vencimientoPrimCuotaNoPagada;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true, name="cuotas_vencidas_impagas")
+     */
+    private $cuotasVencidasImpagas;
+
+    /**
      * @ORM\ManyToOne(targetEntity=Contrato::class)
      * @ORM\JoinColumn(nullable=false)
      */
@@ -231,4 +246,39 @@ class DescargaTc
         $this->contrato = $contrato;
         return $this;
     }
+
+    public function getValorCuota(): ?int
+    {
+        return $this->valorCuota;
+    }
+
+    public function setValorCuota(?int $valorCuota): self
+    {
+        $this->valorCuota = $valorCuota;
+        return $this;
+    }
+
+    public function getVencimientoPrimCuotaNoPagada(): ?\DateTimeInterface
+    {
+        return $this->vencimientoPrimCuotaNoPagada;
+    }
+
+    public function setVencimientoPrimCuotaNoPagada(?\DateTimeInterface $vencimientoPrimCuotaNoPagada): self
+    {
+        $this->vencimientoPrimCuotaNoPagada = $vencimientoPrimCuotaNoPagada;
+        return $this;
+    }
+
+    public function getCuotasVencidasImpagas(): ?int
+    {
+        return $this->cuotasVencidasImpagas;
+    }
+
+    public function setCuotasVencidasImpagas(?int $cuotasVencidasImpagas): self
+    {
+        $this->cuotasVencidasImpagas = $cuotasVencidasImpagas;
+        return $this;
+    }
+
+    
 }

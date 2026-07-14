@@ -51,7 +51,10 @@ class DescargaTcController extends AbstractController
                 ->setCellValue('I1', 'Monto Contrato')
                 ->setCellValue('J1', 'Tramitador')
                 ->setCellValue('K1', 'Materia')
-                ->setCellValue('L1', 'Fecha Vencimiento Última Cuota no pagada');
+                ->setCellValue('L1', 'Fecha Vencimiento Última Cuota no pagada')
+                ->setCellValue('M1', 'Valor Cuota')
+                ->setCellValue('N1', 'Vencimiento Primera Cuota No Pagada')
+                ->setCellValue('O1', 'Cuotas Vencidas Impagas');
 
             $row = 2;
             foreach ($registros as $d) {
@@ -66,7 +69,10 @@ class DescargaTcController extends AbstractController
                     ->setCellValue('I' . $row, $d->getMontoContrato())
                     ->setCellValue('J' . $row, $d->getTramitador())
                     ->setCellValue('K' . $row, $d->getMateria())
-                    ->setCellValue('L' . $row, ($d->getVencimientoUltCuotaNopagada() && $d->getVencimientoUltCuotaNopagada()->format('Y') > 1) ? $d->getVencimientoUltCuotaNopagada()->format('Y-m-d') : '');
+                    ->setCellValue('L' . $row, ($d->getVencimientoUltCuotaNopagada() && $d->getVencimientoUltCuotaNopagada()->format('Y') > 1) ? $d->getVencimientoUltCuotaNopagada()->format('Y-m-d') : '')
+                    ->setCellValue('M' . $row, $d->getValorCuota())
+                    ->setCellValue('N' . $row, ($d->getVencimientoPrimCuotaNoPagada() && $d->getVencimientoPrimCuotaNoPagada()->format('Y') > 1) ? $d->getVencimientoPrimCuotaNoPagada()->format('Y-m-d') : '')
+                    ->setCellValue('O' . $row, $d->getCuotasVencidasImpagas());
                 $row++;
             }
 

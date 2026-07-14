@@ -67,7 +67,7 @@ class ConsultasController extends AbstractController
         'F' => ['Cliente',           'cliente'],
         'G' => ['Cerrador',          'nombre_cerrador'],
         'H' => ['Tramitador',        'nombre_tramitador'],
-        
+        'I' => ['Teléfono Cliente',  'telefono_cliente']
     ];
 
     /**

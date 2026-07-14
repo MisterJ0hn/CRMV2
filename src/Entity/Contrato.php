@@ -19,6 +19,46 @@ class Contrato
      */
     private $id;
 
+     /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $nombre;
+
+    /**
+     * @ORM\Column(type="string", length=255,nullable=true)
+     */
+    private $email;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $telefono;
+
+    /**
+     * @ORM\Column(type="string", length=255,nullable=true)
+     */
+    private $rut;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $direccion;
+    
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $claveUnica;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $telefonoRecado;
+
+    /**
+     * @ORM\Column(type="string", length=20, nullable=true)
+     */
+    private $sexo;
+
     /**
      * @ORM\Column(type="string", length=255,nullable=true)
      */
@@ -1989,6 +2029,102 @@ class Contrato
         return $this;
     }
 
+    public function getNombre(): ?string
+    {
+        return $this->nombre;
+    }
+
+    public function setNombre(string $nombre): self
+    {
+        $this->nombre = $nombre;
+
+        return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(?string $email): self
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    public function getTelefono(): ?string
+    {
+        return $this->telefono;
+    }
+
+    public function setTelefono(?string $telefono): self
+    {
+        $this->telefono = $telefono;
+
+        return $this;
+    }
+
+    public function getRut(): ?string
+    {
+        return $this->rut;
+    }
+
+    public function setRut(?string $rut): self
+    {
+        $this->rut = $rut;
+
+        return $this;
+    }
+
+    public function getDireccion(): ?string
+    {
+        return $this->direccion;
+    }
+
+    public function setDireccion(string $direccion): self
+    {
+        $this->direccion = $direccion;
+
+        return $this;
+    }
+
+    public function getClaveUnica(): ?string
+    {
+        return $this->claveUnica;
+    }
+
+    public function setClaveUnica(?string $claveUnica): self
+    {
+        $this->claveUnica = $claveUnica;
+
+        return $this;
+    }
+
+     public function getSexo(): ?string
+    {
+        return $this->sexo;
+    }
+
+    public function setSexo(?string $sexo): self
+    {
+        $this->sexo = $sexo;
+
+        return $this;
+    }
+
+    public function getTelefonoRecado(): ?string
+    {
+        return $this->telefonoRecado;
+    }
+
+    public function setTelefonoRecado(?string $telefonoRecado): self
+    {
+        $this->telefonoRecado = $telefonoRecado;
+
+        return $this;
+    }
+
     // --- Propiedades transient módulo Encuesta (no mapeadas a BD) ---
     private ?int $ultimaNota = null;
     private ?\DateTimeInterface $fechaGestion = null;
@@ -1998,4 +2134,7 @@ class Contrato
 
     public function getFechaGestion(): ?\DateTimeInterface { return $this->fechaGestion; }
     public function setFechaGestion(?\DateTimeInterface $v): self { $this->fechaGestion = $v; return $this; }
+
+
+
 }

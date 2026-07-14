@@ -559,6 +559,7 @@ class PanelAbogadoController extends AbstractController
                 $cliente->setClaveUnica($form->get('claveUnica')->getData());
                 $cliente->setDireccion($form->get('direccion')->getData());
                 $cliente->setTelefonoRecado($form->get('telefonoRecado')->getData());
+                $cliente->setSexo($request->request->get('cboSexo'));
                 $contrato->setCliente($cliente);
                 $entityManager->persist($cliente);
 
@@ -593,7 +594,7 @@ class PanelAbogadoController extends AbstractController
                 $contrato->setCregion($regionRepository->find($request->request->get('cboRegion')));
                 $contrato->setCciudad($ciudadRepository->find($request->request->get('cboCiudad')));
                 $contrato->setCcomuna($comunaRepository->find($request->request->get('cboComuna')));
-                $cliente->setSexo($request->request->get('cboSexo'));
+                
 
 
 
