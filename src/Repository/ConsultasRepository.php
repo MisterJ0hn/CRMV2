@@ -30,10 +30,13 @@ class ConsultasRepository
                 'c.folio',
                 'c.fechaCreacion AS fechaContrato',
                 'MAX(ca.fechaCreacion) AS fechaUltAnexo',
-                'cli.nombre AS cliente',
+                'c.nombre AS cliente',
+                //'cli.nombre AS cliente',
                 'cerrador.nombre AS nombre_cerrador',
                 'tramitador.nombre AS nombre_tramitador',
-                'a.id as agenda_id'
+                'a.id as agenda_id',
+                'c.telefono AS telefono_cliente'
+                //'cli.telefono AS telefono_cliente'
             )
             ->from(Contrato::class, 'c')
             ->join('c.agenda', 'a')
@@ -42,6 +45,7 @@ class ConsultasRepository
             ->join('cm.materia', 'm')
             ->join('a.abogado', 'cerrador')
             ->join('c.tramitador', 'tramitador')
+            //->join('c.cliente', 'cli')
             ->leftJoin('c.contratoAnexos', 'ca')
             ->leftJoin('c.cliente', 'cli')
             ->andWhere('c.fechaDesiste IS NULL')
@@ -49,7 +53,7 @@ class ConsultasRepository
             ->andWhere(" ((c.fechaCreacion between  date_sub(current_timestamp(),c.vigencia,'month') and current_timestamp()) and
                         c.vigenciaUltAnexo is null)
                         or ((c.vigenciaUltAnexo is not null and  c.fechaCreacionUltAnexo between  date_sub(current_timestamp(),c.vigenciaUltAnexo,'month') and current_timestamp()) )")
-            ->groupBy('c.id, c.folio, c.fechaCreacion, cli.nombre, cerrador.id, cerrador.nombre, tramitador.id, tramitador.nombre')
+            ->groupBy('c.id, c.folio, c.fechaCreacion, c.nombre, cerrador.id, cerrador.nombre, tramitador.id, tramitador.nombre')
             ;
     }
 
@@ -83,11 +87,14 @@ class ConsultasRepository
                 'c.folio',
                 'c.fechaCreacion AS fechaContrato',
                 'MAX(ca.fechaCreacion) AS fechaUltAnexo',
-                'cli.nombre AS cliente',
+                'c.nombre AS cliente',
+                //'cli.nombre AS cliente',
                 'cerrador.nombre AS nombre_cerrador',
                 'tramitador.nombre AS nombre_tramitador',
                 'TIMESTAMPDIFF(MONTH, c.fechaCreacion, CURRENT_TIMESTAMP()) AS mesesSistema',
-                'a.id as agenda_id'
+                'a.id as agenda_id',
+                'c.telefono AS telefono_cliente'
+                //'cli.telefono AS telefono_cliente'
             )
             ->from(Contrato::class, 'c')
             ->join('c.agenda', 'a')
@@ -97,14 +104,14 @@ class ConsultasRepository
             ->join('a.abogado', 'cerrador')
             ->join('c.tramitador', 'tramitador')
             ->leftJoin('c.contratoAnexos', 'ca')
-            ->leftJoin('c.cliente', 'cli')
+           // ->leftJoin('c.cliente', 'cli')
             ->andWhere('c.fechaDesiste IS NULL')
             ->andWhere('IDENTITY(a.status) NOT IN (13, 15)')
             ->andWhere('NOT EXISTS (SELECT cu2.id FROM App\Entity\Cuota cu2 WHERE cu2.contrato = c AND cu2.pagado IS NULL AND COALESCE(cu2.anular, 0) = 0)')
             ->andWhere(" ((c.fechaCreacion between  date_sub(current_timestamp(),c.vigencia,'month') and current_timestamp()) and
                         c.vigenciaUltAnexo is null)
                         or ((c.vigenciaUltAnexo is not null and  c.fechaCreacionUltAnexo between  date_sub(current_timestamp(),c.vigenciaUltAnexo,'month') and current_timestamp()) )")
-            ->groupBy('c.id, c.folio, c.fechaCreacion, cli.nombre, cerrador.id, cerrador.nombre, tramitador.id, tramitador.nombre')
+            ->groupBy('c.id, c.folio, c.fechaCreacion, c.nombre, cerrador.id, cerrador.nombre, tramitador.id, tramitador.nombre')
 
             ->getQuery()
             ->getScalarResult();

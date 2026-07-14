@@ -450,11 +450,14 @@ class ResumenCausasController extends AbstractController
            
            // $sheet->setCellValue('L'.$i, $causa->getFechaRegistroObservacion()?$causa->getFechaRegistroObservacion():"");
             $sheet->setCellValue('K'.$i, $causa->getCausaFinalizada());
-            if($bTipoCuenta=="clientesActivosVIP" || $bTipoCuenta=="clientesAlDiaVIP"){
+            //if($bTipoCuenta=="clientesActivosVIP" || $bTipoCuenta=="clientesAlDiaVIP"){
                 $agenda=$agendaRepository->find($causa->getAgendaId());
            
-                $sheet->setCellValue('L'.$i, $agenda?$agenda->getTelefonoCliente():"");
-            }
+                //$sheet->setCellValue('L'.$i, $agenda?$agenda->getTelefonoCliente() : "");
+                $sheet->setCellValue('L'.$i, $agenda?$agenda->getContrato()->getTelefono() : "");
+                //$sheet->setCellValue('L'.$i, $agenda?$agenda->getContrato()->getCliente()->getTelefono() : "");
+                
+            //}
             $sheet->setCellValue('M'.$i, $causa->getDiasUltObservacion() );
            // $sheet->setCellValue('O'.$i, $causa->getFechaObservacionCliente()?$causa->getFechaObservacionCliente():"");
             $i++;
