@@ -35,8 +35,9 @@
                 <td>{{ movimiento.fechaLeido ? movimiento.fechaLeido|date('d-m-Y H:i') : '' }}</td>
             {% else %}
                 <td>
+
                     <button type="button" class="btn btn-sm btn-success btn-marcar-leido" data-id="{{ movimiento.id }}">
-                        <i class="fas fa-check"></i>
+                        Leído
                     </button>
                 </td>
             {% endif %}

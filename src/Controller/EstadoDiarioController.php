@@ -143,13 +143,9 @@ class EstadoDiarioController extends AbstractController
             $jurisdiccion = $request->query->get('bJurisdiccion') ?: null;
             $fecha = $request->query->get('bFecha') ?: date('Y-m-d', strtotime('-1 day'));
             $rut = $request->query->get('bRut') ?: null;
+            $jurisdiccionId = $jurisdiccion ? (int) $jurisdiccion : null;
 
-            $query = $estadoDiarioRepository->findConFiltro(
-                $jurisdiccion ? (int) $jurisdiccion : null,
-                $fecha,
-                $rut,
-                $leido
-            );
+            $query = $estadoDiarioRepository->findConFiltro($jurisdiccionId, $fecha, $rut, $leido);
 
             $movimientos = $paginator->paginate(
                 $query,
@@ -165,6 +161,8 @@ class EstadoDiarioController extends AbstractController
             return new JsonResponse([
                 'html' => $html,
                 'total' => $movimientos->getTotalItemCount(),
+                'totalNoLeidos' => $estadoDiarioRepository->contarPorFiltro($jurisdiccionId, $fecha, $rut, false),
+                'totalLeidos' => $estadoDiarioRepository->contarPorFiltro($jurisdiccionId, $fecha, $rut, true),
             ]);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()]);
