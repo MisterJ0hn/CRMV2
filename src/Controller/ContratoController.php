@@ -208,7 +208,7 @@ class ContratoController extends AbstractController
             }
 
             switch ($user->getUsuarioTipo()->getId()) {
-                case 3: case 4: case 1: case 8: case 11:
+                case 3: case 4: case 1: case 8: case 11: case 14:
                     $query = $contratoRepository->findIndexQuery(null, $user->getEmpresaActual(), $compania, $filtro, null, $fecha);
                     break;
                 case 13: case 10:
@@ -565,6 +565,7 @@ class ContratoController extends AbstractController
      * @Route("/{id}", name="contrato_show", methods={"GET"})
      */
     public function show(Contrato $contrato,
+                        Request $request,
                         DiasPagoRepository $diasPagoRepository,
                         ModuloPerRepository $moduloPerRepository,
                         CausaObservacionRepository $causaObservacionRepository): Response
@@ -572,11 +573,14 @@ class ContratoController extends AbstractController
         $this->denyAccessUnlessGranted('view','contrato');
         $user=$this->getUser();
         $pagina=$moduloPerRepository->findOneByName('contrato',$user->getEmpresaActual());
+        $origen = $request->getSession()->get('origen_anexo');
+        
         return $this->render('contrato/show.html.twig', [
             'contrato' => $contrato,
             'agenda'=>$contrato->getAgenda(),
             'pagina'=>$pagina->getNombre(),
             'diasPagos'=>$diasPagoRepository->findAll(),
+            'origen'=>$origen,
             'observaciones'=>$causaObservacionRepository->findBy(['contrato'=>$contrato],['fechaRegistro'=>'Desc'])
         ]);
     }
