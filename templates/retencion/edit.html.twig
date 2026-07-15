@@ -1,0 +1,12 @@
+
+{% extends 'base.html.twig' %}
+
+{% block title %}{{pagina|default('Retención')}}{% endblock %}
+
+{% block body %}
+	
+    {{ include('retencion/_form.html.twig', {'button_label': 'Modificar'}) }}
+
+    
+    
+{% endblock %}
