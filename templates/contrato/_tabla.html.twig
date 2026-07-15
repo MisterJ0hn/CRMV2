@@ -121,7 +121,9 @@
                             {% else %}
                                 <a href="{{url_web}}{{pdf_contrato}}{{contrato.pdf}}" class="btn btn-success btn-sm"><i class="fas fa-file-pdf"></i></a>
                             {% endif %}
+                            {% if is_granted("create", "contrato_show") %}  
                             <a href="{{ path('contrato_show', {'id': contrato.id}) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>
+                            {% endif %}
                             <a href="{{ path('contrato_edit', {'id': contrato.id}) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
                             {% if is_granted('create','modificar_contrato') %}
                                 <a href="#" class="btn btn-dark btn-sm" onclick="javascript:editarObservacion({{contrato.id}})" ><i class="fas fa-edit"></i></a>
@@ -129,11 +131,15 @@
                             {% if contrato.agenda.status.id == 14 %}
                                 <a href="#" class="btn btn-warning btn-sm"><i class="fas fa-retweet"></i></a>
                             {% else %}
+                                {% if is_granted("create", "terminos") %}                                
                                 <a href="{{ path('contrato_terminar', {'id': contrato.id}) }}" class="btn btn-danger btn-sm"><i class="fas fa-handshake-slash"></i></a>
+                                {% endif %}
                             {% endif %}
                             <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn btn-sm text-white bg-dark">LT</a>
                             <a href="{{path('anexo_index',{'id':contrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos"><i class="fas fa-file"></i></a>
-                            <a href="#" class="btn btn-secondary btn-sm" onclick="javascript:reasignarCerrador({{contrato.id}})"><i class="fas fa-retweet"></i></a>
+                            {% if is_granted("create", "contrato_reasignar") %}
+                                <a href="#" class="btn btn-secondary btn-sm" onclick="javascript:reasignarCerrador({{contrato.id}})"><i class="fas fa-retweet"></i></a>
+                            {% endif %}
                         {% elseif sesion.getSesion.usuarioTipo.id == 12 %}
                                
                             <a href="{{path('anexo_index',{'id':contrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos" ><i class="fas fa-file"></i></a>
@@ -186,15 +192,21 @@
                             {% else %}
                                 <a href="{{url_web}}{{pdf_contrato}}{{contrato.pdf}}" class="btn btn-success btn-sm"><i class="fas fa-file-pdf"></i></a>
                             {% endif %}
-                            <a href="{{ path('contrato_show', {'id': contrato.id}) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>
+                            {% if is_granted("create", "contrato_show") %}  
+                                <a href="{{ path('contrato_show', {'id': contrato.id}) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i></a>
+                            {% endif %}
                             {% if contrato.agenda.status.id == 14 %}
                                 <a href="#" class="btn btn-warning btn-sm"><i class="fas fa-retweet"></i></a>
                             {% else %}
+                                {% if is_granted("create", "terminos") %}
                                 <a href="{{ path('contrato_terminar', {'id': contrato.id}) }}" class="btn btn-danger btn-sm"><i class="fas fa-handshake-slash"></i></a>
+                                {% endif %}
                             {% endif %}
                             <a href="{{ path('contrato_linea_tiempo', {'id': contrato.id}) }}" class="btn btn-sm text-white bg-dark">LT</a>
                             <a href="{{path('anexo_index',{'id':contrato.id})}}" type="button" class="btn btn-info btn-sm buttonAnexos"><i class="fas fa-file"></i></a>
+                            {% if is_granted("create", "contrato_reasignar") %}
                             <a href="#" class="btn btn-secondary btn-sm" onclick="javascript:reasignarCerrador({{contrato.id}})"><i class="fas fa-retweet"></i></a>
+                            {% endif %}
                         {% endif %}
                         </div>
                         </div>

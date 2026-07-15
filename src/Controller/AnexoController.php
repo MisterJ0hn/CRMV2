@@ -67,7 +67,7 @@ class AnexoController extends AbstractController
         $this->denyAccessUnlessGranted('create','anexo');
 
         $origen = $request->getSession()->get('origen_anexo');
-  
+        $user = $this->getUser();
         $tiposAnexo=[["id"=>1,"nombre"=>"Agregar Causa"],
             ["id"=>2,"nombre"=>"Extensión del plazo"],
             ["id"=>3,"nombre"=>"Renegociación"]];
@@ -88,7 +88,16 @@ class AnexoController extends AbstractController
                     ["id"=>3,"nombre"=>"Renegociación"]
                 ];
             }
+             if(trim($origen)==trim(OrigenAnexo::CONTRATOS_VENCIDOS)){
+               $tiposAnexo=[["id"=>1,"nombre"=>"Agregar Causa"],
+                ["id"=>2,"nombre"=>"Extensión del plazo"]
+               ];
+            }
              
+        }
+        if ($user->getUsuarioTipo()->getId() == 14) {
+            $tiposAnexo=[["id"=>1,"nombre"=>"Agregar Causa"],
+                ["id"=>2,"nombre"=>"Extensión del plazo"]];
         }
    
         return $this->render('anexo/crearAnexo.html.twig', [
