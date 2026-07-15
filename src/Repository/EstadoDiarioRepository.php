@@ -46,4 +46,11 @@ class EstadoDiarioRepository extends ServiceEntityRepository
 
         return $query;
     }
+
+    public function contarPorFiltro(?int $jurisdiccion = null, ?string $fecha = null, ?string $rut = null): int
+    {
+        $query = $this->findConFiltro($jurisdiccion, $fecha, $rut);
+
+        return (int) $query->select('COUNT(ed.id)')->getQuery()->getSingleScalarResult();
+    }
 }

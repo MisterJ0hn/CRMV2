@@ -718,15 +718,21 @@ class ApiController extends AbstractController
             $fecha = $request->query->get('fecha') ?: null;
             $rut = $request->query->get('rut') ?: null;
             $limit = $request->query->get('limit') ?: null;
+            $page = max(1, (int) ($request->query->get('page') ?: 1));
+            $jurisdiccionId = $jurisdiccion ? (int) $jurisdiccion : null;
 
-            $query = $estadoDiarioRepository->findConFiltro(
-                $jurisdiccion ? (int) $jurisdiccion : null,
-                $fecha,
-                $rut
-            )->getQuery();
+            $totalItems = $estadoDiarioRepository->contarPorFiltro($jurisdiccionId, $fecha, $rut);
 
+            $query = $estadoDiarioRepository->findConFiltro($jurisdiccionId, $fecha, $rut)->getQuery();
+
+            $totalPages = 1;
             if ($limit) {
-                $query->setMaxResults((int) $limit);
+                $limit = (int) $limit;
+                $totalPages = (int) max(1, ceil($totalItems / $limit));
+                $query->setFirstResult(($page - 1) * $limit);
+                $query->setMaxResults($limit);
+            } else {
+                $page = 1;
             }
 
             $movimientos = $query->getResult();
@@ -749,7 +755,9 @@ class ApiController extends AbstractController
 
             return $this->json([
                 'exito' => true,
-                'total' => count($data),
+                'total' => $totalItems,
+                'page' => $page,
+                'total_pages' => $totalPages,
                 'movimientos' => $data,
             ]);
         } catch (\Exception $e) {
