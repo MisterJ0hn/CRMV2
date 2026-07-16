@@ -7,6 +7,7 @@ use App\Entity\ApiLlamadoAdereso;
 use App\Entity\ApiToken;
 use App\Entity\Contrato;
 use App\Entity\EstadoDiario;
+use App\Entity\EstadoDiarioAgenda;
 use App\Repository\EstadoDiarioRepository;
 use App\Entity\PjudAnexoCausa;
 use App\Entity\PjudAnexoMovimiento;
@@ -765,6 +766,56 @@ class ApiController extends AbstractController
             $em->flush();
 
             return $this->json(['exito' => true]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'exito' => false,
+                'mensaje' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * @Route("/api/estado-diario/{id}/agenda", methods={"POST"})
+     */
+    public function estadoDiarioAgendarRegistro(EstadoDiario $estadoDiario, Request $request, EntityManagerInterface $em, UsuarioRepository $usuarioRepository): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            if (empty($data['detalle']) || empty($data['fecha_hora'])) {
+                return $this->json([
+                    'exito' => false,
+                    'mensaje' => 'Los campos detalle y fecha_hora son obligatorios',
+                ], 400);
+            }
+
+            $fechaHora = \DateTime::createFromFormat('Y-m-d H:i:s', $data['fecha_hora']) ?: new \DateTime($data['fecha_hora']);
+
+            $usuarioRegistro = null;
+            if (!empty($data['usuario_registro_id'])) {
+                $usuarioRegistro = $usuarioRepository->find($data['usuario_registro_id']);
+                if (!$usuarioRegistro) {
+                    return $this->json([
+                        'exito' => false,
+                        'mensaje' => 'usuario_registro_id no existe',
+                    ], 400);
+                }
+            }
+
+            $agenda = new EstadoDiarioAgenda();
+            $agenda->setEstadoDiario($estadoDiario);
+            $agenda->setDetalle($data['detalle']);
+            $agenda->setFechaHora($fechaHora);
+            $agenda->setUsuarioRegistro($usuarioRegistro);
+            $agenda->setFechaHoraRegistro(new \DateTime());
+
+            $em->persist($agenda);
+            $em->flush();
+
+            return $this->json([
+                'exito' => true,
+                'id' => $agenda->getId(),
+            ]);
         } catch (\Exception $e) {
             return $this->json([
                 'exito' => false,

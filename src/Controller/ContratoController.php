@@ -1435,7 +1435,7 @@ class ContratoController extends AbstractController
             $contratoRepository->actualizarEsVip($contratoId);
             
             //Obtendremos la materia para poder identificar que correo debe ser enviado.
-            $template_id=0;
+            /*$template_id=0;
             foreach ($contrato->getAgenda()->getCuenta()->getCuentaMaterias() as $cuenta_materia) {
                 switch($cuenta_materia->getMateria()->getId()){
                     case 12:
@@ -1461,7 +1461,7 @@ class ContratoController extends AbstractController
                 $entityManager->flush();
             }else{
                 exec("cd .. && cd .. && cd Proyecto_Mailer/Desarrollo &&  node Mailer_bienvenida.js ".$contrato->getId()." $template_id envio-correo.log 2>&1");
-            }
+            }*/
             if($contrato->getAceptaSuscripcion()){
                 return $this->redirectToRoute('contrato_ver_suscripcion',["id"=>$contrato->getId()]);
             }else{
