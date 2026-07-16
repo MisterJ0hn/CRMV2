@@ -454,8 +454,8 @@ class ResumenCausasController extends AbstractController
                 $agenda=$agendaRepository->find($causa->getAgendaId());
            
                 //$sheet->setCellValue('L'.$i, $agenda?$agenda->getTelefonoCliente() : "");
-                $sheet->setCellValue('L'.$i, $agenda?$agenda->getContrato()->getTelefono() : "");
-                //$sheet->setCellValue('L'.$i, $agenda?$agenda->getContrato()->getCliente()->getTelefono() : "");
+                //$sheet->setCellValue('L'.$i, $agenda?$agenda->getContrato()->getTelefono() : "");
+                $sheet->setCellValue('L'.$i, $agenda?$agenda->getContrato()->getCliente()->getTelefono() : "");
                 
             //}
             $sheet->setCellValue('M'.$i, $causa->getDiasUltObservacion() );
