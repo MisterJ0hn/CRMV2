@@ -580,6 +580,7 @@ class CuotaRepository extends ServiceEntityRepository
         $query->join('c.contrato','co');
         $query->join('co.agenda','a');
         $query->join('a.cuenta','cu');
+        $query->leftJoin('co.cliente','cli');
         
         if($conrestriccion==true){
             if($vigente){
@@ -622,7 +623,7 @@ class CuotaRepository extends ServiceEntityRepository
 
 
         if(!is_null($filtro)){ 
-            $query->andWhere("(co.nombre like '%$filtro%' or co.rut like '%$filtro%')")
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.rut like '%$filtro%')")
          ;
 
         }

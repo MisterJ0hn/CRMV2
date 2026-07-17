@@ -85,7 +85,7 @@ class TicketRepository extends ServiceEntityRepository
                 break;
             case 3:
                 if(!is_null($usuario)){
-                    $query->andWhere('(t.encargado='.$usuario.' and u.usuarioTipo=3) or (t.encargado='.$usuario.' or t.origen='.$usuario.' or u.usuarioTipo!=3 )');
+                    $query->andWhere('(t.encargado='.$usuario.' and u.usuarioTipo=3) or (t.encargado='.$usuario.' or t.origen='.$usuario.' or (u.usuarioTipo!=3 and u.usuarioTipo!=1) )');
                 }
                 break;                        
             default:
