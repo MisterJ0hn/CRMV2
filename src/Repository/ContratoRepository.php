@@ -841,6 +841,19 @@ class ContratoRepository extends ServiceEntityRepository
         return $query->orderBy('c.folio', 'asc')->getQuery();
     }
 
+    /**
+     * @return Contrato
+     */
+    public function findByFolio(string $folio): Contrato
+    {
+        return $this->createQueryBuilder('c')           
+            ->where(" c.folio = :folio or c.agenda = :folio ")          
+            ->setParameter('folio', $folio)
+            ->orderBy('c.fechaCreacion', 'DESC')
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     // /**
     //  * @return Contrato[] Returns an array of Contrato objects
     //  */

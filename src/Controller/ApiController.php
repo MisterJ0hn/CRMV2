@@ -792,12 +792,12 @@ class ApiController extends AbstractController
             $fechaHora = \DateTime::createFromFormat('Y-m-d H:i:s', $data['fecha_hora']) ?: new \DateTime($data['fecha_hora']);
 
             $usuarioRegistro = null;
-            if (!empty($data['usuario_registro_id'])) {
-                $usuarioRegistro = $usuarioRepository->find($data['usuario_registro_id']);
+            if (!empty($data['username'])) {
+                $usuarioRegistro = $usuarioRepository->findOneBy(['username' => $data['username']]);
                 if (!$usuarioRegistro) {
                     return $this->json([
                         'exito' => false,
-                        'mensaje' => 'usuario_registro_id no existe',
+                        'mensaje' => 'username no existe',
                     ], 400);
                 }
             }

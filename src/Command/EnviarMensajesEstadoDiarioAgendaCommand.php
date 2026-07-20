@@ -67,11 +67,18 @@ class EnviarMensajesEstadoDiarioAgendaCommand extends Command
             }
 
             try {
-                $client->messages->create($telefono, [
-                    'from' => $this->twilioFromNumber,
-                    'body' => $agenda->getDetalle(),
-                ]);
-
+               
+                $message = $client->messages
+                ->create("whatsapp:$telefono", // to
+                    array(
+                    "from" => "whatsapp:".$this->twilioFromNumber,
+                    //"contentSid" => "HX5f91b49fd936e355e8ca63c98b17d6e7",
+                    "contentSid" => "HXb9ce70f637853bfb9cfc21c7dc546034",
+                    "contentVariables" => 
+                    '{"first_name":"'.$agenda->getUsuarioRegistro()->getNombre().' Rol: '.$agenda->getEstadoDiario()->getRol().' Caratulado: '.$agenda->getEstadoDiario()->getCaratulado().'" }',
+                    "body" => $agenda->getDetalle()
+                    )
+                );
                 // Se marca enviado=true inmediatamente y se hace flush individual
                 // para que, aunque el proceso se corte a mitad de camino, los
                 // registros ya enviados no vuelvan a procesarse en la próxima corrida.

@@ -29,8 +29,8 @@ class EstadoDiarioAgendaRepository extends ServiceEntityRepository
             ->join('a.usuarioRegistro', 'u')
             ->join('a.estadoDiario', 'ed')
             ->andWhere('a.enviado = false')
-            ->andWhere('a.fechaHora <= :ahora')
-            ->setParameter('ahora', new \DateTime())
+            ->andWhere('a.fechaHora <= now()')
+          
             ->orderBy('a.fechaHora', 'ASC')
             ->getQuery()
             ->getResult();

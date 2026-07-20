@@ -216,12 +216,11 @@ class TicketRepository extends ServiceEntityRepository
         $query=$this->createQueryBuilder('t')
         ->join('t.contrato','c')
         ->join('t.estado','e')
-        ->where('c.folio='.$folio)
+        ->where('c.folio='.$folio.' or c.agenda='.$folio)
         ->andWhere('e.id in (1,2,3) ');
         
         return $query->getQuery()
-                ->getResult()
-        ;
+                ->getResult();
     }
 
     public function findTicketsByFechaRange(DateTime $fechaInicio, DateTime $fechaFIn){

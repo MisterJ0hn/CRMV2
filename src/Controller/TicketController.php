@@ -216,10 +216,11 @@ class TicketController extends AbstractController
         $usuarioReporte="";
         if($folio!=''){
             
-            $contrato=$contratoRepository->findOneBy(['folio'=>$folio]);
+            $contrato=$contratoRepository->findByFolio($folio);
             $ticket=$ticketRepository->findAbierto($folio);
             if($contrato){
-                $usuarioGrupo = $usuarioGrupoRepository->findOneBy(['grupo'=>$contrato->getGrupo()]);
+                echo $contrato->getGrupo()->getId();
+                $usuarioGrupo = $usuarioGrupoRepository->findOneBy(['grupo'=>$contrato->getGrupo()->getId()]);
 
                 if($usuarioGrupo->getUsuario() != null){
                     $usuarioReporte=$usuarioGrupo->getUsuario()->getNombre();

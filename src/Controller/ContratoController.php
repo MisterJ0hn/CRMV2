@@ -208,7 +208,7 @@ class ContratoController extends AbstractController
             }
 
             switch ($user->getUsuarioTipo()->getId()) {
-                case 3: case 4: case 1: case 8: case 11:
+                case 3: case 4: case 1: case 8: case 11: case 14:
                     $query = $contratoRepository->findIndexQuery(null, $user->getEmpresaActual(), $compania, $filtro, null, $fecha);
                     break;
                 case 13: case 10:
@@ -565,6 +565,7 @@ class ContratoController extends AbstractController
      * @Route("/{id}", name="contrato_show", methods={"GET"})
      */
     public function show(Contrato $contrato,
+
                         DiasPagoRepository $diasPagoRepository,
                         ModuloPerRepository $moduloPerRepository,
                         CausaObservacionRepository $causaObservacionRepository): Response
@@ -572,11 +573,14 @@ class ContratoController extends AbstractController
         $this->denyAccessUnlessGranted('view','contrato');
         $user=$this->getUser();
         $pagina=$moduloPerRepository->findOneByName('contrato',$user->getEmpresaActual());
+
+        
         return $this->render('contrato/show.html.twig', [
             'contrato' => $contrato,
             'agenda'=>$contrato->getAgenda(),
             'pagina'=>$pagina->getNombre(),
             'diasPagos'=>$diasPagoRepository->findAll(),
+            
             'observaciones'=>$causaObservacionRepository->findBy(['contrato'=>$contrato],['fechaRegistro'=>'Desc'])
         ]);
     }
@@ -1356,6 +1360,20 @@ class ContratoController extends AbstractController
 
         $cliente = $contrato->getCliente();
 
+        if (!$cliente) {
+            return new JsonResponse(['success' => false, 'message' => 'El contrato no tiene un cliente asociado.'], 400);
+        }
+
+        $txtNombre = trim((string) $request->request->get('txtNombre'));
+        $txtRut = trim((string) $request->request->get('txtRut'));
+        $txtEmail = trim((string) $request->request->get('txtEmail'));
+        $txtTelefono = trim((string) $request->request->get('txtTelefono'));
+        $txtDireccion = trim((string) $request->request->get('txtDireccion'));
+
+        if ($txtNombre === '' || $txtRut === '' || $txtEmail === '' || $txtTelefono === '' || $txtDireccion === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Debe completar nombre, rut, correo, teléfono y dirección.'], 400);
+        }
+
         $clienteHistorial = new ClienteHistorial();
         $clienteHistorial->setCliente($cliente);
         $clienteHistorial->setNombre($cliente->getNombre());
@@ -1370,14 +1388,14 @@ class ContratoController extends AbstractController
         $clienteHistorial->setUsuarioModificacion($user->getNombre());
         $entityManager->persist($clienteHistorial);
 
-        $cliente->setNombre($request->request->get('txtNombre'));
-        $cliente->setRut($request->request->get('txtRut'));
-        $cliente->setTelefono($request->request->get('txtTelefono'));
-        $cliente->setCorreo($request->request->get('txtEmail'));
+        $cliente->setNombre($txtNombre);
+        $cliente->setRut($txtRut);
+        $cliente->setTelefono($txtTelefono);
+        $cliente->setCorreo($txtEmail);
         $cliente->setSexo($request->request->get('cboSexo'));
         $cliente->setClaveUnica($request->request->get('txtClaveUnica'));
         $cliente->setTelefonoRecado($request->request->get('txtTelefonoRecado'));
-        $cliente->setDireccion($request->request->get('txtDireccion'));
+        $cliente->setDireccion($txtDireccion);
         $entityManager->persist($cliente);
 
         if (!$tieneObservaciones) {
@@ -1435,7 +1453,7 @@ class ContratoController extends AbstractController
             $contratoRepository->actualizarEsVip($contratoId);
             
             //Obtendremos la materia para poder identificar que correo debe ser enviado.
-            /*$template_id=0;
+            $template_id=0;
             foreach ($contrato->getAgenda()->getCuenta()->getCuentaMaterias() as $cuenta_materia) {
                 switch($cuenta_materia->getMateria()->getId()){
                     case 12:
@@ -1451,8 +1469,9 @@ class ContratoController extends AbstractController
                         break;
                 }
             }
+            $mailPendienteEnvio = new MailPendienteEnvio();
             if($template_id == 13){
-                $mailPendienteEnvio = new MailPendienteEnvio();
+                
                 $mailPendienteEnvio->setContrato($contrato);
                 $mailPendienteEnvio->setEnviado(0);
                 $mailPendienteEnvio->setFechaIngreso(new \DateTime(date('Y-m-d H:i:s')));
@@ -1461,7 +1480,15 @@ class ContratoController extends AbstractController
                 $entityManager->flush();
             }else{
                 exec("cd .. && cd .. && cd Proyecto_Mailer/Desarrollo &&  node Mailer_bienvenida.js ".$contrato->getId()." $template_id envio-correo.log 2>&1");
-            }*/
+               
+                $mailPendienteEnvio->setContrato($contrato);
+                $mailPendienteEnvio->setEnviado(0);
+                $mailPendienteEnvio->setFechaIngreso(new \DateTime(date('Y-m-d H:i:s')));
+
+                $entityManager->persist($mailPendienteEnvio);
+                $entityManager->flush();
+            }
+                
             if($contrato->getAceptaSuscripcion()){
                 return $this->redirectToRoute('contrato_ver_suscripcion',["id"=>$contrato->getId()]);
             }else{
