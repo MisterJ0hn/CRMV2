@@ -30,6 +30,7 @@ class VwCuotaConEquipoRepository extends ServiceEntityRepository
         $query->join('c.contrato','co');
         $query->join('co.agenda','a');
         $query->join('a.cuenta','cu');
+        $query->leftJoin('co.cliente','cli');
       
         if($conrestriccion==true){
             if($vigente){
@@ -80,7 +81,7 @@ class VwCuotaConEquipoRepository extends ServiceEntityRepository
         
         
         if(!is_null($filtro)){ 
-            $query->andWhere("(co.nombre like '%$filtro%' or co.rut like '%$filtro%')")
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.rut like '%$filtro%')")
          ;
 
         }
@@ -94,7 +95,7 @@ class VwCuotaConEquipoRepository extends ServiceEntityRepository
 
         }
         if(!is_null($rut)){
-            $query->andWhere("co.rut = '$rut'");
+            $query->andWhere("cli.rut = '$rut'");
         }
 
         $query->orderBy("co.fechaCreacion","Desc");
@@ -115,6 +116,7 @@ class VwCuotaConEquipoRepository extends ServiceEntityRepository
         $query->join('c.contrato','co');
         $query->join('co.agenda','a');
         $query->join('a.cuenta','cu');
+        $query->leftJoin('co.cliente','cli');
         
         if($conrestriccion==true){
             if($vigente){
@@ -154,7 +156,7 @@ class VwCuotaConEquipoRepository extends ServiceEntityRepository
         
         
         if(!is_null($filtro)){ 
-            $query->andWhere("(co.nombre like '%$filtro%' or co.rut like '%$filtro%')")
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.rut like '%$filtro%')")
          ;
 
         }
@@ -179,8 +181,8 @@ class VwCuotaConEquipoRepository extends ServiceEntityRepository
         ->join('co.agenda','a')
         ->join('a.cuenta','cu')
         ->join('c.pagoCuotas','pc')
-        ->join('pc.pago','p');
-        
+        ->join('pc.pago','p')
+        ->leftJoin('co.cliente','cli');
         if($conrestriccion==true){
             if($vigente){
                 if($esCobranza){
@@ -219,7 +221,7 @@ class VwCuotaConEquipoRepository extends ServiceEntityRepository
         
         
         if(!is_null($filtro)){ 
-            $query->andWhere("(co.nombre like '%$filtro%' or co.rut like '%$filtro%')")
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.rut like '%$filtro%')")
          ;
 
         }

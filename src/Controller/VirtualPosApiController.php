@@ -93,7 +93,7 @@ class VirtualPosApiController extends AbstractController
             }
 
             $primero    = $contratos[0];
-            $partes     = explode(' ', trim((string) $primero->getNombre()), 2);
+            $partes     = explode(' ', trim((string) $primero->getCliente()->getNombre()), 2);
             $firstName  = $partes[0] ?? '';
             $lastName   = $partes[1] ?? '';
 
@@ -138,8 +138,8 @@ class VirtualPosApiController extends AbstractController
                 'client' => [
                     'firstName' => $firstName,
                     'lastName'  => $lastName,
-                    'phone'     => $primero->getTelefono(),
-                    'email'     => $primero->getEmail(),
+                    'phone'     => $primero->getCliente()->getTelefono(),
+                    'email'     => $primero->getCliente()->getCorreo(),
                     'debits'    => $debits,
                 ],
             ];

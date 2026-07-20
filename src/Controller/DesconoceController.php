@@ -94,6 +94,7 @@ class DesconoceController  extends AbstractController{
             case 1:
             case 11:
             case 13:
+            case 14:
                 $query=$contratoRepository->findByPers(null,$user->getEmpresaActual(),$compania,$filtro,null,$fecha);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
             break;

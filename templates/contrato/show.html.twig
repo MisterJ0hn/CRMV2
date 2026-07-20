@@ -188,6 +188,9 @@
                 
             </div>
             <hr>
+            {% if noSuscribir is not defined  %}
+                
+            
             <h3>Suscripción pago automático</h3>
             <div class="row">
                 {% if contrato.aceptaSuscripcion == 1 %}
@@ -228,7 +231,9 @@
                     </form>
                 </div>
                 {% endif %}
-            </div>  
+            </div> 
+            
+            {% endif %} 
             <hr >
             {% if metodo is defined %}
                 

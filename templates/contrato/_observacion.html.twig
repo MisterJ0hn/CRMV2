@@ -6,20 +6,20 @@
             <p>{{contrato.folio}}</p>
         </div>
         <div class="col-sm-4">
-            <small class="text-muted">Nombre</small>
+            <small class="text-muted">Nombre *</small>
             <input type="text" name="txtNombre" class="form-control" value="{{contrato.cliente.nombre}}">
         </div>
         <div class="col-sm-4">
-            <small class="text-muted">Rut</small>
+            <small class="text-muted">Rut *</small>
             <input type="text" name="txtRut" class="form-control format-rut" value="{{contrato.cliente.rut}}">
         </div>
         
         <div class="col-sm-4">
-            <small class="text-muted">Email</small>
+            <small class="text-muted">Email *</small>
             <input type="email" name="txtEmail" class="form-control" value="{{contrato.cliente.correo}}">
         </div>
         <div class="col-sm-4">
-            <small class="text-muted">Sexo</small>
+            <small class="text-muted">Sexo *</small>
             <select name="cboSexo" class="form-control">
                 <option value=""></option>
                 <option value="Masculino" {% if contrato.cliente.sexo == "Masculino" %}selected{% endif %}>Masculino</option>
@@ -27,7 +27,7 @@
             </select>
         </div>
         <div class="col-sm-4">
-            <small class="text-muted">Teléfono</small>
+            <small class="text-muted">Teléfono *</small>
             <input type="text" name="txtTelefono" class="form-control" value="{{contrato.cliente.telefono}}">
         </div>
         <div class="col-sm-4">
@@ -38,7 +38,7 @@
         
         
         <div class="col-sm-8">
-            <small class="text-muted">Dirección</small>
+            <small class="text-muted">Dirección *</small>
             <input type="text" name="txtDireccion" class="form-control" value="{{contrato.cliente.direccion}}">
         </div>
         <div class="col-sm-4">

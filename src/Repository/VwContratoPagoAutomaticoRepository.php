@@ -52,6 +52,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
         $query->join('c.contrato','co');
         $query->join('co.agenda','a');
         $query->join('a.cuenta','cu');
+        $query->leftJoin('co.cliente','cli');
 
         $query->andWhere('a.status not in (13,15)');
 
@@ -66,7 +67,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
         }
 
         if(!is_null($filtro)){
-            $query->andWhere("(co.nombre like '%$filtro%' or co.telefono like '%$filtro%')");
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.rut like '%$filtro%')");
         }
 
         if(!is_null($folio) && $folio != ''){
@@ -91,6 +92,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
         $query->join('a.cuenta','cu');
         $query->andWhere('a.status not in (13,15)');
         $query->andWhere('co.aceptaSuscripcion = true');
+        $query->leftJoin('co.cliente','cli');
 
 
         if(!is_null($estado) && $estado != ''){
@@ -104,7 +106,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
 
 
         if(!is_null($filtro)){
-            $query->andWhere("(co.nombre like '%$filtro%' or co.telefono like '%$filtro%')");
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.rut like '%$filtro%')");
         }
 
         if(!is_null($folio) && $folio != ''){
@@ -126,6 +128,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
         $query->join('a.cuenta','cu');
         $query->andWhere('a.status not in (13,15)');
         $query->andWhere('co.aceptaSuscripcion = true');
+        $query->leftJoin('co.cliente','cli');
 
 
         if(!is_null($estado) && $estado != ''){
@@ -138,7 +141,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
 
 
         if(!is_null($filtro)){
-            $query->andWhere("(co.nombre like '%$filtro%' or co.telefono like '%$filtro%')");
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.rut like '%$filtro%')");
         }
 
         if(!is_null($folio) && $folio != ''){
@@ -162,6 +165,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
         $query->join('a.cuenta','cu');
         $query->andWhere('a.status not in (13,15)');
         $query->andWhere('co.aceptaSuscripcion = true');
+        $query->leftJoin('co.cliente','cli');
 
 
         if(!is_null($estado) && $estado != ''){
@@ -175,7 +179,7 @@ class VwContratoPagoAutomaticoRepository extends ServiceEntityRepository
 
 
         if(!is_null($filtro)){
-            $query->andWhere("(co.nombre like '%$filtro%' or co.telefono like '%$filtro%')");
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.rut like '%$filtro%')");
         }
 
         if(!is_null($folio) && $folio != ''){

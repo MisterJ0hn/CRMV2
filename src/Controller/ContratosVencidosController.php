@@ -41,13 +41,14 @@ class ContratosVencidosController extends AbstractController
         $folio="";
         $dateInicio=date('Y-m-d',mktime(0,0,0,date('m'),date('d'),date('Y'))-60*60*24*30*24);
         $dateFin=date('Y-m-d');
+        $request->getSession()->set('origen_anexo','contratos_vencidos');
         if(null !== $request->query->get('error_toast')){
             $error_toast=$request->query->get('error_toast');
         }
         $compania=null;
         
         switch($user->getUsuarioTipo()->getId()){
-            case 3: case 4:  case 1:  case 8:  case 11: case 12:
+            case 3: case 4:  case 1:  case 8:  case 11: case 12: case 14:
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             default:
@@ -117,7 +118,7 @@ class ContratosVencidosController extends AbstractController
             }
 
             switch ($user->getUsuarioTipo()->getId()) {
-                case 3: case 4: case 1: case 8: case 11:
+                case 3: case 4: case 1: case 8: case 11: case 14:
                     $query = $contratoRepository->findIndexQueryVencidos(null, $user->getEmpresaActual(), $compania, $filtro, null, $fecha);
                     break;
                 case 13: case 10:
@@ -234,6 +235,7 @@ class ContratosVencidosController extends AbstractController
             'agenda'=>$contrato->getAgenda(),
             'pagina'=>$pagina->getNombre(),
             'diasPagos'=>$diasPagoRepository->findAll(),
+            'noSuscribir'=>'si',
             'observaciones'=>$causaObservacionRepository->findBy(['contrato'=>$contrato],['fechaRegistro'=>'Desc'])
         ]);
     }
