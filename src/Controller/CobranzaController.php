@@ -478,7 +478,7 @@ class CobranzaController extends AbstractController
         $compania=null;
         $queryTotales="";
         $segmento="";
-        
+        $mostrarMensaje="no";
        $request->getSession()->set('origen_anexo','incumplimiento');
         //   "maximo ".$vencimiento->getValMax();
         //$vencimiento=$vencimientoArray[0];
