@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\EstadoDiario;
+use App\Entity\EstadoDiarioAgenda;
 use App\Entity\EstadoDiarioOrigen;
 use App\Form\EstadoDiarioOrigenType;
 use App\Repository\EstadoDiarioOrigenRepository;
@@ -10,6 +11,7 @@ use App\Repository\EstadoDiarioRepository;
 use App\Repository\JurisdiccionRepository;
 use App\Repository\ModuloPerRepository;
 use App\Service\EstadoDiarioImportService;
+use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -138,14 +140,13 @@ class EstadoDiarioController extends AbstractController
 
         try {
             $tab = $request->query->get('tab', 'no-leidos');
-            $leido = ($tab === 'leidos');
 
             $jurisdiccion = $request->query->get('bJurisdiccion') ?: null;
             $fecha = $request->query->get('bFecha') ?: date('Y-m-d', strtotime('-1 day'));
             $rut = $request->query->get('bRut') ?: null;
             $jurisdiccionId = $jurisdiccion ? (int) $jurisdiccion : null;
 
-            $query = $estadoDiarioRepository->findConFiltro($jurisdiccionId, $fecha, $rut, $leido);
+            $query = $estadoDiarioRepository->findConFiltro($jurisdiccionId, $fecha, $rut, $tab);
 
             $movimientos = $paginator->paginate(
                 $query,
@@ -161,8 +162,9 @@ class EstadoDiarioController extends AbstractController
             return new JsonResponse([
                 'html' => $html,
                 'total' => $movimientos->getTotalItemCount(),
-                'totalNoLeidos' => $estadoDiarioRepository->contarPorFiltro($jurisdiccionId, $fecha, $rut, false),
-                'totalLeidos' => $estadoDiarioRepository->contarPorFiltro($jurisdiccionId, $fecha, $rut, true),
+                'totalNoLeidos' => $estadoDiarioRepository->contarPorFiltro($jurisdiccionId, $fecha, $rut, 'no-leidos'),
+                'totalPendiente' => $estadoDiarioRepository->contarPorFiltro($jurisdiccionId, $fecha, $rut, 'pendiente'),
+                'totalResuelto' => $estadoDiarioRepository->contarPorFiltro($jurisdiccionId, $fecha, $rut, 'resuelto'),
             ]);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()]);
@@ -185,6 +187,49 @@ class EstadoDiarioController extends AbstractController
         $estadoDiario->setUsuarioLeido($this->getUser());
 
         $this->getDoctrine()->getManager()->flush();
+
+        return new JsonResponse(['exito' => true]);
+    }
+
+    /**
+     * @Route("/movimientos/{id}/pendiente", name="estado_diario_movimientos_pendiente", methods={"POST"})
+     */
+    public function marcarPendiente(Request $request, EstadoDiario $estadoDiario, EntityManagerInterface $em): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('view', 'estado_diario');
+
+        if (!$this->isCsrfTokenValid('estado_diario_pendiente', $request->request->get('_token'))) {
+            return new JsonResponse(['exito' => false, 'mensaje' => 'Token inválido'], 400);
+        }
+
+        $nivel = $request->request->get('nivel');
+
+        if (!in_array($nivel, ['bajo', 'medio', 'alto'], true)) {
+            return new JsonResponse(['exito' => false, 'mensaje' => 'Nivel inválido'], 400);
+        }
+
+        $estadoDiario->setPendiente(true);
+        $estadoDiario->setNivelPendiente($nivel);
+        $estadoDiario->setFechaPendiente(new \DateTime());
+        $estadoDiario->setUsuarioPendiente($this->getUser());
+
+        $recordatorioDetalle = trim((string) $request->request->get('recordatorio_detalle'));
+        $recordatorioFechaHora = $request->request->get('recordatorio_fecha_hora');
+
+        if ($recordatorioDetalle !== '' && $recordatorioFechaHora) {
+            $fechaHora = \DateTime::createFromFormat('Y-m-d\TH:i', $recordatorioFechaHora) ?: new \DateTime($recordatorioFechaHora);
+
+            $agenda = new EstadoDiarioAgenda();
+            $agenda->setEstadoDiario($estadoDiario);
+            $agenda->setDetalle($recordatorioDetalle);
+            $agenda->setFechaHora($fechaHora);
+            $agenda->setUsuarioRegistro($this->getUser());
+            $agenda->setFechaHoraRegistro(new \DateTime());
+
+            $em->persist($agenda);
+        }
+
+        $em->flush();
 
         return new JsonResponse(['exito' => true]);
     }
