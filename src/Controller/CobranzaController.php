@@ -10,6 +10,7 @@ use App\Entity\Cuota;
 use App\Entity\Contrato;
 use App\Entity\ContratoHistoricoSuscripcion;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\CobranzaRespuesta;
 use App\Entity\EquipoTrabajoVencimiento;
 use App\Form\CobranzaType;
@@ -612,7 +613,8 @@ class CobranzaController extends AbstractController
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             
-            case 1://administrador y jefes    
+            case 1://administrador y jefes   
+                $mostrarMensaje  = "SI"; 
             case 3:
                 $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual()],["valMin"=>'ASC']);
                 $query=$cuotaRepository->findVencimientoIncumplimiento(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
@@ -653,7 +655,9 @@ class CobranzaController extends AbstractController
             'vencimientos'=>$vencimientos,
             'vencimientoSeleccionado'=>$vencimiento,
             'queryTotales'=>$queryTotales,
-            'status'=>$status
+            'status'=>$status,
+            'mostrarMensaje'=>$mostrarMensaje,
+            'vencimientoMin'=>$vencimientoRepository->find(1)
         ]);
     }
     
