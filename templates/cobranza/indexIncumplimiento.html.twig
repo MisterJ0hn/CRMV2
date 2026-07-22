@@ -67,6 +67,16 @@
         
     {% endif %}
     </section>
+    {% if mostrarMensaje=="SI" %}
+        
+
+        <div class="card bg-light">
+            <div class="card-body">
+                <small >Contratos morosos desde el día {{vencimientoSeleccionado.valMin}} con ninguna cuota pagada.</small>
+            </div>
+
+        </div>
+    {% endif %}
     <div class="card">
         <div class="card-header">
             <form action="{{path("cobranza_index_incumplimiento")}}" method="get" class="frmBuscar">

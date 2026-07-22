@@ -73,6 +73,34 @@
         
     {% endif %}
     </section>
+    {% if mostrarMensaje=="SI" %}
+        <div class="card bg-light">
+            <div class="card-body">
+                <small >Contratos con pagos pendientes desde el día {{vencimientoMin.valMin}}
+                <ul>
+                {% for equipo in equipos %}
+                {% if equipo.equipoTrabajoVencimientos|length > 0 %}
+                    
+                
+                    <li> {{equipo.nombre}}:  
+                        {% for equipoVencimiento in equipo.equipoTrabajoVencimientos %}
+                            {% if loop.first %}
+                            {% else %}
+                            ,
+                            {% endif %}
+                            {{equipoVencimiento.vencimiento.nombre}}
+
+                        {% endfor %}
+                    </li>
+                {% endif %}
+                {% endfor %}
+               
+                </ul>
+                </small>
+            </div>
+
+        </div>
+    {% endif %}
     <div class="card">
         <div class="card-header">
             <form action="" method="get" class="frmBuscar">
@@ -103,7 +131,13 @@
                         <input type="text" class="form-control" name="bFecha" id="bFecha"  value="" >
                     </div>-->
                     <div class="col-sm-12 col-md-1 mt-3">
-                        <button type="button" class="btn btn-primary buscar mt-3"><i class="fas fa-search"></i></button>
+                        <button type="button" class="btn btn-primary buscar mt-3">
+                        <i class="fas fa-search"></i>
+                        </button>
+                        {% if is_granted("view","cobranza_excel") %}
+                            
+                        <button type="button"  class="btn btn-success exportarxslx mt-3" ><i class="fas fa-file-excel"></i></button>
+                        {% endif %}
                     </div>
                     
                     <!--<div class="col-sm-12 col-md-4 border-1">
@@ -195,7 +229,6 @@
                          </td>
                         <td align="center">
                         {% if cuota.isMulta != true %}
-
                             ${{ cuota.monto|number_format(0,',','.') }}
                         {% endif %}
                         </td>

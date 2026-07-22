@@ -65,6 +65,15 @@
     </div>
 
     </section>
+    {% if mostrarMensaje=="SI" %}
+        <div class="card bg-light">
+            <div class="card-body">
+                <small >Contratos inscritos pago recurrente con tres intentos de pago automático rechazados. Desde el día {{vencimiento.min}} al día  {{vencimiento.max}}.</small>
+            </div>
+
+        </div>
+    {% endif %}
+
     <div class="card">
         <div class="card-header">
             <form action="" method="get" class="form-envio">
