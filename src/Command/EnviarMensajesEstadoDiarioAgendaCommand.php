@@ -73,9 +73,9 @@ class EnviarMensajesEstadoDiarioAgendaCommand extends Command
                     array(
                     "from" => "whatsapp:".$this->twilioFromNumber,
                     //"contentSid" => "HX5f91b49fd936e355e8ca63c98b17d6e7",
-                    "contentSid" => "HXb9ce70f637853bfb9cfc21c7dc546034",
+                    "contentSid" => "HX5ed1144f5391e0df1320b648ee139074",
                     "contentVariables" => 
-                    '{"first_name":"'.$agenda->getUsuarioRegistro()->getNombre().' Rol: '.$agenda->getEstadoDiario()->getRol().' Caratulado: '.$agenda->getEstadoDiario()->getCaratulado().'" }',
+                    '{"1":"'.$agenda->getDetalle().'","2": "'. $agenda->getEstadoDiario()->getRol().'","3":"'. $agenda->getEstadoDiario()->getCaratulado().'"}',
                     "body" => $agenda->getDetalle()
                     )
                 );
