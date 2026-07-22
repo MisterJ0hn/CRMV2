@@ -47,8 +47,15 @@ class CobranzaPatController extends AbstractController
         $error='';
         $status=1;
         $error_toast="";
+        $mostrarMensaje="NO";
         $request->getSession()->set('origen_anexo','cobranza_pat');
-        
+         switch($user->getUsuarioTipo()->getId()){
+            case 1:
+                $mostrarMensaje="SI";
+                break;
+            
+         }
+
         $vencimiento_pat = ['min'=>$configuracion->getDiasMorosidadPat(),
                         'max'=>$vencimiento->getValMin()-1,
                         'color'=>$configuracion->getMorosidadPatColor(),
@@ -68,6 +75,7 @@ class CobranzaPatController extends AbstractController
             'error'=>$error,
             'error_toast'=>$error_toast,
             'vencimiento'=>$vencimiento_pat,
+            'mostrarMensaje'=>$mostrarMensaje,
         ]);
     }
 

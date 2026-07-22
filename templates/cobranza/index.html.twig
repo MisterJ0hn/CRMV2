@@ -73,6 +73,34 @@
         
     {% endif %}
     </section>
+    {% if mostrarMensaje=="SI" %}
+        <div class="card bg-light">
+            <div class="card-body">
+                <small >Contratos con pagos pendientes desde el día {{vencimientoMin.valMin}}
+                <ul>
+                {% for equipo in equipos %}
+                {% if equipo.equipoTrabajoVencimientos|length > 0 %}
+                    
+                
+                    <li> {{equipo.nombre}}:  
+                        {% for equipoVencimiento in equipo.equipoTrabajoVencimientos %}
+                            {% if loop.first %}
+                            {% else %}
+                            ,
+                            {% endif %}
+                            {{equipoVencimiento.vencimiento.nombre}}
+
+                        {% endfor %}
+                    </li>
+                {% endif %}
+                {% endfor %}
+               
+                </ul>
+                </small>
+            </div>
+
+        </div>
+    {% endif %}
     <div class="card">
         <div class="card-header">
             <form action="" method="get" class="frmBuscar">

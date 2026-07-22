@@ -24,6 +24,7 @@ use App\Repository\VencimientoRepository;
 use App\Repository\UsuarioRepository;
 use App\Repository\ConfiguracionRepository;
 use App\Repository\DiasPagoRepository;
+use App\Repository\EquipoTrabajoRepository;
 use App\Repository\EquipoTrabajoUsuarioRepository;
 use App\Repository\EquipoTrabajoVencimientoRepository;
 use App\Repository\LotesRepository;
@@ -57,6 +58,7 @@ class CobranzaController extends AbstractController
                         CuentaRepository $cuentaRepository,
                         VencimientoRepository $vencimientoRepository,
                         EquipoTrabajoUsuarioRepository $equipoTrabajoUsuarioRepository,
+                        EquipoTrabajoRepository $equipoTrabajoRepository,
                         EquipoTrabajoVencimientoRepository $equipoTrabajoVencimientoRepository): Response
     {
         $this->denyAccessUnlessGranted('view','cobranza');
@@ -69,6 +71,7 @@ class CobranzaController extends AbstractController
         $queryTotales="";
         $mostrarVencimientoSeleccionado="";
         $segmento="";
+        $mostrarMensaje="NO";
         $equipoTrabajoUsuario=$equipoTrabajoUsuarioRepository->findOneBy(['usuario'=>$user->getId()]);
 
         $configuracion = $configuracionRepository->find(1);
@@ -213,7 +216,8 @@ class CobranzaController extends AbstractController
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());
                 break;
             
-            case 1://administrador y jefes    
+            case 1://administrador y jefes  
+                $mostrarMensaje="SI";  
             case 3:
                 $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual()],["valMin"=>'ASC']);
                 $query=$cuotaRepository->findVencimiento(null,null,$compania,$filtro,null,true,$fecha, true,true,$status);
@@ -237,7 +241,7 @@ class CobranzaController extends AbstractController
             $request->query->getInt('page', 1), /*page number*/
             100 /*limit per page*/,
             array());
-        
+        $equipos = $equipoTrabajoRepository->findAll();
         return $this->render('cobranza/index.html.twig', [
             'cuotas' => $cuotas,
             'bFiltro'=>$filtro,
@@ -254,7 +258,10 @@ class CobranzaController extends AbstractController
             'vencimientoSeleccionado'=>$vencimiento,
             'queryTotales'=>$queryTotales,
             'status'=>$status,
-            'mostrarVencimientoSeleccionado'=>$mostrarVencimientoSeleccionado
+            'mostrarVencimientoSeleccionado'=>$mostrarVencimientoSeleccionado,
+            'mostrarMensaje'=>$mostrarMensaje,
+            'vencimientoMin'=>$vencimientoRepository->find(1),
+            'equipos'=>$equipos
         ]);
     }
 
