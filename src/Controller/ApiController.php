@@ -4,11 +4,13 @@ namespace App\Controller;
 
 use App\Entity\ApiLlamado;
 use App\Entity\ApiLlamadoAdereso;
+use App\Entity\ApiLlamadoEstadoDiario;
 use App\Entity\ApiToken;
 use App\Entity\Contrato;
 use App\Entity\EstadoDiario;
 use App\Entity\EstadoDiarioAgenda;
 use App\Repository\EstadoDiarioRepository;
+use App\Repository\JurisdiccionRepository;
 use App\Entity\PjudAnexoCausa;
 use App\Entity\PjudAnexoMovimiento;
 use App\Entity\PjudCausa;
@@ -28,6 +30,7 @@ use App\Repository\PjudCausaRepository;
 use App\Repository\PjudEscritosRepository;
 use App\Repository\PjudMovimientoRepository;
 use App\Repository\PjudPdfRepository;
+use App\Repository\UsuarioFcmTokenRepository;
 use App\Repository\UsuarioRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -710,10 +713,95 @@ class ApiController extends AbstractController
     }
 
     /**
+     * @Route("/api/estado-diario/fcm/token", methods={"POST"})
+     */
+    public function estadoDiarioRegistrarFcmToken(Request $request, UsuarioRepository $usuarioRepository, UsuarioFcmTokenRepository $tokenRepository): JsonResponse
+    {
+        try {
+            $data = json_decode($request->getContent(), true) ?? [];
+
+            if (empty($data['username']) || empty($data['token'])) {
+                return $this->json([
+                    'exito' => false,
+                    'mensaje' => 'Los campos username y token son obligatorios',
+                ], 400);
+            }
+
+            $usuario = $usuarioRepository->findOneBy(['username' => $data['username']]);
+
+            if (!$usuario) {
+                return $this->json([
+                    'exito' => false,
+                    'mensaje' => 'username no existe',
+                ], 400);
+            }
+
+            $tokenRepository->registrarToken($usuario, $data['token'], $data['plataforma'] ?? null);
+
+            return $this->json(['exito' => true]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'exito' => false,
+                'mensaje' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * @Route("/api/estado-diario/jurisdicciones", methods={"GET"})
+     */
+    public function estadoDiarioJurisdicciones(Request $request, JurisdiccionRepository $jurisdiccionRepository, EntityManagerInterface $em): JsonResponse
+    {
+        $log = new ApiLlamadoEstadoDiario();
+        $log->setEndpoint('jurisdicciones');
+        $log->setFechaRegistro(new \DateTime());
+        $log->setJsonRequest(json_encode($request->query->all()));
+
+        try {
+            $jurisdicciones = $jurisdiccionRepository->findBy([], ['nombre' => 'ASC']);
+
+            $data = array_map(function (\App\Entity\Jurisdiccion $j) {
+                return [
+                    'id' => $j->getId(),
+                    'nombre' => $j->getNombre(),
+                ];
+            }, $jurisdicciones);
+
+            $response = [
+                'exito' => true,
+                'total' => count($data),
+                'jurisdicciones' => $data,
+            ];
+
+            $log->setExito(true);
+            $log->setJsonResponse(json_encode($response));
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json($response);
+        } catch (\Exception $e) {
+            $log->setExito(false);
+            $log->setMensajeError($e->getMessage());
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json([
+                'exito' => false,
+                'mensaje' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * @Route("/api/estado-diario/no-leidos", methods={"GET"})
      */
-    public function estadoDiarioNoLeidos(Request $request, EstadoDiarioRepository $estadoDiarioRepository): JsonResponse
+    public function estadoDiarioNoLeidos(Request $request, EstadoDiarioRepository $estadoDiarioRepository, EntityManagerInterface $em): JsonResponse
     {
+        $log = new ApiLlamadoEstadoDiario();
+        $log->setEndpoint('no-leidos');
+        $log->setFechaRegistro(new \DateTime());
+        $log->setJsonRequest(json_encode($request->query->all()));
+
         try {
             $jurisdiccion = $request->query->get('jurisdiccion') ?: null;
             $fecha = $request->query->get('fecha') ?: null;
@@ -741,12 +829,151 @@ class ApiController extends AbstractController
                 ];
             }, $movimientos);
 
-            return $this->json([
+            $response = [
                 'exito' => true,
                 'total' => count($data),
                 'movimientos' => $data,
-            ]);
+            ];
+
+            $log->setExito(true);
+            $log->setJsonResponse(json_encode($response));
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json($response);
         } catch (\Exception $e) {
+            $log->setExito(false);
+            $log->setMensajeError($e->getMessage());
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json([
+                'exito' => false,
+                'mensaje' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    /**
+     * @Route("/api/estado-diario/leidos", methods={"GET"})
+     */
+    public function estadoDiarioLeidos(Request $request, EstadoDiarioRepository $estadoDiarioRepository, EntityManagerInterface $em): JsonResponse
+    {
+        $log = new ApiLlamadoEstadoDiario();
+        $log->setEndpoint('leidos');
+        $log->setFechaRegistro(new \DateTime());
+        $log->setJsonRequest(json_encode($request->query->all()));
+
+        try {
+            $jurisdiccion = $request->query->get('jurisdiccion') ?: null;
+            $fecha = $request->query->get('fecha') ?: null;
+            $rut = $request->query->get('rut') ?: null;
+
+            $movimientos = $estadoDiarioRepository->findConFiltro(
+                $jurisdiccion ? (int) $jurisdiccion : null,
+                $fecha,
+                $rut,
+                'resuelto'
+            )->getQuery()->getResult();
+
+            $data = array_map(function (EstadoDiario $m) {
+                return [
+                    'id' => $m->getId(),
+                    'jurisdiccion' => $m->getJurisdiccion() ? $m->getJurisdiccion()->getNombre() : null,
+                    'rol' => $m->getRol(),
+                    'rol_unico' => $m->getRolUnico(),
+                    'fecha_ingreso' => $m->getFechaIngreso() ? $m->getFechaIngreso()->format('Y-m-d') : null,
+                    'caratulado' => $m->getCaratulado(),
+                    'tribunal' => $m->getTribunal(),
+                    'estado' => $m->getEstado(),
+                    'tipo_causa' => $m->getTipoCausa(),
+                    'rut' => $m->getEstadoDiarioOrigen()->getRut(),
+                    'fecha_estado_diario' => $m->getEstadoDiarioOrigen()->getFecha() ? $m->getEstadoDiarioOrigen()->getFecha()->format('Y-m-d') : null,
+                ];
+            }, $movimientos);
+
+            $response = [
+                'exito' => true,
+                'total' => count($data),
+                'movimientos' => $data,
+            ];
+
+            $log->setExito(true);
+            $log->setJsonResponse(json_encode($response));
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json($response);
+        } catch (\Exception $e) {
+            $log->setExito(false);
+            $log->setMensajeError($e->getMessage());
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json([
+                'exito' => false,
+                'mensaje' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    /**
+     * @Route("/api/estado-diario/pendientes", methods={"GET"})
+     */
+    public function estadoDiarioPendientes(Request $request, EstadoDiarioRepository $estadoDiarioRepository, EntityManagerInterface $em): JsonResponse
+    {
+        $log = new ApiLlamadoEstadoDiario();
+        $log->setEndpoint('pendientes');
+        $log->setFechaRegistro(new \DateTime());
+        $log->setJsonRequest(json_encode($request->query->all()));
+
+        try {
+            $jurisdiccion = $request->query->get('jurisdiccion') ?: null;
+            $fecha = $request->query->get('fecha') ?: null;
+            $rut = $request->query->get('rut') ?: null;
+
+            $movimientos = $estadoDiarioRepository->findConFiltro(
+                $jurisdiccion ? (int) $jurisdiccion : null,
+                $fecha,
+                $rut,
+                'pendiente'
+            )->getQuery()->getResult();
+
+            $data = array_map(function (EstadoDiario $m) {
+                return [
+                    'id' => $m->getId(),
+                    'jurisdiccion' => $m->getJurisdiccion() ? $m->getJurisdiccion()->getNombre() : null,
+                    'rol' => $m->getRol(),
+                    'rol_unico' => $m->getRolUnico(),
+                    'fecha_ingreso' => $m->getFechaIngreso() ? $m->getFechaIngreso()->format('Y-m-d') : null,
+                    'caratulado' => $m->getCaratulado(),
+                    'tribunal' => $m->getTribunal(),
+                    'estado' => $m->getEstado(),
+                    'tipo_causa' => $m->getTipoCausa(),
+                    'rut' => $m->getEstadoDiarioOrigen()->getRut(),
+                    'fecha_estado_diario' => $m->getEstadoDiarioOrigen()->getFecha() ? $m->getEstadoDiarioOrigen()->getFecha()->format('Y-m-d') : null,
+                    'nivel_pendiente' => $m->getNivelPendiente(),
+                    'fecha_pendiente' => $m->getFechaPendiente() ? $m->getFechaPendiente()->format('Y-m-d H:i:s') : null,
+                    'usuario_pendiente' => $m->getUsuarioPendiente() ? $m->getUsuarioPendiente()->getUsername() : null,
+                ];
+            }, $movimientos);
+
+            $response = [
+                'exito' => true,
+                'total' => count($data),
+                'movimientos' => $data,
+            ];
+
+            $log->setExito(true);
+            $log->setJsonResponse(json_encode($response));
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json($response);
+        } catch (\Exception $e) {
+            $log->setExito(false);
+            $log->setMensajeError($e->getMessage());
+            $em->persist($log);
+            $em->flush();
+
             return $this->json([
                 'exito' => false,
                 'mensaje' => $e->getMessage(),
@@ -757,16 +984,136 @@ class ApiController extends AbstractController
     /**
      * @Route("/api/estado-diario/{id}/leido", methods={"POST"})
      */
-    public function estadoDiarioMarcarLeido(EstadoDiario $estadoDiario, EntityManagerInterface $em): JsonResponse
+    public function estadoDiarioMarcarLeido(EstadoDiario $estadoDiario, Request $request, EntityManagerInterface $em): JsonResponse
     {
+        $log = new ApiLlamadoEstadoDiario();
+        $log->setEndpoint('leido');
+        $log->setEstadoDiario($estadoDiario);
+        $log->setFechaRegistro(new \DateTime());
+        $log->setJsonRequest($request->getContent());
+
         try {
             $estadoDiario->setLeido(true);
             $estadoDiario->setFechaLeido(new \DateTime());
 
             $em->flush();
 
-            return $this->json(['exito' => true]);
+            $response = ['exito' => true];
+
+            $log->setExito(true);
+            $log->setJsonResponse(json_encode($response));
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json($response);
         } catch (\Exception $e) {
+            $log->setExito(false);
+            $log->setMensajeError($e->getMessage());
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json([
+                'exito' => false,
+                'mensaje' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * @Route("/api/estado-diario/{id}/pendiente", methods={"POST"})
+     */
+    public function estadoDiarioMarcarPendiente(EstadoDiario $estadoDiario, Request $request, EntityManagerInterface $em, UsuarioRepository $usuarioRepository): JsonResponse
+    {
+        $log = new ApiLlamadoEstadoDiario();
+        $log->setEndpoint('pendiente');
+        $log->setEstadoDiario($estadoDiario);
+        $log->setFechaRegistro(new \DateTime());
+        $log->setJsonRequest($request->getContent());
+
+        try {
+            $data = json_decode($request->getContent(), true) ?? [];
+
+            $nivel = $data['nivel'] ?? null;
+
+            if (!in_array($nivel, ['bajo', 'medio', 'alto'], true)) {
+                $response = [
+                    'exito' => false,
+                    'mensaje' => 'El campo nivel es obligatorio y debe ser bajo, medio o alto',
+                ];
+                $log->setExito(false);
+                $log->setMensajeError($response['mensaje']);
+                $em->persist($log);
+                $em->flush();
+
+                return $this->json($response, 400);
+            }
+
+            $mensaje = trim((string) ($data['mensaje'] ?? ''));
+            $fechaHora = $data['fecha_hora'] ?? null;
+            $agendar = $mensaje !== '' && $fechaHora;
+
+            $usuario = null;
+            if ($agendar || !empty($data['username'])) {
+                if (empty($data['username'])) {
+                    $response = [
+                        'exito' => false,
+                        'mensaje' => 'El campo username es obligatorio para agendar',
+                    ];
+                    $log->setExito(false);
+                    $log->setMensajeError($response['mensaje']);
+                    $em->persist($log);
+                    $em->flush();
+
+                    return $this->json($response, 400);
+                }
+
+                $usuario = $usuarioRepository->findOneBy(['username' => $data['username']]);
+                if (!$usuario) {
+                    $response = [
+                        'exito' => false,
+                        'mensaje' => 'username no existe',
+                    ];
+                    $log->setExito(false);
+                    $log->setMensajeError($response['mensaje']);
+                    $em->persist($log);
+                    $em->flush();
+
+                    return $this->json($response, 400);
+                }
+            }
+
+            $estadoDiario->setPendiente(true);
+            $estadoDiario->setNivelPendiente($nivel);
+            $estadoDiario->setFechaPendiente(new \DateTime());
+            $estadoDiario->setUsuarioPendiente($usuario);
+
+            if ($agendar) {
+                $fechaHoraAgenda = \DateTime::createFromFormat('Y-m-d H:i:s', $fechaHora) ?: new \DateTime($fechaHora);
+
+                $agenda = new EstadoDiarioAgenda();
+                $agenda->setEstadoDiario($estadoDiario);
+                $agenda->setDetalle($mensaje);
+                $agenda->setFechaHora($fechaHoraAgenda);
+                $agenda->setUsuarioRegistro($usuario);
+                $agenda->setFechaHoraRegistro(new \DateTime());
+
+                $em->persist($agenda);
+            }
+
+            $response = ['exito' => true];
+
+            $log->setExito(true);
+            $log->setJsonResponse(json_encode($response));
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json($response);
+        } catch (\Exception $e) {
+            $log->setExito(false);
+            $log->setMensajeError($e->getMessage());
+            $em->persist($log);
+            $em->flush();
+
             return $this->json([
                 'exito' => false,
                 'mensaje' => $e->getMessage(),
@@ -779,14 +1126,26 @@ class ApiController extends AbstractController
      */
     public function estadoDiarioAgendarRegistro(EstadoDiario $estadoDiario, Request $request, EntityManagerInterface $em, UsuarioRepository $usuarioRepository): JsonResponse
     {
+        $log = new ApiLlamadoEstadoDiario();
+        $log->setEndpoint('agenda');
+        $log->setEstadoDiario($estadoDiario);
+        $log->setFechaRegistro(new \DateTime());
+        $log->setJsonRequest($request->getContent());
+
         try {
             $data = json_decode($request->getContent(), true);
 
             if (empty($data['detalle']) || empty($data['fecha_hora'])) {
-                return $this->json([
+                $response = [
                     'exito' => false,
                     'mensaje' => 'Los campos detalle y fecha_hora son obligatorios',
-                ], 400);
+                ];
+                $log->setExito(false);
+                $log->setMensajeError($response['mensaje']);
+                $em->persist($log);
+                $em->flush();
+
+                return $this->json($response, 400);
             }
 
             $fechaHora = \DateTime::createFromFormat('Y-m-d H:i:s', $data['fecha_hora']) ?: new \DateTime($data['fecha_hora']);
@@ -795,10 +1154,16 @@ class ApiController extends AbstractController
             if (!empty($data['username'])) {
                 $usuarioRegistro = $usuarioRepository->findOneBy(['username' => $data['username']]);
                 if (!$usuarioRegistro) {
-                    return $this->json([
+                    $response = [
                         'exito' => false,
                         'mensaje' => 'username no existe',
-                    ], 400);
+                    ];
+                    $log->setExito(false);
+                    $log->setMensajeError($response['mensaje']);
+                    $em->persist($log);
+                    $em->flush();
+
+                    return $this->json($response, 400);
                 }
             }
 
@@ -812,11 +1177,23 @@ class ApiController extends AbstractController
             $em->persist($agenda);
             $em->flush();
 
-            return $this->json([
+            $response = [
                 'exito' => true,
                 'id' => $agenda->getId(),
-            ]);
+            ];
+
+            $log->setExito(true);
+            $log->setJsonResponse(json_encode($response));
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json($response);
         } catch (\Exception $e) {
+            $log->setExito(false);
+            $log->setMensajeError($e->getMessage());
+            $em->persist($log);
+            $em->flush();
+
             return $this->json([
                 'exito' => false,
                 'mensaje' => $e->getMessage(),

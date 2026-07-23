@@ -32,16 +32,22 @@ class EstadoDiarioImportService
 
     private $entityManager;
     private $jurisdiccionRepository;
+    private $firebaseMessagingService;
 
-    public function __construct(EntityManagerInterface $entityManager, JurisdiccionRepository $jurisdiccionRepository)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        JurisdiccionRepository $jurisdiccionRepository,
+        FirebaseMessagingService $firebaseMessagingService
+    ) {
         $this->entityManager = $entityManager;
         $this->jurisdiccionRepository = $jurisdiccionRepository;
+        $this->firebaseMessagingService = $firebaseMessagingService;
     }
 
     /**
      * Extrae rut, fecha y guid desde el nombre del archivo.
      * Formato esperado: EstadoDiario{RUT}-{DV}_{DD}_{MM}_{AAAA}-{guid}.xlsx
+     * El guid es opcional: algunos archivos vienen como EstadoDiario{RUT}-{DV}_{DD}_{MM}_{AAAA}.xlsx
      * Tolera el sufijo " (1)", " (2)", etc. que agrega el navegador cuando el
      * archivo se descarga duplicado, ej: EstadoDiario16952077-1_23_07_2024 (1)-66a1134a5ff38.xlsx
      *
@@ -51,10 +57,10 @@ class EstadoDiarioImportService
     {
         // Quita el sufijo "(1)", "(2)", etc. que agregan los navegadores en descargas
         // duplicadas, tolerando cualquier tipo de espacio (normal, non-breaking, etc.)
-        // o ninguno, antes del paréntesis.
-        $nombreLimpio = preg_replace('/[\s\x{00A0}]*\(\d+\)(?=-)/u', '', $nombreSinExtension);
+        // o ninguno, antes del paréntesis o al final del nombre (cuando no hay guid).
+        $nombreLimpio = preg_replace('/[\s\x{00A0}]*\(\d+\)(?=-|$)/u', '', $nombreSinExtension);
 
-        $patron = '/^EstadoDiario(?<rut>\d{1,9}-[\dkK])_(?<dd>\d{2})_(?<mm>\d{2})_(?<yyyy>\d{4})-(?<guid>[a-zA-Z0-9]+)$/';
+        $patron = '/^EstadoDiario(?<rut>\d{1,9}-[\dkK])_(?<dd>\d{2})_(?<mm>\d{2})_(?<yyyy>\d{4})(?:-(?<guid>[a-zA-Z0-9]+))?$/';
 
         if (!preg_match($patron, $nombreLimpio, $m)) {
             return ['rut' => null, 'fecha' => null, 'guid' => null];
@@ -65,7 +71,7 @@ class EstadoDiarioImportService
         return [
             'rut' => $m['rut'],
             'fecha' => $fecha ?: null,
-            'guid' => $m['guid'],
+            'guid' => $m['guid'] ?? null,
         ];
     }
 
@@ -128,7 +134,32 @@ class EstadoDiarioImportService
 
         $this->entityManager->flush();
 
+        if ($total > 0) {
+            $this->notificarImportacion($origen, $total);
+        }
+
         return $total;
+    }
+
+    /**
+     * Envía una notificación push (Firebase) avisando que se importó un Estado Diario.
+     * Un fallo aquí no debe afectar el resultado de la importación.
+     */
+    private function notificarImportacion(EstadoDiarioOrigen $origen, int $total): void
+    {
+        try {
+            $this->firebaseMessagingService->enviarATodosLosTokens(
+                'Nuevo Estado Diario importado',
+                sprintf('%s: %d movimiento(s) nuevo(s)', $origen->getNombreArchivo(), $total),
+                [
+                    'tipo' => 'estado_diario_importado',
+                    'origen_id' => (string) $origen->getId(),
+                    'total' => (string) $total,
+                ]
+            );
+        } catch (\Throwable $e) {
+            // Silenciado a propósito: la importación ya se completó y no debe romperse por un error de notificación.
+        }
     }
 
     /**

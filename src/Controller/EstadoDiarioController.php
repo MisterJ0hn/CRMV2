@@ -40,7 +40,7 @@ class EstadoDiarioController extends AbstractController
             $query,
             $request->query->getInt('page', 1),
             20,
-            ['defaultSortFieldName' => 'fechaCarga', 'defaultSortDirection' => 'desc']
+            ['defaultSortFieldName' => 'fecha', 'defaultSortDirection' => 'desc']
         );
 
         return $this->render('estado_diario/index.html.twig', [
@@ -70,11 +70,11 @@ class EstadoDiarioController extends AbstractController
                 $nombreOriginalSinExtension = pathinfo($archivo->getClientOriginalName(), PATHINFO_FILENAME);
                 $datosNombre = $importService->parseNombreArchivo($nombreOriginalSinExtension);
 
-                if (!$datosNombre['guid']) {
+                if (!$datosNombre['rut'] || !$datosNombre['fecha']) {
                     return $this->render('estado_diario/new.html.twig', [
                         'form' => $form->createView(),
                         'pagina' => $pagina->getNombre(),
-                        'error' => 'El nombre del archivo no corresponde al formato esperado: EstadoDiario{RUT}_{DD}_{MM}_{AAAA}-{guid}.xlsx',
+                        'error' => 'El nombre del archivo no corresponde al formato esperado: EstadoDiario{RUT}_{DD}_{MM}_{AAAA}.xlsx (el sufijo -{guid} es opcional).',
                     ]);
                 }
 
