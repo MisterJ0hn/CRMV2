@@ -124,7 +124,7 @@ class EstadoDiarioController extends AbstractController
         $pagina = $moduloPerRepository->findOneByName('estado_diario', $user->getEmpresaActual());
 
         return $this->render('estado_diario/movimientos.html.twig', [
-            'pagina' => $pagina->getNombre(),
+            'pagina' =>"Movimientos",
             'jurisdicciones' => $jurisdiccionRepository->findBy([], ['nombre' => 'ASC']),
             'tabInicial' => $request->query->get('tab', 'no-leidos'),
             'fechaDefault' => date('Y-m-d', strtotime('-1 day')),

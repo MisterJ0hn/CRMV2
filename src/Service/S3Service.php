@@ -32,7 +32,7 @@ class S3Service
      * @param string       $carpeta  Prefijo/carpeta dentro del bucket (ej: "contratos/2024")
      * @return string|false
      */
-    public function subirArchivo(UploadedFile $file, string $carpeta = ''): string|false
+    public function subirArchivo(UploadedFile $file, string $carpeta = ''): string
     {
         $nombreOriginal = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $extension      = $file->guessExtension() ?? $file->getClientOriginalExtension();
@@ -63,7 +63,7 @@ class S3Service
      * @param string $contentType MIME type del archivo
      * @return string|false
      */
-    public function subirDesdeRuta(string $rutaLocal, string $claveS3, string $contentType = 'application/octet-stream'): string|false
+    public function subirDesdeRuta(string $rutaLocal, string $claveS3, string $contentType = 'application/octet-stream'): string
     {
         try {
             $resultado = $this->client->putObject([
