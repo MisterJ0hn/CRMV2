@@ -112,6 +112,7 @@ use App\Entity\ErrorSistemaLog;
 use App\Entity\MailPendienteEnvio;
 use App\Entity\MensajeTipo;
 use App\Entity\TicketHistorial;
+use App\Repository\MailPendienteEnvioRepository;
 use App\Repository\MensajeTipoRepository;
 use App\Repository\TicketRepository;
 
@@ -1403,7 +1404,7 @@ class ContratoController extends AbstractController
     /**
      * @Route("/{id}/pdf", name="contrato_pdf", methods={"GET","POST"})
      */
-    public function pdf(Contrato $contrato, ContratoRepository $contratoRepository): Response
+    public function pdf(Contrato $contrato, ContratoRepository $contratoRepository,MailPendienteEnvioRepository $mailPendienteEnvioRepository): Response
     {
         $this->denyAccessUnlessGranted('view','contrato');
         $filename = sprintf('Contrato-'.$contrato->getId().'-%s.pdf',rand(0,9000));
@@ -1439,35 +1440,38 @@ class ContratoController extends AbstractController
             $contratoId = $contrato->getId();
             $contratoRepository->actualizarEsVip($contratoId);
             
-            //Obtendremos la materia para poder identificar que correo debe ser enviado.
-            $template_id=0;
-            foreach ($contrato->getAgenda()->getCuenta()->getCuentaMaterias() as $cuenta_materia) {
-                switch($cuenta_materia->getMateria()->getId()){
-                    case 12:
-                    case 1: //CIvil
-                        $template_id=13;
-                       
-                        break;
-                    case 11: //tributaria
-                        $template_id=14;
-                        break;
-                    case 13: //familia
-                        $template_id=15;
-                        break;
+            $mailPendienteEnvioExiste = $mailPendienteEnvioRepository->findOneBy(['contrato'=>$contratoId]);
+
+            if($mailPendienteEnvioExiste == null){
+                //Obtendremos la materia para poder identificar que correo debe ser enviado.
+                $template_id=0;
+                foreach ($contrato->getAgenda()->getCuenta()->getCuentaMaterias() as $cuenta_materia) {
+                    switch($cuenta_materia->getMateria()->getId()){
+                        case 12:
+                        case 1: //CIvil
+                            $template_id=13;
+                        
+                            break;
+                        case 11: //tributaria
+                            $template_id=14;
+                            break;
+                        case 13: //familia
+                            $template_id=15;
+                            break;
+                    }
+                }
+                if($template_id == 13){
+                    $mailPendienteEnvio = new MailPendienteEnvio();
+                    $mailPendienteEnvio->setContrato($contrato);
+                    $mailPendienteEnvio->setEnviado(0);
+                    $mailPendienteEnvio->setFechaIngreso(new \DateTime(date('Y-m-d H:i:s')));
+
+                    $entityManager->persist($mailPendienteEnvio);
+                    $entityManager->flush();
+                }else{
+                    exec("cd .. && cd .. && cd Proyecto_Mailer/Desarrollo &&  node Mailer_bienvenida.js ".$contrato->getId()." $template_id envio-correo.log 2>&1");
                 }
             }
-            if($template_id == 13){
-                $mailPendienteEnvio = new MailPendienteEnvio();
-                $mailPendienteEnvio->setContrato($contrato);
-                $mailPendienteEnvio->setEnviado(0);
-                $mailPendienteEnvio->setFechaIngreso(new \DateTime(date('Y-m-d H:i:s')));
-
-                $entityManager->persist($mailPendienteEnvio);
-                $entityManager->flush();
-            }else{
-                exec("cd .. && cd .. && cd Proyecto_Mailer/Desarrollo &&  node Mailer_bienvenida.js ".$contrato->getId()." $template_id envio-correo.log 2>&1");
-            }
-                
             if($contrato->getAceptaSuscripcion()){
                 return $this->redirectToRoute('contrato_ver_suscripcion',["id"=>$contrato->getId()]);
             }else{
