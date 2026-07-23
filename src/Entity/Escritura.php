@@ -34,15 +34,12 @@ class Escritura
      */
     private $contratos;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Mee::class, mappedBy="escritura")
-     */
-    private $mees;
+    
 
     public function __construct()
     {
         $this->contratos = new ArrayCollection();
-        $this->mees = new ArrayCollection();
+
     }
 
     public function getId(): ?int
@@ -107,33 +104,5 @@ class Escritura
         return $this->getNombre();
     }
 
-    /**
-     * @return Collection|Mee[]
-     */
-    public function getMees(): Collection
-    {
-        return $this->mees;
-    }
-
-    public function addMee(Mee $mee): self
-    {
-        if (!$this->mees->contains($mee)) {
-            $this->mees[] = $mee;
-            $mee->setEscritura($this);
-        }
-
-        return $this;
-    }
-
-    public function removeMee(Mee $mee): self
-    {
-        if ($this->mees->removeElement($mee)) {
-            // set the owning side to null (unless already changed)
-            if ($mee->getEscritura() === $this) {
-                $mee->setEscritura(null);
-            }
-        }
-
-        return $this;
-    }
+  
 }

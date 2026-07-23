@@ -31,7 +31,7 @@ class VirtualPos{
         $payload['api_key'] = $this->apiKey;
 
         try{    
-            $jwt_signature = JWT::encode($payload, $this->secretKey);
+            $jwt_signature = JWT::encode($payload, $this->secretKey, 'RS256');
 
             return $jwt_signature;
         }catch(Exception $ex){

@@ -31,20 +31,13 @@ class MateriaEstrategia
      */
     private $estrategiaJuridica;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Mee::class, mappedBy="materiaEstrategia")
-     */
-    private $mees;
 
     /**
      * @ORM\Column(type="boolean")
      */
     private $estado;
 
-    public function __construct()
-    {
-        $this->mees = new ArrayCollection();
-    }
+   
 
     public function getId(): ?int
     {
@@ -75,35 +68,6 @@ class MateriaEstrategia
         return $this;
     }
 
-    /**
-     * @return Collection|Mee[]
-     */
-    public function getMees(): Collection
-    {
-        return $this->mees;
-    }
-
-    public function addMee(Mee $mee): self
-    {
-        if (!$this->mees->contains($mee)) {
-            $this->mees[] = $mee;
-            $mee->setMateriaEstrategia($this);
-        }
-
-        return $this;
-    }
-
-    public function removeMee(Mee $mee): self
-    {
-        if ($this->mees->removeElement($mee)) {
-            // set the owning side to null (unless already changed)
-            if ($mee->getMateriaEstrategia() === $this) {
-                $mee->setMateriaEstrategia(null);
-            }
-        }
-
-        return $this;
-    }
 
     public function getEstado(): ?bool
     {

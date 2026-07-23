@@ -19,58 +19,10 @@ class Contrato
      */
     private $id;
 
-     /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $nombre;
-
-    /**
-     * @ORM\Column(type="string", length=255,nullable=true)
-     */
-    private $email;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $telefono;
-
-    /**
-     * @ORM\Column(type="string", length=255,nullable=true)
-     */
-    private $rut;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $direccion;
-    
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $claveUnica;
-
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $telefonoRecado;
-
-    /**
-     * @ORM\Column(type="string", length=20, nullable=true)
-     */
-    private $sexo;
-
     /**
      * @ORM\Column(type="string", length=255,nullable=true)
      */
     private $ciudad;
-
-    
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $comuna;
-
     /**
      * @ORM\ManyToOne(targetEntity=EstadoCivil::class, inversedBy="contratos")
      */
@@ -82,24 +34,9 @@ class Contrato
     private $situacionLaboral;
 
     /**
-     * @ORM\ManyToOne(targetEntity=EstrategiaJuridica::class, inversedBy="contratos")
-     */
-    private $estrategiaJuridica;
-
-    /**
-     * @ORM\ManyToOne(targetEntity=Escritura::class, inversedBy="contratos")
-     */
-    private $escritura;
-
-    /**
      * @ORM\OneToOne(targetEntity=Agenda::class,inversedBy="contrato", cascade={"persist", "remove"})
      */
     private $agenda;
-
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private $tituloContrato;
 
     /**
      * @ORM\Column(type="decimal", precision=10, scale=0, nullable=true)
@@ -120,11 +57,6 @@ class Contrato
      * @ORM\Column(type="decimal", precision=10, scale=0, nullable=true)
      */
     private $valorCuota;
-
-    /**
-     * @ORM\Column(type="decimal", precision=5, scale=2, nullable=true)
-     */
-    private $interes;
 
     /**
      * @ORM\Column(type="integer", nullable=true)
@@ -226,10 +158,7 @@ class Contrato
      */
     private $isFinalizado;
 
-    /**
-     * @ORM\Column(type="integer", nullable=true)
-     */
-    private $lote;
+    
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -305,11 +234,6 @@ class Contrato
      * @ORM\ManyToOne(targetEntity=Region::class, inversedBy="contratos")
      */
     private $cregion;
-
-    /**
-     * @ORM\OneToMany(targetEntity=ContratoMee::class, mappedBy="contrato")
-     */
-    private $contratoMees;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
@@ -481,7 +405,6 @@ class Contrato
         $this->detalleCuotas = new ArrayCollection();
         $this->contratoAnexos = new ArrayCollection();
         $this->cobranzas = new ArrayCollection();
-        $this->contratoMees = new ArrayCollection();
         $this->contratoAudios = new ArrayCollection();
         $this->tickets = new ArrayCollection();
         $this->causaObservacions = new ArrayCollection();
@@ -497,30 +420,6 @@ class Contrato
     {
         return $this->id;
     }
-    public function getCiudad(): ?string
-    {
-        return $this->ciudad;
-    }
-
-    public function setCiudad(string $ciudad): self
-    {
-        $this->ciudad = $ciudad;
-
-        return $this;
-    }
-
-    public function getComuna(): ?string
-    {
-        return $this->comuna;
-    }
-
-    public function setComuna(string $comuna): self
-    {
-        $this->comuna = $comuna;
-
-        return $this;
-    }
-
     public function getEstadoCivil(): ?EstadoCivil
     {
         return $this->estadoCivil;
@@ -544,31 +443,7 @@ class Contrato
 
         return $this;
     }
-
-    public function getEstrategiaJuridica(): ?EstrategiaJuridica
-    {
-        return $this->estrategiaJuridica;
-    }
-
-    public function setEstrategiaJuridica(?EstrategiaJuridica $estrategiaJuridica): self
-    {
-        $this->estrategiaJuridica = $estrategiaJuridica;
-
-        return $this;
-    }
-
-    public function getEscritura(): ?Escritura
-    {
-        return $this->escritura;
-    }
-
-    public function setEscritura(?Escritura $escritura): self
-    {
-        $this->escritura = $escritura;
-
-        return $this;
-    }
-
+    
     public function getAgenda(): ?Agenda
     {
         return $this->agenda;
@@ -577,18 +452,6 @@ class Contrato
     public function setAgenda(?Agenda $agenda): self
     {
         $this->agenda = $agenda;
-
-        return $this;
-    }
-
-    public function getTituloContrato(): ?string
-    {
-        return $this->tituloContrato;
-    }
-
-    public function setTituloContrato(?string $tituloContrato): self
-    {
-        $this->tituloContrato = $tituloContrato;
 
         return $this;
     }
@@ -637,18 +500,6 @@ class Contrato
     public function setValorCuota(?string $valorCuota): self
     {
         $this->valorCuota = $valorCuota;
-
-        return $this;
-    }
-
-    public function getInteres(): ?string
-    {
-        return $this->interes;
-    }
-
-    public function setInteres(?string $interes): self
-    {
-        $this->interes = $interes;
 
         return $this;
     }
@@ -930,18 +781,6 @@ class Contrato
         return $this;
     }
 
-    public function getLote(): ?int
-    {
-        return $this->lote;
-    }
-
-    public function setLote(?int $lote): self
-    {
-        $this->lote = $lote;
-
-        return $this;
-    }
-
     public function getPdfTermino(): ?string
     {
         return $this->pdfTermino;
@@ -1154,37 +993,6 @@ class Contrato
     public function setCregion(?Region $cregion): self
     {
         $this->cregion = $cregion;
-
-        return $this;
-    }
-
-
-    /**
-     * @return Collection|ContratoMee[]
-     */
-    public function getContratoMees(): Collection
-    {
-        return $this->contratoMees;
-    }
-
-    public function addContratoMee(ContratoMee $contratoMee): self
-    {
-        if (!$this->contratoMees->contains($contratoMee)) {
-            $this->contratoMees[] = $contratoMee;
-            $contratoMee->setContrato($this);
-        }
-
-        return $this;
-    }
-
-    public function removeContratoMee(ContratoMee $contratoMee): self
-    {
-        if ($this->contratoMees->removeElement($contratoMee)) {
-            // set the owning side to null (unless already changed)
-            if ($contratoMee->getContrato() === $this) {
-                $contratoMee->setContrato(null);
-            }
-        }
 
         return $this;
     }
@@ -2029,102 +1837,6 @@ class Contrato
         return $this;
     }
 
-    public function getNombre(): ?string
-    {
-        return $this->nombre;
-    }
-
-    public function setNombre(string $nombre): self
-    {
-        $this->nombre = $nombre;
-
-        return $this;
-    }
-
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(?string $email): self
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    public function getTelefono(): ?string
-    {
-        return $this->telefono;
-    }
-
-    public function setTelefono(?string $telefono): self
-    {
-        $this->telefono = $telefono;
-
-        return $this;
-    }
-
-    public function getRut(): ?string
-    {
-        return $this->rut;
-    }
-
-    public function setRut(?string $rut): self
-    {
-        $this->rut = $rut;
-
-        return $this;
-    }
-
-    public function getDireccion(): ?string
-    {
-        return $this->direccion;
-    }
-
-    public function setDireccion(string $direccion): self
-    {
-        $this->direccion = $direccion;
-
-        return $this;
-    }
-
-    public function getClaveUnica(): ?string
-    {
-        return $this->claveUnica;
-    }
-
-    public function setClaveUnica(?string $claveUnica): self
-    {
-        $this->claveUnica = $claveUnica;
-
-        return $this;
-    }
-
-     public function getSexo(): ?string
-    {
-        return $this->sexo;
-    }
-
-    public function setSexo(?string $sexo): self
-    {
-        $this->sexo = $sexo;
-
-        return $this;
-    }
-
-    public function getTelefonoRecado(): ?string
-    {
-        return $this->telefonoRecado;
-    }
-
-    public function setTelefonoRecado(?string $telefonoRecado): self
-    {
-        $this->telefonoRecado = $telefonoRecado;
-
-        return $this;
-    }
-
     // --- Propiedades transient módulo Encuesta (no mapeadas a BD) ---
     private ?int $ultimaNota = null;
     private ?\DateTimeInterface $fechaGestion = null;
@@ -2135,6 +1847,16 @@ class Contrato
     public function getFechaGestion(): ?\DateTimeInterface { return $this->fechaGestion; }
     public function setFechaGestion(?\DateTimeInterface $v): self { $this->fechaGestion = $v; return $this; }
 
+     public function getCiudad(): ?string
+    {
+        return $this->ciudad;
+    }
 
+    public function setCiudad(string $ciudad): self
+    {
+        $this->ciudad = $ciudad;
+
+        return $this;
+    }
 
 }

@@ -22,7 +22,6 @@ use App\Entity\CausaObservacionArchivo;
 use App\Entity\Configuracion;
 use App\Entity\ContratoAudios;
 use App\Entity\ContratoHistoricoSuscripcion;
-use App\Entity\ContratoMee;
 use App\Entity\ContratoObservacion;
 use App\Entity\Cuaderno;
 use App\Entity\DetalleCuaderno;
@@ -59,7 +58,6 @@ use App\Repository\RegionRepository;
 use App\Repository\CiudadRepository;
 use App\Repository\ComunaRepository;
 use App\Repository\ContratoAudiosRepository;
-use App\Repository\ContratoMeeRepository;
 use App\Repository\ContratoObservacionRepository;
 use App\Repository\CorteRepository;
 use App\Repository\CuadernoRepository;
@@ -74,7 +72,6 @@ use App\Repository\LineaTiempoEtapasRepository;
 use App\Repository\LineaTiempoObservacionRepository;
 use App\Repository\MateriaCorteRepository;
 use App\Repository\MateriaEstrategiaRepository;
-use App\Repository\MeeRepository;
 use App\Repository\PjudCausaRepository;
 use App\Repository\PjudEbookRepository;
 use App\Repository\PjudMovimientoRepository;
@@ -826,14 +823,6 @@ class ContratoController extends AbstractController
             $entityManager->flush();
             
 
-        
-
-            $contratoMees=$contrato->getContratoMees();
-
-            foreach($contratoMees as $contratoMee){
-                $entityManager->remove($contratoMee);
-                $entityManager->flush();
-            }
             if($contrato->getAceptaSuscripcion()==null){
                 if(!$tienePago && count($contrato->getContratoAnexos())==0){
                     /*$detalleCuotas=$contrato->getDetalleCuotas();
@@ -1012,7 +1001,7 @@ class ContratoController extends AbstractController
             'sucursales'=>$sucursalRepository->findBy(['cuenta'=>$contrato->getAgenda()->getCuenta()->getId()]),
             'regiones'=>$regionRepository->findAll(),
             'cuenta_materias'=>$cuentaMateriaRepository->findBy(['cuenta'=>$contrato->getAgenda()->getCuenta(),'estado'=>1]),
-            'contratoMees'=>$contrato->getContratoMees(),
+          
             'agendaContactos'=>$agendaContactoRepository->findAll(),
         ]);
     }
@@ -1266,7 +1255,6 @@ class ContratoController extends AbstractController
             'sucursales'=>$sucursalRepository->findBy(['cuenta'=>$contrato->getAgenda()->getCuenta()->getId()]),
             'regiones'=>$regionRepository->findAll(),
             'cuenta_materias'=>$cuentaMateriaRepository->findBy(['cuenta'=>$contrato->getAgenda()->getCuenta(),'estado'=>1]),
-            'contratoMees'=>$contrato->getContratoMees(),
         ]);
     }
 
@@ -1415,7 +1403,7 @@ class ContratoController extends AbstractController
     /**
      * @Route("/{id}/pdf", name="contrato_pdf", methods={"GET","POST"})
      */
-    public function pdf(Contrato $contrato,ContratoMeeRepository $contratoMeeRepository, ContratoRepository $contratoRepository): Response
+    public function pdf(Contrato $contrato, ContratoRepository $contratoRepository): Response
     {
         $this->denyAccessUnlessGranted('view','contrato');
         $filename = sprintf('Contrato-'.$contrato->getId().'-%s.pdf',rand(0,9000));
@@ -1423,8 +1411,7 @@ class ContratoController extends AbstractController
         try{
             $html = $this->renderView('contrato/print.html.twig', array(
                 'contrato' => $contrato,
-                'Titulo'=>"Contrato",
-                'mees'=>$contratoMeeRepository->findByContrato($contrato->getId()),
+                'Titulo'=>"Contrato"
             ));
            
             $contrato->setPdf($filename);
@@ -1564,6 +1551,7 @@ class ContratoController extends AbstractController
             'pagina'=>$pagina->getNombre(),
             'diasPagos'=>$diasPagoRepository->findAll(),
             'metodo'=>"T",
+             'noSuscribir'=>'si',
             
         ]);
     }
