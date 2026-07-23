@@ -1201,6 +1201,66 @@ class ApiController extends AbstractController
         }
     }
 
+    /**
+     * Webhook para recibir requests externos (ej. callbacks de Twilio) relacionados a Estado Diario.
+     * Solo almacena el request recibido en api_llamado_estado_diario; no requiere Bearer token
+     * (ver whitelist en ApiTokenListener) porque quien llama es un servicio externo, no nuestro cliente.
+     *
+     * @Route("/api/estado-diario/request-tw", methods={"POST"})
+     */
+    public function estadoDiarioRequestTw(Request $request, EntityManagerInterface $em, EstadoDiarioRepository $estadoDiarioRepository): JsonResponse
+    {
+        $log = new ApiLlamadoEstadoDiario();
+        $log->setEndpoint('request-tw');
+        $log->setFechaRegistro(new \DateTime());
+
+        $datos = $request->request->all();
+
+        if (empty($datos)) {
+            $datos = json_decode($request->getContent(), true) ?? [];
+        }
+
+        if (empty($datos)) {
+            $datos = $request->query->all();
+        }
+
+        $log->setJsonRequest(json_encode($datos));
+
+        try {
+            $buttonText = $datos['ButtonText'] ?? null;
+            $buttonPayload = $datos['ButtonPayload'] ?? null;
+
+            if ($buttonPayload !== null && ctype_digit((string) $buttonPayload)) {
+                $estadoDiario = $estadoDiarioRepository->find((int) $buttonPayload);
+
+                if ($estadoDiario) {
+                    $log->setEstadoDiario($estadoDiario);
+
+                    if ($buttonText !== null && mb_strtolower(trim($buttonText)) === 'resuelto') {
+                        $estadoDiario->setLeido(true);
+                        $estadoDiario->setFechaLeido(new \DateTime());
+                    }
+                }
+            }
+
+            $log->setExito(true);
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json(['exito' => true]);
+        } catch (\Exception $e) {
+            $log->setExito(false);
+            $log->setMensajeError($e->getMessage());
+            $em->persist($log);
+            $em->flush();
+
+            return $this->json([
+                'exito' => false,
+                'mensaje' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     function grabarDocumento($base64String, $nombreArchivo,$mime_type,$causaId) {
 
         try {

@@ -34,12 +34,12 @@
         <ul class="nav nav-tabs" id="tabs-movimientos" role="tablist">
             <li class="nav-item">
                 <a class="nav-link tab-link {% if tabInicial == 'no-leidos' %}active{% endif %}" href="#" data-tab="no-leidos">
-                    No leídos <span class="badge badge-danger badge-pill" id="badge-no-leidos">0</span>
+                    No leídos <span class="badge badge-primary badge-pill" id="badge-no-leidos">0</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link tab-link {% if tabInicial == 'pendiente' %}active{% endif %}" href="#" data-tab="pendiente">
-                    Pendiente <span class="badge badge-warning badge-pill" id="badge-pendiente">0</span>
+                    Pendiente <span class="badge badge-primary badge-pill" id="badge-pendiente">0</span>
                 </a>
             </li>
             <li class="nav-item">
@@ -81,7 +81,7 @@
                     <hr>
                     <div class="form-group">
                         <label>Recordatorio (opcional)</label>
-                        <input type="datetime-local" class="form-control mb-2" id="pendiente-recordatorio-fecha" name="recordatorio_fecha_hora">
+                        <input type="text" class="form-control mb-2 flatpickr-datetime" id="pendiente-recordatorio-fecha" name="recordatorio_fecha_hora" autocomplete="off" placeholder="Selecciona fecha y hora">
                         <textarea class="form-control" id="pendiente-recordatorio-detalle" name="recordatorio_detalle" rows="2" placeholder="Detalle del recordatorio"></textarea>
                     </div>
                 </div>
@@ -211,6 +211,12 @@ $(document).on('click', '.btn-marcar-pendiente', function() {
     var id = $(this).data('id');
     $('#form-pendiente')[0].reset();
     $('#pendiente-id').val(id);
+
+    var fechaPicker = document.getElementById('pendiente-recordatorio-fecha')._flatpickr;
+    if (fechaPicker) {
+        fechaPicker.clear();
+    }
+
     $('#modal-pendiente').modal('show');
 });
 

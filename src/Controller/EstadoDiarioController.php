@@ -217,7 +217,7 @@ class EstadoDiarioController extends AbstractController
         $recordatorioFechaHora = $request->request->get('recordatorio_fecha_hora');
 
         if ($recordatorioDetalle !== '' && $recordatorioFechaHora) {
-            $fechaHora = \DateTime::createFromFormat('Y-m-d\TH:i', $recordatorioFechaHora) ?: new \DateTime($recordatorioFechaHora);
+            $fechaHora = \DateTime::createFromFormat('Y-m-d H:i', $recordatorioFechaHora) ?: new \DateTime($recordatorioFechaHora);
 
             $agenda = new EstadoDiarioAgenda();
             $agenda->setEstadoDiario($estadoDiario);

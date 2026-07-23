@@ -33,6 +33,9 @@ class ApiTokenListener
         if ($request->getPathInfo() === '/api/virtual-pos/informar-pago') {
             return;
         }
+        if ($request->getPathInfo() === '/api/estado-diario/request-tw') {
+            return;
+        }
 
         //$header = $request->headers->get('Authorization');
         $header= $request->headers->get('Authorization')

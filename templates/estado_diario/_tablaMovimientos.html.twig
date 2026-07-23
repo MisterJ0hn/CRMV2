@@ -1,6 +1,13 @@
-<table class="table table-sm">
+<div class="card-body table-responsive p-0" style="height: 500px;">
+<table class="table table-head-fixed text-nowrap table-striped table-sm">
     <thead>
         <tr>
+            {% if tab != 'resuelto' %}
+                <th>Acciones</th>
+            {% endif %}
+            {% if tab == 'pendiente' %}
+            <th>Nivel</th>   
+            {% endif %}
             <th>Jurisdicción</th>
             <th>Rol</th>
             <th>Rol Único</th>
@@ -12,18 +19,37 @@
             <th>Fecha Estado Diario</th>
             {% if tab == 'resuelto' %}
                 <th>Resuelto por</th>
-                <th>Fecha Resuelto</th>
-            {% elseif tab == 'pendiente' %}
-                <th>Nivel</th>
-                <th></th>
-            {% else %}
-                <th></th>
+                <th>Fecha Resuelto</th>                           
             {% endif %}
         </tr>
     </thead>
     <tbody>
     {% for movimiento in movimientos %}
         <tr>
+            {% if tab != 'resuelto' %}
+            <td>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Acciones
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item btn-marcar-leido" href="#" data-id="{{ movimiento.id }}">Resuelto</a>
+                            <a class="dropdown-item btn-marcar-pendiente" href="#" data-id="{{ movimiento.id }}">Pendiente</a>
+                        </div>
+                    </div>
+            </td>
+            {% endif %}
+            {% if tab == 'pendiente' %}
+                <td>
+                    {% if movimiento.nivelPendiente == 'alto' %}
+                        <span class="badge badge-danger">Alto</span>
+                    {% elseif movimiento.nivelPendiente == 'medio' %}
+                        <span class="badge" style="background:#E37C17;color:#fff">Medio</span>
+                    {% else %}
+                        <span class="badge badge-warning">Bajo</span>
+                    {% endif %}
+                </td>
+            {% endif %}
             <td>{{ movimiento.jurisdiccion ? movimiento.jurisdiccion.nombre : '' }}</td>
             <td>{{ movimiento.rol }}</td>
             <td>{{ movimiento.rolUnico }}</td>
@@ -35,30 +61,7 @@
             <td>{{ movimiento.estadoDiarioOrigen.fecha ? movimiento.estadoDiarioOrigen.fecha|date('d-m-Y') : '' }}</td>
             {% if tab == 'resuelto' %}
                 <td>{{ movimiento.usuarioLeido ? movimiento.usuarioLeido.nombre : '' }}</td>
-                <td>{{ movimiento.fechaLeido ? movimiento.fechaLeido|date('d-m-Y H:i') : '' }}</td>
-            {% else %}
-                {% if tab == 'pendiente' %}
-                    <td>
-                        {% if movimiento.nivelPendiente == 'alto' %}
-                            <span class="badge badge-danger">Alto</span>
-                        {% elseif movimiento.nivelPendiente == 'medio' %}
-                            <span class="badge badge-warning">Medio</span>
-                        {% else %}
-                            <span class="badge badge-secondary">Bajo</span>
-                        {% endif %}
-                    </td>
-                {% endif %}
-                <td>
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Acciones
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item btn-marcar-leido" href="#" data-id="{{ movimiento.id }}">Resuelto</a>
-                            <a class="dropdown-item btn-marcar-pendiente" href="#" data-id="{{ movimiento.id }}">Pendiente</a>
-                        </div>
-                    </div>
-                </td>
+                <td>{{ movimiento.fechaLeido ? movimiento.fechaLeido|date('d-m-Y H:i') : '' }}</td>                
             {% endif %}
         </tr>
     {% else %}
@@ -76,6 +79,7 @@
     {% endfor %}
     </tbody>
 </table>
+</div>
 <div class="navigation">
     {{ knp_pagination_render(movimientos,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
     'position': 'centered',
