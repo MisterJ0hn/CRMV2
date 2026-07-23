@@ -3,5 +3,6 @@
 /bin/
 /1.-\ entregables/
 /public
+/config/firebase
 .env
 .env.local.php
