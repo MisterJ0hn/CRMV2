@@ -3,13 +3,16 @@
 namespace App\Entity;
 
 use App\Repository\ClienteRepository;
+use App\Security\Cifrado;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
  * @ORM\Entity(repositoryClass=ClienteRepository::class)
  * @ORM\Table(name="cliente")
+ * @ORM\HasLifecycleCallbacks()
  */
 class Cliente
 {
@@ -26,9 +29,22 @@ class Cliente
     private $nombre;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * rut, telefono, telefonoRecado, direccion y claveUnica se guardan cifrados
+     * (AES-256-GCM, ver App\Doctrine\EncryptedStringType / App\Security\Cifrado).
+     * Los getters/setters siguen trabajando en texto plano de forma transparente.
+     *
+     * @ORM\Column(type="encrypted_string", length=255)
      */
     private $rut;
+
+    /**
+     * Hash determinístico (HMAC-SHA256) de rut, usado únicamente para búsquedas
+     * exactas (WHERE rutHash = ...), ya que la columna rut queda cifrada con IV
+     * aleatorio y no es comparable directamente.
+     *
+     * @ORM\Column(type="string", length=64, nullable=true)
+     */
+    private $rutHash;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -36,9 +52,14 @@ class Cliente
     private $correo;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="encrypted_string", length=255)
      */
     private $telefono;
+
+    /**
+     * @ORM\Column(type="string", length=64, nullable=true)
+     */
+    private $telefonoHash;
 
     /**
      * @ORM\Column(type="string", length=20)
@@ -46,7 +67,7 @@ class Cliente
     private $sexo;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="encrypted_string", length=255, nullable=true)
      */
     private $claveUnica;
 
@@ -61,14 +82,19 @@ class Cliente
     private $clienteHistorials;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="encrypted_string", length=255, nullable=true)
      */
     private $direccion;
      /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="encrypted_string", length=255)
      */
     private $telefonoRecado;
-    
+
+    /**
+     * @ORM\Column(type="string", length=64, nullable=true)
+     */
+    private $telefonoRecadoHash;
+
 
     public function __construct()
     {
@@ -233,5 +259,66 @@ class Cliente
         $this->telefonoRecado = $telefonoRecado;
 
         return $this;
+    }
+
+    public function getRutHash(): ?string
+    {
+        return $this->rutHash;
+    }
+
+    public function getTelefonoHash(): ?string
+    {
+        return $this->telefonoHash;
+    }
+
+    public function getTelefonoRecadoHash(): ?string
+    {
+        return $this->telefonoRecadoHash;
+    }
+
+    /**
+     * Calcula los hashes de búsqueda (rutHash, telefonoHash, telefonoRecadoHash) al
+     * crear un Cliente nuevo. En este punto del ciclo de vida de Doctrine las
+     * propiedades aún son texto plano; el cifrado de las columnas ocurre después,
+     * a nivel de EncryptedStringType.
+     *
+     * @ORM\PrePersist()
+     */
+    public function calcularHashesAlCrear(): void
+    {
+        $this->rutHash = Cifrado::hash($this->rut, 'rut');
+        $this->telefonoHash = Cifrado::hash($this->telefono, 'telefono');
+        $this->telefonoRecadoHash = Cifrado::hash($this->telefonoRecado, 'telefono');
+    }
+
+    /**
+     * Recalcula los hashes de búsqueda al actualizar. PreUpdate es especial en
+     * Doctrine: asignar una propiedad directamente en este callback NO alcanza a
+     * incluirse en el UPDATE, porque el changeset ya se calculó antes de que este
+     * evento se dispare — hay que registrar el valor nuevo explícitamente con
+     * PreUpdateEventArgs::setNewValue().
+     *
+     * @ORM\PreUpdate()
+     */
+    public function calcularHashesAlActualizar(PreUpdateEventArgs $event): void
+    {
+        $rutHash = Cifrado::hash($this->rut, 'rut');
+        $telefonoHash = Cifrado::hash($this->telefono, 'telefono');
+        $telefonoRecadoHash = Cifrado::hash($this->telefonoRecado, 'telefono');
+
+        if ($rutHash !== $this->rutHash) {
+            $this->rutHash = $rutHash;
+            $event->setNewValue('rutHash', $rutHash);
+        }
+
+        if ($telefonoHash !== $this->telefonoHash) {
+            $this->telefonoHash = $telefonoHash;
+            $event->setNewValue('telefonoHash', $telefonoHash);
+        }
+
+        if ($telefonoRecadoHash !== $this->telefonoRecadoHash) {
+            $this->telefonoRecadoHash = $telefonoRecadoHash;
+            $event->setNewValue('telefonoRecadoHash', $telefonoRecadoHash);
+        }
     }
 }

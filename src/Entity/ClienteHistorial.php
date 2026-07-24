@@ -30,7 +30,10 @@ class ClienteHistorial
     private $nombre;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * Cifrado (AES-256-GCM, ver App\Doctrine\EncryptedStringType). Sin columna hash:
+     * esta tabla es solo un historial de auditoría, no se busca por estos campos.
+     *
+     * @ORM\Column(type="encrypted_string", length=255)
      */
     private $rut;
 
@@ -40,7 +43,7 @@ class ClienteHistorial
     private $correo;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="encrypted_string", length=255)
      */
     private $telefono;
 
@@ -50,7 +53,7 @@ class ClienteHistorial
     private $sexo;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="encrypted_string", length=255, nullable=true)
      */
     private $claveUnica;
 
@@ -65,11 +68,11 @@ class ClienteHistorial
     private $usuarioModificacion;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="encrypted_string", length=255, nullable=true)
      */
     private $direccion;
      /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="encrypted_string", length=255)
      */
     private $telefonoRecado;
 

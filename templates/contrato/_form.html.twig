@@ -159,85 +159,63 @@
                     {% endfor %}
                 </select>
             </div>
-         
-          
+        </div>
+        <div class="row">
             <!-- Existen pagos asociados al contrato, no se puede modificar-->
-            <div class="row alert alert-info col-12 gy-5 p-3" role="alert">
-                <h4><i class="icon fas fa-info-circle"></i> Información</h4> 
-                Los siguientes campos se han deshabilitado.
-              </div>
+            <div class="col-12">
+                
+            </div>
             <div class="col-sm-12 col-md-3">
                 <small class="text-muted">Monto nivel de deuda</small><br>
                 <strong><label for="">{{contrato.montoNivelDeuda}}</label></strong>
-                {{form_row(form.montoNivelDeuda,{'label':false,'attr':{'class':'form-control ','style':'visibility:hidden'}})}}
             </div>
             <div class="col-sm-12 col-md-3">
                 <small class="text-muted">Monto contrato *</small><br>
                 <strong><label id="m-monto-contrato"></label></strong>
-                {{form_row(form.MontoContrato,{'label':false,'attr':{'class':'form-control monto-contrato number','style':'visibility:hidden'}})}}
                 
             </div>
             
             <div class="col-sm-12 col-md-3">
-                <div class="row"><small class="text-muted">Abono *</small><br>
-                <strong><label id="m-primera-cuota"></label></strong>
-                    {{form_row(form.isAbono,{'label':false,'attr':{'class':' chk-bono','style':'visibility:hidden'}})}}</div>
-                {{form_row(form.primeraCuota,{'label':false,'attr':{'class':'form-control primera-cuota number','style':'visibility:hidden'}})}}
-                
-                
+                <small class="text-muted">Abono *</small><br>
+                <strong><label id="m-primera-cuota"></label></strong>              
             </div>
+            {% if contrato.pagoActual is not null %}
+                
             
+            <div class="col-sm-12 col-md-3">
+                <small class="text-muted ">Pago Actual *</small><br>
+                <strong><label for="">{{contrato.pagoActual}}</label></strong>
+            </div>
+            {% endif %}
             <div class="col-sm-12 col-md-3">
                 <small class="text-muted t-cuotas" >Cuotas *</small><br>
                 <strong><label for="">{{contrato.cuotas}}</label></strong>
-                {{form_row(form.cuotas,{'label':false,'attr':{'class':'form-control cuotas number','style':'visibility:hidden'}})}}
                 
             </div>
             
             <div class="col-sm-12 col-md-3">
                 <small class="text-muted t-valor-cuota">Valor cuota *</small><br>
                 <strong><label id="m-valor-cuota"></label></strong>
-                {{form_row(form.valorCuota,{'label':false,'attr':{'class':'form-control valor-cuota','style':'visibility:hidden'}})}}
-                
-            </div>
-            <div class="col-sm-12 col-md-3">
-                <small class="text-muted ">Pago Actual *</small><br>
-                {{form_row(form.pagoActual,{'label':false,'attr':{'class':'form-control '}})}}
                 
             </div>
             
         
-            <div class="col-sm-12 col-md-12">
+            <div class="col-sm-12 col-md-3">
                 <small class="text-muted">Días de Pago</small>
                 <br>
                 <strong><label for="">{{ contrato.diaPago}}</label></strong>
                 
-                <div class="btn-group btn-group-toggle" data-toggle="buttons" style='visibility:hidden'>
-                   
-                    {% for diasPago in diasPagos %}
-                    <label class="btn btn-success 
-                    {% if contrato.diaPago == diasPago.dias %}
-                    active
-                    {% endif %}
-                    ">
-                        <input type="radio" name="chkDiasPago" id="chkDiasPago{{diasPago.dias}}" autocomplete="off"
-                        {% if contrato.diaPago == diasPago.dias %}
-                            checked
-                        {% endif %}
-                        value="{{diasPago.dias}}">{{diasPago.nombre}}
-                    </label>
-                    {% endfor %}
-                </div>
+                
             </div>
             <div class="col-sm-12 col-md-3">
-                <small class="text-muted  t-mes-pago">Mes Primer Pago''</small>
-                <input type="text" name="txtFechaPago" class="form-control primer-pago" style='visibility:hidden'> 
+                <small class="text-muted  t-mes-pago">Mes Primer Pago</small><br>
                 <strong><label for="">{{contrato.fechaPrimerPago|date('Y-m')}}</label></strong>   
+               
             </div>
             <div class="col-sm-12 col-md-3">
-                <small class="text-muted ">Vigencia en Meses</small>
-                {{form_row(form.vigencia,{'label':false,'attr':{'class':'form-control','style':'visibility:hidden'}})}}
-                <strong><label for="">{{contrato.vigencia}}</label></strong>   
+                <small class="text-muted ">Vigencia en Meses</small><br>
+                 <strong><label for="">{{contrato.vigencia}}</label></strong>
+                  
             </div>
        
         </div>
@@ -345,7 +323,34 @@
         
     </div>
 </div>
-
+{{form_row(form.montoNivelDeuda,{'label':false,'attr':{'class':'form-control ','style':'visibility:hidden'}})}}
+{{form_row(form.MontoContrato,{'label':false,'attr':{'class':'form-control monto-contrato number','style':'visibility:hidden'}})}}
+{{form_row(form.isAbono,{'label':false,'attr':{'class':' chk-bono','style':'visibility:hidden'}})}}
+{{form_row(form.primeraCuota,{'label':false,'attr':{'class':'form-control primera-cuota number','style':'visibility:hidden'}})}}
+{{form_row(form.cuotas,{'label':false,'attr':{'class':'form-control cuotas number','style':'visibility:hidden'}})}}
+{{form_row(form.valorCuota,{'label':false,'attr':{'class':'form-control valor-cuota','style':'visibility:hidden'}})}}
+{{form_row(form.pagoActual,{'label':false,'attr':{'class':'form-control ','style':'visibility:hidden'}})}}
+{{form_row(form.vigencia,{'label':false,'attr':{'class':'form-control','style':'visibility:hidden'}})}}
+    <input type="text" name="txtFechaPago" class="form-control primer-pago" style='visibility:hidden'> 
+{{form_row(form.isTotal,{'label':false,'attr':{'style':'visibility:hidden'}})}}
+{{form_row(form.isIncorporacion,{'label':false,'attr':{'style':'visibility:hidden'}})}}
+    {{form_row(form.fechaPrimeraCuota,{'label':false,'attr':{'style':'visibility:hidden'}})}}
+    <div class="btn-group btn-group-toggle" data-toggle="buttons" style='visibility:hidden'>
+    
+    {% for diasPago in diasPagos %}
+    <label class="btn btn-success 
+    {% if contrato.diaPago == diasPago.dias %}
+    active
+    {% endif %}
+    ">
+        <input type="radio" name="chkDiasPago" id="chkDiasPago{{diasPago.dias}}" autocomplete="off"
+        {% if contrato.diaPago == diasPago.dias %}
+            checked
+        {% endif %}
+        value="{{diasPago.dias}}">{{diasPago.nombre}}
+    </label>
+    {% endfor %}
+</div>
 {{ form_end(form) }}
 <div class="row" id="juzgado">
     

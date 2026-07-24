@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Configuracion;
 use App\Entity\VwCuotaConEquipo;
+use App\Security\Cifrado;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -80,22 +81,25 @@ class VwCuotaConEquipoRepository extends ServiceEntityRepository
         }
         
         
-        if(!is_null($filtro)){ 
-            $query->andWhere("(cli.nombre like '%$filtro%' or cli.rut like '%$filtro%')")
+        if(!is_null($filtro)){
+            $query->andWhere('(cli.nombre LIKE :filtro OR cli.rutHash = :filtroRutHash)')
+                ->setParameter('filtro', '%' . $filtro . '%')
+                ->setParameter('filtroRutHash', Cifrado::hash($filtro, 'rut'))
          ;
 
         }
         if(!is_null($compania)){
             $query->andWhere('a.cuenta = '.$compania);
         }
-        
-        if(!is_null($otros) && $otros!=''){ 
+
+        if(!is_null($otros) && $otros!=''){
             $query->andWhere($otros)
          ;
 
         }
         if(!is_null($rut)){
-            $query->andWhere("cli.rut = '$rut'");
+            $query->andWhere('cli.rutHash = :rutHash')
+                ->setParameter('rutHash', Cifrado::hash($rut, 'rut'));
         }
 
         $query->orderBy("co.fechaCreacion","Desc");
@@ -156,7 +160,9 @@ class VwCuotaConEquipoRepository extends ServiceEntityRepository
         
         
         if(!is_null($filtro)){ 
-            $query->andWhere("(cli.nombre like '%$filtro%' or cli.rut like '%$filtro%')")
+            $query->andWhere('(cli.nombre LIKE :filtro OR cli.rutHash = :filtroRutHash)')
+                ->setParameter('filtro', '%' . $filtro . '%')
+                ->setParameter('filtroRutHash', Cifrado::hash($filtro, 'rut'))
          ;
 
         }
@@ -221,7 +227,9 @@ class VwCuotaConEquipoRepository extends ServiceEntityRepository
         
         
         if(!is_null($filtro)){ 
-            $query->andWhere("(cli.nombre like '%$filtro%' or cli.rut like '%$filtro%')")
+            $query->andWhere('(cli.nombre LIKE :filtro OR cli.rutHash = :filtroRutHash)')
+                ->setParameter('filtro', '%' . $filtro . '%')
+                ->setParameter('filtroRutHash', Cifrado::hash($filtro, 'rut'))
          ;
 
         }

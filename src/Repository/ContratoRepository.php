@@ -6,6 +6,7 @@ use App\Entity\Configuracion;
 use App\Entity\Contrato;
 use App\Entity\Vencimiento;
 use App\Entity\VwCuotaPendiente;
+use App\Security\Cifrado;
 use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -28,13 +29,12 @@ class ContratoRepository extends ServiceEntityRepository
      */
     public function findByTelefono(string $telefono): array
     {
-        $sinPlus  = ltrim($telefono, '+');
-        $conPlus  = '+' . $sinPlus;
+        $hash = Cifrado::hash($telefono, 'telefono');
         $query=$this->createQueryBuilder('c')
             ->leftJoin('c.cartera', 'car')
             ->leftJoin('c.cliente', 'cli')
-            ->leftJoin('car.materia', 'mat')->addSelect('car', 'mat')->where('cli.telefono IN (:variantes) OR cli.telefonoRecado IN (:variantes)')
-            ->setParameter('variantes', [$sinPlus, $conPlus]);
+            ->leftJoin('car.materia', 'mat')->addSelect('car', 'mat')->where('cli.telefonoHash = :hash OR cli.telefonoRecadoHash = :hash')
+            ->setParameter('hash', $hash);
 
         $query->andWhere(" ((c.fechaCreacion between  date_sub(current_timestamp(),c.vigencia,'month') and current_timestamp()) )
                         or ((c.vigenciaUltAnexo is not null and  c.fechaCreacionUltAnexo between  date_sub(current_timestamp(),c.vigenciaUltAnexo,'month') and current_timestamp()))
@@ -51,9 +51,9 @@ class ContratoRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('c')
             ->leftJoin('c.cliente', 'cli')
-            ->where(" REPLACE(REPLACE(cli.rut, '.', ''), '-', '') = REPLACE(REPLACE(:rut, '.', ''), '-', '') ")
+            ->where('cli.rutHash = :hash')
             ->andWhere('c.isFinalizado = false OR c.isFinalizado IS NULL')
-            ->setParameter('rut', $rut)
+            ->setParameter('hash', Cifrado::hash($rut, 'rut'))
             ->orderBy('c.fechaCreacion', 'DESC')
             ->getQuery()
             ->getResult();
@@ -107,7 +107,8 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere('a.abogado = ' . $usuario);
         }
         if (!is_null($filtro)) {
-            $query->andWhere("(cli.nombre LIKE '%$filtro%' OR cli.telefono LIKE '%$filtro%' OR cli.correo LIKE '%$filtro%')");
+            $query->andWhere("(cli.nombre LIKE '%$filtro%' OR cli.telefonoHash = :filtroTelefonoHash OR cli.correo LIKE '%$filtro%')")
+                ->setParameter('filtroTelefonoHash', Cifrado::hash($filtro, 'telefono'));
         }
         if (!is_null($compania)) {
             $query->andWhere('a.cuenta in (' . $compania.')');
@@ -141,7 +142,8 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere('a.agendador = ' . $agendador);
         }
         if (!is_null($filtro)) {
-            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')");
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefonoHash = :filtroTelefonoHash or cli.correo like '%$filtro%')")
+                ->setParameter('filtroTelefonoHash', Cifrado::hash($filtro, 'telefono'));
         }
         if (!is_null($compania)) {
             $query->andWhere('a.cuenta = ' . $compania);
@@ -179,7 +181,8 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere('a.agendador = ' . $agendador);
         }
         if (!is_null($filtro)) {
-            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')");
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefonoHash = :filtroTelefonoHash or cli.correo like '%$filtro%')")
+                ->setParameter('filtroTelefonoHash', Cifrado::hash($filtro, 'telefono'));
         }
         if (!is_null($compania)) {
             $query->andWhere('a.cuenta = ' . $compania);
@@ -213,7 +216,8 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere('a.agendador = '.$agendador);
         }
         if(!is_null($filtro)){
-            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')")
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefonoHash = :filtroTelefonoHash or cli.correo like '%$filtro%')")
+                ->setParameter('filtroTelefonoHash', Cifrado::hash($filtro, 'telefono'))
          ;
 
         }
@@ -306,7 +310,8 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere('a.agendador = '.$agendador);
         }
         if(!is_null($filtro)){
-            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')")
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefonoHash = :filtroTelefonoHash or cli.correo like '%$filtro%')")
+                ->setParameter('filtroTelefonoHash', Cifrado::hash($filtro, 'telefono'))
          ;
 
         }
@@ -442,7 +447,9 @@ class ContratoRepository extends ServiceEntityRepository
     public function findNombreRut($texto){
         $query=$this->createQueryBuilder('c')
         ->leftJoin('c.cliente', 'cli')
-        ->where("cli.nombre like '%".$texto."%' or cli.rut like '%".$texto."%' ");
+        ->where('cli.nombre LIKE :texto OR cli.rutHash = :textoRutHash')
+        ->setParameter('texto', '%' . $texto . '%')
+        ->setParameter('textoRutHash', Cifrado::hash($texto, 'rut'));
 
         return $query
             ->getQuery()
@@ -476,7 +483,8 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere('a.agendador = '.$agendador);
         }
         if(!is_null($filtro)){
-            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')")
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefonoHash = :filtroTelefonoHash or cli.correo like '%$filtro%')")
+                ->setParameter('filtroTelefonoHash', Cifrado::hash($filtro, 'telefono'))
          ;
 
         }
@@ -518,7 +526,8 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere('a.agendador = '.$agendador);
         }
         if(!is_null($filtro)){
-            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')")
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefonoHash = :filtroTelefonoHash or cli.correo like '%$filtro%')")
+                ->setParameter('filtroTelefonoHash', Cifrado::hash($filtro, 'telefono'))
          ;
 
         }
@@ -553,7 +562,8 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere("a.abodado=$usuario");
         }
         if(!is_null($filtro)){
-            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefono like '%$filtro%' or cli.correo like '%$filtro%')")
+            $query->andWhere("(cli.nombre like '%$filtro%' or cli.telefonoHash = :filtroTelefonoHash or cli.correo like '%$filtro%')")
+                ->setParameter('filtroTelefonoHash', Cifrado::hash($filtro, 'telefono'))
          ;
 
         }
@@ -787,9 +797,9 @@ class ContratoRepository extends ServiceEntityRepository
             $query->andWhere('c.tramitador = ' . $tramitador);
         }
         if (!is_null($filtro)) {
-            $query->andWhere("(cli.nombre LIKE :filtro OR REPLACE(REPLACE(cli.rut, '.', ''), '-', '') = REPLACE(REPLACE(:filtroRut, '.', ''), '-', '') OR c.folio LIKE :filtro)")
+            $query->andWhere('(cli.nombre LIKE :filtro OR cli.rutHash = :filtroRutHash OR c.folio LIKE :filtro)')
                ->setParameter('filtro', '%' . $filtro . '%')
-               ->setParameter('filtroRut', $filtro);
+               ->setParameter('filtroRutHash', Cifrado::hash($filtro, 'rut'));
         }
         if (!is_null($materia)) {
             $query->andWhere("EXISTS (
@@ -961,8 +971,9 @@ class ContratoRepository extends ServiceEntityRepository
             $qb->andWhere('a.cuenta = :compania')->setParameter('compania', $compania);
         }
         if (!is_null($filtro)) {
-            $qb->andWhere('(cli.nombre LIKE :filtro OR cli.telefono LIKE :filtro OR cli.correo LIKE :filtro)')
-               ->setParameter('filtro', '%' . $filtro . '%');
+            $qb->andWhere('(cli.nombre LIKE :filtro OR cli.telefonoHash = :filtroTelefonoHash OR cli.correo LIKE :filtro)')
+               ->setParameter('filtro', '%' . $filtro . '%')
+               ->setParameter('filtroTelefonoHash', Cifrado::hash($filtro, 'telefono'));
         }
         if (!is_null($folio) && $folio !== '') {
             $qb->andWhere('(c.folio = :folio OR a.id = :folio)')
