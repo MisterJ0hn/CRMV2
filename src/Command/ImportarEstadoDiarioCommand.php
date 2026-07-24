@@ -71,14 +71,20 @@ class ImportarEstadoDiarioCommand extends Command
             $nombreSinExtension = pathinfo($rutaOrigen, PATHINFO_FILENAME);
             $datosNombre = $this->importService->parseNombreArchivo($nombreSinExtension);
 
-            if (!$datosNombre['guid']) {
+            if (!$datosNombre['rut'] || !$datosNombre['fecha']) {
                 $io->warning(sprintf('Nombre de archivo no reconocido, se omite: %s', $nombreArchivo));
                 $noReconocidos++;
                 continue;
             }
 
-            if ($this->origenRepository->existeGuid($datosNombre['guid'])) {
-                $io->text(sprintf('Ya importado (guid %s): %s', $datosNombre['guid'], $nombreArchivo));
+            if ($datosNombre['guid']) {
+                $yaImportado = $this->origenRepository->existeGuid($datosNombre['guid']);
+            } else {
+                $yaImportado = $this->origenRepository->existeNombreArchivo($nombreSinExtension);
+            }
+
+            if ($yaImportado) {
+                $io->text(sprintf('Ya importado: %s', $nombreArchivo));
                 $omitidos++;
                 continue;
             }

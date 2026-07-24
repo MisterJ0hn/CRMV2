@@ -1,6 +1,13 @@
-<table class="table table-sm">
+<div class="card-body table-responsive p-0" style="height: 500px;">
+<table class="table table-head-fixed text-nowrap table-striped table-sm">
     <thead>
         <tr>
+            {% if tab != 'resuelto' %}
+                <th>Acciones</th>
+            {% endif %}
+            {% if tab == 'pendiente' %}
+            <th>Nivel</th>   
+            {% endif %}
             <th>Jurisdicción</th>
             <th>Rol</th>
             <th>Rol Único</th>
@@ -10,12 +17,39 @@
             <th>Estado</th>
             <th>Rut</th>
             <th>Fecha Estado Diario</th>
-            <th></th>
+            {% if tab == 'resuelto' %}
+                <th>Resuelto por</th>
+                <th>Fecha Resuelto</th>                           
+            {% endif %}
         </tr>
     </thead>
     <tbody>
     {% for movimiento in movimientos %}
         <tr>
+            {% if tab != 'resuelto' %}
+            <td>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Acciones
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item btn-marcar-leido" href="#" data-id="{{ movimiento.id }}">Resuelto</a>
+                            <a class="dropdown-item btn-marcar-pendiente" href="#" data-id="{{ movimiento.id }}">Pendiente</a>
+                        </div>
+                    </div>
+            </td>
+            {% endif %}
+            {% if tab == 'pendiente' %}
+                <td>
+                    {% if movimiento.nivelPendiente == 'alto' %}
+                        <span class="badge badge-danger">Alto</span>
+                    {% elseif movimiento.nivelPendiente == 'medio' %}
+                        <span class="badge" style="background:#E37C17;color:#fff">Medio</span>
+                    {% else %}
+                        <span class="badge badge-warning">Bajo</span>
+                    {% endif %}
+                </td>
+            {% endif %}
             <td>{{ movimiento.jurisdiccion ? movimiento.jurisdiccion.nombre : '' }}</td>
             <td>{{ movimiento.rol }}</td>
             <td>{{ movimiento.rolUnico }}</td>
@@ -25,19 +59,27 @@
             <td>{{ movimiento.estado }}</td>
             <td>{{ movimiento.estadoDiarioOrigen.rut }}</td>
             <td>{{ movimiento.estadoDiarioOrigen.fecha ? movimiento.estadoDiarioOrigen.fecha|date('d-m-Y') : '' }}</td>
-            <td>
-                <button type="button" class="btn btn-sm btn-success btn-marcar-leido" data-id="{{ movimiento.id }}">
-                    <i class="fas fa-check"></i>
-                </button>
-            </td>
+            {% if tab == 'resuelto' %}
+                <td>{{ movimiento.usuarioLeido ? movimiento.usuarioLeido.nombre : '' }}</td>
+                <td>{{ movimiento.fechaLeido ? movimiento.fechaLeido|date('d-m-Y H:i') : '' }}</td>                
+            {% endif %}
         </tr>
     {% else %}
         <tr>
-            <td colspan="10">No hay movimientos pendientes de revisión.</td>
+            <td colspan="11">
+                {% if tab == 'resuelto' %}
+                    No hay movimientos resueltos.
+                {% elseif tab == 'pendiente' %}
+                    No hay movimientos pendientes.
+                {% else %}
+                    No hay movimientos pendientes de revisión.
+                {% endif %}
+            </td>
         </tr>
     {% endfor %}
     </tbody>
 </table>
+</div>
 <div class="navigation">
     {{ knp_pagination_render(movimientos,'@KnpPaginator/Pagination/twitter_bootstrap_v4_pagination.html.twig',{},{
     'position': 'centered',

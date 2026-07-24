@@ -95,6 +95,27 @@ class EstadoDiario
      */
     private $usuarioLeido;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $pendiente = false;
+
+    /**
+     * @ORM\Column(type="string", length=20, nullable=true)
+     */
+    private $nivelPendiente;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $fechaPendiente;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Usuario::class)
+     * @ORM\JoinColumn(nullable=true)
+     */
+    private $usuarioPendiente;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -276,6 +297,54 @@ class EstadoDiario
     public function setUsuarioLeido(?Usuario $usuarioLeido): self
     {
         $this->usuarioLeido = $usuarioLeido;
+
+        return $this;
+    }
+
+    public function getPendiente(): bool
+    {
+        return $this->pendiente;
+    }
+
+    public function setPendiente(bool $pendiente): self
+    {
+        $this->pendiente = $pendiente;
+
+        return $this;
+    }
+
+    public function getNivelPendiente(): ?string
+    {
+        return $this->nivelPendiente;
+    }
+
+    public function setNivelPendiente(?string $nivelPendiente): self
+    {
+        $this->nivelPendiente = $nivelPendiente;
+
+        return $this;
+    }
+
+    public function getFechaPendiente(): ?\DateTimeInterface
+    {
+        return $this->fechaPendiente;
+    }
+
+    public function setFechaPendiente(?\DateTimeInterface $fechaPendiente): self
+    {
+        $this->fechaPendiente = $fechaPendiente;
+
+        return $this;
+    }
+
+    public function getUsuarioPendiente(): ?Usuario
+    {
+        return $this->usuarioPendiente;
+    }
+
+    public function setUsuarioPendiente(?Usuario $usuarioPendiente): self
+    {
+        $this->usuarioPendiente = $usuarioPendiente;
 
         return $this;
     }

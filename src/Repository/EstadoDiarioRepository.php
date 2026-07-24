@@ -19,15 +19,24 @@ class EstadoDiarioRepository extends ServiceEntityRepository
         parent::__construct($registry, EstadoDiario::class);
     }
 
-    public function findConFiltro(?int $jurisdiccion = null, ?string $fecha = null, ?string $rut = null)
+    public function findConFiltro(?int $jurisdiccion = null, ?string $fecha = null, ?string $rut = null, string $tab = 'no-leidos')
     {
         $query = $this->createQueryBuilder('ed')
             ->addSelect('origen', 'j')
             ->join('ed.estadoDiarioOrigen', 'origen')
             ->leftJoin('ed.jurisdiccion', 'j')
-            ->andWhere('ed.leido = false')
             ->orderBy('origen.fecha', 'DESC')
             ->addOrderBy('ed.id', 'DESC');
+
+        if ($tab === 'resuelto') {
+            $query->andWhere('ed.leido = true');
+        } elseif ($tab === 'pendiente') {
+            $query->andWhere('ed.leido = false')
+                ->andWhere('ed.pendiente = true');
+        } else {
+            $query->andWhere('ed.leido = false')
+                ->andWhere('ed.pendiente = false');
+        }
 
         if ($jurisdiccion) {
             $query->andWhere('j.id = :jurisdiccion')
@@ -47,9 +56,9 @@ class EstadoDiarioRepository extends ServiceEntityRepository
         return $query;
     }
 
-    public function contarPorFiltro(?int $jurisdiccion = null, ?string $fecha = null, ?string $rut = null): int
+    public function contarPorFiltro(?int $jurisdiccion = null, ?string $fecha = null, ?string $rut = null, string $tab = 'no-leidos'): int
     {
-        $query = $this->findConFiltro($jurisdiccion, $fecha, $rut);
+        $query = $this->findConFiltro($jurisdiccion, $fecha, $rut, $tab);
 
         return (int) $query->select('COUNT(ed.id)')->getQuery()->getSingleScalarResult();
     }

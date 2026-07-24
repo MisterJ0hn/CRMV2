@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\EstadoDiario;
+use App\Entity\EstadoDiarioAgenda;
 use App\Entity\EstadoDiarioOrigen;
 use App\Form\EstadoDiarioOrigenType;
 use App\Repository\EstadoDiarioOrigenRepository;
@@ -10,6 +11,7 @@ use App\Repository\EstadoDiarioRepository;
 use App\Repository\JurisdiccionRepository;
 use App\Repository\ModuloPerRepository;
 use App\Service\EstadoDiarioImportService;
+use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -38,7 +40,7 @@ class EstadoDiarioController extends AbstractController
             $query,
             $request->query->getInt('page', 1),
             20,
-            ['defaultSortFieldName' => 'fechaCarga', 'defaultSortDirection' => 'desc']
+            ['defaultSortFieldName' => 'fecha', 'defaultSortDirection' => 'desc']
         );
 
         return $this->render('estado_diario/index.html.twig', [
@@ -68,11 +70,11 @@ class EstadoDiarioController extends AbstractController
                 $nombreOriginalSinExtension = pathinfo($archivo->getClientOriginalName(), PATHINFO_FILENAME);
                 $datosNombre = $importService->parseNombreArchivo($nombreOriginalSinExtension);
 
-                if (!$datosNombre['guid']) {
+                if (!$datosNombre['rut'] || !$datosNombre['fecha']) {
                     return $this->render('estado_diario/new.html.twig', [
                         'form' => $form->createView(),
                         'pagina' => $pagina->getNombre(),
-                        'error' => 'El nombre del archivo no corresponde al formato esperado: EstadoDiario{RUT}_{DD}_{MM}_{AAAA}-{guid}.xlsx',
+                        'error' => 'El nombre del archivo no corresponde al formato esperado: EstadoDiario{RUT}_{DD}_{MM}_{AAAA}.xlsx (el sufijo -{guid} es opcional).',
                     ]);
                 }
 
@@ -115,15 +117,17 @@ class EstadoDiarioController extends AbstractController
     /**
      * @Route("/movimientos", name="estado_diario_movimientos", methods={"GET"})
      */
-    public function movimientos(ModuloPerRepository $moduloPerRepository, JurisdiccionRepository $jurisdiccionRepository): Response
+    public function movimientos(Request $request, ModuloPerRepository $moduloPerRepository, JurisdiccionRepository $jurisdiccionRepository): Response
     {
         $this->denyAccessUnlessGranted('view', 'estado_diario');
         $user = $this->getUser();
         $pagina = $moduloPerRepository->findOneByName('estado_diario', $user->getEmpresaActual());
 
         return $this->render('estado_diario/movimientos.html.twig', [
-            'pagina' => $pagina->getNombre(),
+            'pagina' =>"Movimientos",
             'jurisdicciones' => $jurisdiccionRepository->findBy([], ['nombre' => 'ASC']),
+            'tabInicial' => $request->query->get('tab', 'no-leidos'),
+            'fechaDefault' => date('Y-m-d', strtotime('-1 day')),
         ]);
     }
 
@@ -135,15 +139,14 @@ class EstadoDiarioController extends AbstractController
         $this->denyAccessUnlessGranted('view', 'estado_diario');
 
         try {
-            $jurisdiccion = $request->query->get('bJurisdiccion') ?: null;
-            $fecha = $request->query->get('bFecha') ?: null;
-            $rut = $request->query->get('bRut') ?: null;
+            $tab = $request->query->get('tab', 'no-leidos');
 
-            $query = $estadoDiarioRepository->findConFiltro(
-                $jurisdiccion ? (int) $jurisdiccion : null,
-                $fecha,
-                $rut
-            );
+            $jurisdiccion = $request->query->get('bJurisdiccion') ?: null;
+            $fecha = $request->query->get('bFecha') ?: date('Y-m-d', strtotime('-1 day'));
+            $rut = $request->query->get('bRut') ?: null;
+            $jurisdiccionId = $jurisdiccion ? (int) $jurisdiccion : null;
+
+            $query = $estadoDiarioRepository->findConFiltro($jurisdiccionId, $fecha, $rut, $tab);
 
             $movimientos = $paginator->paginate(
                 $query,
@@ -153,11 +156,15 @@ class EstadoDiarioController extends AbstractController
 
             $html = $this->renderView('estado_diario/_tablaMovimientos.html.twig', [
                 'movimientos' => $movimientos,
+                'tab' => $tab,
             ]);
 
             return new JsonResponse([
                 'html' => $html,
                 'total' => $movimientos->getTotalItemCount(),
+                'totalNoLeidos' => $estadoDiarioRepository->contarPorFiltro($jurisdiccionId, $fecha, $rut, 'no-leidos'),
+                'totalPendiente' => $estadoDiarioRepository->contarPorFiltro($jurisdiccionId, $fecha, $rut, 'pendiente'),
+                'totalResuelto' => $estadoDiarioRepository->contarPorFiltro($jurisdiccionId, $fecha, $rut, 'resuelto'),
             ]);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()]);
@@ -180,6 +187,49 @@ class EstadoDiarioController extends AbstractController
         $estadoDiario->setUsuarioLeido($this->getUser());
 
         $this->getDoctrine()->getManager()->flush();
+
+        return new JsonResponse(['exito' => true]);
+    }
+
+    /**
+     * @Route("/movimientos/{id}/pendiente", name="estado_diario_movimientos_pendiente", methods={"POST"})
+     */
+    public function marcarPendiente(Request $request, EstadoDiario $estadoDiario, EntityManagerInterface $em): JsonResponse
+    {
+        $this->denyAccessUnlessGranted('view', 'estado_diario');
+
+        if (!$this->isCsrfTokenValid('estado_diario_pendiente', $request->request->get('_token'))) {
+            return new JsonResponse(['exito' => false, 'mensaje' => 'Token inválido'], 400);
+        }
+
+        $nivel = $request->request->get('nivel');
+
+        if (!in_array($nivel, ['bajo', 'medio', 'alto'], true)) {
+            return new JsonResponse(['exito' => false, 'mensaje' => 'Nivel inválido'], 400);
+        }
+
+        $estadoDiario->setPendiente(true);
+        $estadoDiario->setNivelPendiente($nivel);
+        $estadoDiario->setFechaPendiente(new \DateTime());
+        $estadoDiario->setUsuarioPendiente($this->getUser());
+
+        $recordatorioDetalle = trim((string) $request->request->get('recordatorio_detalle'));
+        $recordatorioFechaHora = $request->request->get('recordatorio_fecha_hora');
+
+        if ($recordatorioDetalle !== '' && $recordatorioFechaHora) {
+            $fechaHora = \DateTime::createFromFormat('Y-m-d H:i', $recordatorioFechaHora) ?: new \DateTime($recordatorioFechaHora);
+
+            $agenda = new EstadoDiarioAgenda();
+            $agenda->setEstadoDiario($estadoDiario);
+            $agenda->setDetalle($recordatorioDetalle);
+            $agenda->setFechaHora($fechaHora);
+            $agenda->setUsuarioRegistro($this->getUser());
+            $agenda->setFechaHoraRegistro(new \DateTime());
+
+            $em->persist($agenda);
+        }
+
+        $em->flush();
 
         return new JsonResponse(['exito' => true]);
     }

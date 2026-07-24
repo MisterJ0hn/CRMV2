@@ -14,7 +14,7 @@ class ArchivarActivityLogCommand extends Command
     protected static $defaultName        = 'app:archivar-activity-log';
     protected static $defaultDescription = 'Archiva en CSV los registros de actividad con más de 60 días y los elimina de la BD';
 
-    private const DAYS_TO_KEEP = 60;
+    private const DAYS_TO_KEEP = 53;
     private const BATCH_SIZE   = 500;
 
     private EntityManagerInterface $em;

@@ -18,7 +18,7 @@
             </div>
             <div class="col-sm-6 col-md-3">
                 <small class="text-muted">Fecha Estado Diario</small>
-                <input type="date" class="form-control" name="bFecha" id="bFecha" value="">
+                <input type="date" class="form-control" name="bFecha" id="bFecha" value="{{ fechaDefault }}">
             </div>
             <div class="col-sm-6 col-md-3">
                 <small class="text-muted">Rut</small>
@@ -30,6 +30,25 @@
             </div>
         </div>
     </div>
+    <div class="card-header p-0 border-bottom-0">
+        <ul class="nav nav-tabs" id="tabs-movimientos" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link tab-link {% if tabInicial == 'no-leidos' %}active{% endif %}" href="#" data-tab="no-leidos">
+                    No leídos <span class="badge badge-primary badge-pill" id="badge-no-leidos">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link tab-link {% if tabInicial == 'pendiente' %}active{% endif %}" href="#" data-tab="pendiente">
+                    Pendiente <span class="badge badge-primary badge-pill" id="badge-pendiente">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link tab-link {% if tabInicial == 'resuelto' %}active{% endif %}" href="#" data-tab="resuelto">
+                    Resuelto <span class="badge badge-success badge-pill" id="badge-resuelto">0</span>
+                </a>
+            </li>
+        </ul>
+    </div>
     <div class="card-body">
         <div id="resultado">
             <div class="text-center py-5">
@@ -39,11 +58,62 @@
     </div>
 </div>
 
-<script>
-var _filtrosActuales = '';
-var _csrfTokenLeido = '{{ csrf_token('estado_diario_leido') }}';
+<div class="modal fade" id="modal-pendiente" tabindex="-1" role="dialog" aria-labelledby="modal-pendiente-label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="form-pendiente">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modal-pendiente-label">Marcar como Pendiente</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="pendiente-id" name="id" value="">
+                    <div class="form-group">
+                        <label for="pendiente-nivel">Nivel</label>
+                        <select class="form-control" id="pendiente-nivel" name="nivel" required>
+                            <option value="bajo">Bajo</option>
+                            <option value="medio">Medio</option>
+                            <option value="alto">Alto</option>
+                        </select>
+                    </div>
+                    <hr>
+                    <div class="form-group">
+                        <label>Recordatorio (opcional)</label>
+                        <input type="text" class="form-control mb-2 flatpickr-datetime" id="pendiente-recordatorio-fecha" name="recordatorio_fecha_hora" autocomplete="off" placeholder="Selecciona fecha y hora">
+                        <textarea class="form-control" id="pendiente-recordatorio-detalle" name="recordatorio_detalle" rows="2" placeholder="Detalle del recordatorio"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-guardar-pendiente">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
-function cargarMovimientos(url) {
+<script>
+var tabActivo = '{{ tabInicial|default('no-leidos') }}';
+var _csrfTokenLeido = '{{ csrf_token('estado_diario_leido') }}';
+var _csrfTokenPendiente = '{{ csrf_token('estado_diario_pendiente') }}';
+
+function buildFiltros() {
+    var jurisdiccion = $('#bJurisdiccion').val() || '';
+    var fecha = $('#bFecha').val() || '';
+    var rut = $('#bRut').val() || '';
+    return 'bJurisdiccion=' + encodeURIComponent(jurisdiccion) + '&bFecha=' + encodeURIComponent(fecha) + '&bRut=' + encodeURIComponent(rut);
+}
+
+function cargarMovimientos(tab, page) {
+    tabActivo = tab;
+
+    var url = '{{ path('estado_diario_movimientos_obtener_contenido') }}?tab=' + encodeURIComponent(tab) + '&' + buildFiltros();
+    if (page && page > 1) {
+        url += '&page=' + page;
+    }
+
     $('#resultado').html('<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-2x text-primary"></i></div>');
     $.ajax({
         url: url,
@@ -55,6 +125,9 @@ function cargarMovimientos(url) {
                 return;
             }
             $('#resultado').html(data.html);
+            $('#badge-no-leidos').text(data.totalNoLeidos);
+            $('#badge-pendiente').text(data.totalPendiente);
+            $('#badge-resuelto').text(data.totalResuelto);
         },
         error: function() {
             $('#resultado').html('<div class="alert alert-danger m-3">Error al cargar los datos.</div>');
@@ -62,64 +135,120 @@ function cargarMovimientos(url) {
     });
 }
 
-function buildFiltros() {
-    var jurisdiccion = $('#bJurisdiccion').val() || '';
-    var fecha = $('#bFecha').val() || '';
-    var rut = $('#bRut').val() || '';
-    return 'bJurisdiccion=' + encodeURIComponent(jurisdiccion) + '&bFecha=' + encodeURIComponent(fecha) + '&bRut=' + encodeURIComponent(rut);
-}
-
 $(document).ready(function() {
-    cargarMovimientos('{{ path('estado_diario_movimientos_obtener_contenido') }}');
+    cargarMovimientos(tabActivo);
+});
+
+$('.tab-link').on('click', function(e) {
+    e.preventDefault();
+    $('.tab-link').removeClass('active');
+    $(this).addClass('active');
+    cargarMovimientos($(this).data('tab'));
 });
 
 $('#btn-buscar').on('click', function() {
-    _filtrosActuales = buildFiltros();
-    cargarMovimientos('{{ path('estado_diario_movimientos_obtener_contenido') }}?' + _filtrosActuales);
+    cargarMovimientos(tabActivo);
 });
 
 $('#btn-limpiar').on('click', function() {
     $('#bJurisdiccion').val('');
-    $('#bFecha').val('');
+    $('#bFecha').val('{{ fechaDefault }}');
     $('#bRut').val('');
-    _filtrosActuales = '';
-    cargarMovimientos('{{ path('estado_diario_movimientos_obtener_contenido') }}');
+    cargarMovimientos(tabActivo);
 });
 
 $(document).on('click', '#resultado a.page-link', function(e) {
     e.preventDefault();
     var url = $(this).attr('href');
-    if (url && url !== '#') {
-        if (_filtrosActuales && url.indexOf('bJurisdiccion') === -1) {
-            url += (url.indexOf('?') === -1 ? '?' : '&') + _filtrosActuales;
-        }
-        cargarMovimientos(url);
-    }
+    var page = 1;
+    var match = url.match(/[?&]page=(\d+)/);
+    if (match) { page = parseInt(match[1]); }
+    cargarMovimientos(tabActivo, page);
 });
 
 $(document).on('click', '.btn-marcar-leido', function() {
     var boton = $(this);
     var id = boton.data('id');
-    var fila = boton.closest('tr');
 
+    Swal.fire({
+        title: '¿Marcar como resuelto?',
+        text: 'Este movimiento pasará a la pestaña Resuelto.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, marcar como resuelto',
+        cancelButtonText: 'Cancelar'
+    }).then(function(result) {
+        if (!result.value) {
+            return;
+        }
+
+        boton.prop('disabled', true);
+
+        $.ajax({
+            url: '/estado_diario/movimientos/' + id + '/leido',
+            type: 'POST',
+            dataType: 'json',
+            data: { _token: _csrfTokenLeido },
+            success: function(data) {
+                if (data.exito) {
+                    cargarMovimientos(tabActivo);
+                } else {
+                    alert(data.mensaje || 'No se pudo marcar como resuelto.');
+                    boton.prop('disabled', false);
+                }
+            },
+            error: function() {
+                alert('Error al marcar como resuelto.');
+                boton.prop('disabled', false);
+            }
+        });
+    });
+});
+
+$(document).on('click', '.btn-marcar-pendiente', function() {
+    var id = $(this).data('id');
+    $('#form-pendiente')[0].reset();
+    $('#pendiente-id').val(id);
+
+    var fechaPicker = document.getElementById('pendiente-recordatorio-fecha')._flatpickr;
+    if (fechaPicker) {
+        fechaPicker.clear();
+    }
+
+    $('#modal-pendiente').modal('show');
+});
+
+$('#form-pendiente').on('submit', function(e) {
+    e.preventDefault();
+
+    var id = $('#pendiente-id').val();
+    var boton = $('#btn-guardar-pendiente');
     boton.prop('disabled', true);
 
     $.ajax({
-        url: '/estado_diario/movimientos/' + id + '/leido',
+        url: '/estado_diario/movimientos/' + id + '/pendiente',
         type: 'POST',
         dataType: 'json',
-        data: { _token: _csrfTokenLeido },
+        data: {
+            _token: _csrfTokenPendiente,
+            nivel: $('#pendiente-nivel').val(),
+            recordatorio_detalle: $('#pendiente-recordatorio-detalle').val(),
+            recordatorio_fecha_hora: $('#pendiente-recordatorio-fecha').val()
+        },
         success: function(data) {
+            boton.prop('disabled', false);
             if (data.exito) {
-                fila.fadeOut(200, function() { $(this).remove(); });
+                $('#modal-pendiente').modal('hide');
+                cargarMovimientos(tabActivo);
             } else {
-                alert(data.mensaje || 'No se pudo marcar como leído.');
-                boton.prop('disabled', false);
+                alert(data.mensaje || 'No se pudo marcar como pendiente.');
             }
         },
         error: function() {
-            alert('Error al marcar como leído.');
             boton.prop('disabled', false);
+            alert('Error al marcar como pendiente.');
         }
     });
 });

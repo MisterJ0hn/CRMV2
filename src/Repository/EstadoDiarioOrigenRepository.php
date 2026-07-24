@@ -23,4 +23,9 @@ class EstadoDiarioOrigenRepository extends ServiceEntityRepository
     {
         return null !== $this->findOneBy(['guid' => $guid]);
     }
+
+    public function existeNombreArchivo(string $nombreArchivo): bool
+    {
+        return null !== $this->findOneBy(['nombreArchivo' => $nombreArchivo]);
+    }
 }

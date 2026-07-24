@@ -64,4 +64,15 @@ services:
             $carpetaOrigen: '%estado_diario_carpeta_origen%'
             $carpetaDestino: '%estado_diario_importacion%'
 
+    App\Command\EnviarMensajesEstadoDiarioAgendaCommand:
+        arguments:
+            $twilioAccountSid: '%env(TWILIO_ACCOUNT_SID)%'
+            $twilioAuthToken: '%env(TWILIO_AUTH_TOKEN)%'
+            $twilioFromNumber: '%env(TWILIO_FROM_NUMBER)%'
+
+    App\Service\FirebaseMessagingService:
+        arguments:
+            $credentialsPath: '%env(FIREBASE_CREDENTIALS_PATH)%'
+            $projectDir: '%kernel.project_dir%'
+
     # Log de actividad de usuarios (EventSubscriber, se registra automáticamente)
