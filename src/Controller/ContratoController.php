@@ -1460,8 +1460,9 @@ class ContratoController extends AbstractController
                             break;
                     }
                 }
+                $mailPendienteEnvio = new MailPendienteEnvio();
                 if($template_id == 13){
-                    $mailPendienteEnvio = new MailPendienteEnvio();
+                    
                     $mailPendienteEnvio->setContrato($contrato);
                     $mailPendienteEnvio->setEnviado(0);
                     $mailPendienteEnvio->setFechaIngreso(new \DateTime(date('Y-m-d H:i:s')));
@@ -1470,6 +1471,12 @@ class ContratoController extends AbstractController
                     $entityManager->flush();
                 }else{
                     exec("cd .. && cd .. && cd Proyecto_Mailer/Desarrollo &&  node Mailer_bienvenida.js ".$contrato->getId()." $template_id envio-correo.log 2>&1");
+                     $mailPendienteEnvio->setContrato($contrato);
+                    $mailPendienteEnvio->setEnviado(1);
+                    $mailPendienteEnvio->setFechaIngreso(new \DateTime(date('Y-m-d H:i:s')));
+
+                    $entityManager->persist($mailPendienteEnvio);
+                    $entityManager->flush();
                 }
             }
             if($contrato->getAceptaSuscripcion()){
