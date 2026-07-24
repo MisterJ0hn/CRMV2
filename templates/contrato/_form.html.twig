@@ -160,11 +160,11 @@
                 </select>
             </div>
          
-            {% if tienePago %}
+          
             <!-- Existen pagos asociados al contrato, no se puede modificar-->
             <div class="row alert alert-info col-12 gy-5 p-3" role="alert">
                 <h4><i class="icon fas fa-info-circle"></i> Información</h4> 
-                El contrato ya tiene cuotas pagadas, por lo que los siguientes campos se han deshabilitado.
+                Los siguientes campos se han deshabilitado.
               </div>
             <div class="col-sm-12 col-md-3">
                 <small class="text-muted">Monto nivel de deuda</small><br>
@@ -239,100 +239,7 @@
                 {{form_row(form.vigencia,{'label':false,'attr':{'class':'form-control','style':'visibility:hidden'}})}}
                 <strong><label for="">{{contrato.vigencia}}</label></strong>   
             </div>
-            {% else %}
-            <div class="col-sm-12 col-md-3">
-                <small class="text-muted">Monto Deuda</small>
-                {{form_row(form.montoNivelDeuda,{'label':false,'attr':{'class':'form-control nivel-deuda','autocomplete':"ÑÖcompletes"}})}}
-                <strong><label id="m-nivel-deuda"></label></strong>
-            </div>
-            <div class="col-sm-12 col-md-3">
-                <small class="text-muted t-pago-actual" >Pago Mensual Deuda </small>
-                {{form_row(form.pagoActual,{'label':false,'attr':{'class':'form-control pago-actual number','autocomplete':"ÑÖcompletes"}})}}
-                <strong><label id="m-pago-actual"></label></strong>
-            </div>
-            <div class="col-sm-12 col-md-3">
-                <small class="text-muted">Monto contrato *</small>
-                {{form_row(form.MontoContrato,{'label':false,'attr':{'class':'form-control monto-contrato number','required':true,'autocomplete':"ÑÖcompletes"}})}}
-                <strong><label id="m-monto-contrato"></label></strong>
-            </div>
-            
-            <div class="col-sm-12 col-md-6">
-                <div class="row"> 
-                    <small class="text-muted isAbono">Abono *</small>
-                    <div class="col">{{form_row(form.isAbono,{'label':false,'attr':{'class':' chk-bono'}})}}</div>
-                    <small class="text-muted textTotal">Paga el total *</small>
-                    <div class="col divTotal">{{form_row(form.isTotal,{'label':false,'attr':{'class':' chk-total'}})}}</div>
-                    <small class="text-muted isIncorporacion">Incorporación *</small>
-                    <div class="col">{{form_row(form.isIncorporacion,{'label':false,'attr':{'class':' chk-incorporacion'}})}}</div>
-                </div>
-                <div class="row"> 
-                    <div class="col">
-                        {{form_row(form.primeraCuota,{'label':false,'attr':{'class':'form-control primera-cuota number','required':true,'autocomplete':"ÑÖcompletes"}})}}
-                        
-                        <strong><label id="m-primera-cuota"></label></strong>
-                    </div>
-
-                    <div class="col">
-                        <div class="input-group fecha-total-group">
-                            <input type="text" class="fecha-total form-control" name="txtFechaTotal">
-                            <div class="input-group-append">
-                                <button type="button" class="btn btn-primary btn-calendar-total"> <i class="fas fa-calendar-alt"></i></button>
-                            </div> 
-                        </div> 
-                        <div class="input-group fecha-incorporacion-group">  
-                            <input type="text" class="fecha-incorporacion form-control" name="txtFechaIncorporacion" required>
-                            <div class="input-group-append">
-                                <button type="button" class="btn btn-primary btn-calendar-incorporacion" > <i class="fas fa-calendar-alt"></i></button>
-                            </div>
-                        </div>
-                        {{form_row(form.fechaPrimeraCuota,{'label':false,'attr':{'class':'form-control','required':true,'autocomplete':"ÑÖcompletes",'style':'visibility:hidden'}})}}
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-sm-12 col-md-3">
-                <small class="text-muted t-cuotas" >Cuotas *</small>
-                {{form_row(form.cuotas,{'label':false,'attr':{'class':'form-control cuotas number','required':true,'autocomplete':"ÑÖcompletes"}})}}
-            </div>
-            
-            <div class="col-sm-12 col-md-3">
-                <small class="text-muted t-valor-cuota">Valor cuota *</small>
-                {{form_row(form.valorCuota,{'label':false,'attr':{'class':'form-control valor-cuota','required':true,'autocomplete':"ÑÖcompletes"}})}}
-                <strong><label id="m-valor-cuota"></label></strong>
-            </div>
-
-            
-        
-            <div class="col-sm-12 col-md-12 diasPago">
-                <small class="text-muted">Días de Pago</small>
-                <br>
-                <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                   
-                    {% for diasPago in diasPagos %}
-                    <label class="btn btn-success 
-                    {% if contrato.diaPago == diasPago.dias %}
-                    active
-                    {% endif %}
-                    ">
-                        <input type="radio" name="chkDiasPago" id="chkDiasPago{{diasPago.dias}}" autocomplete="off"
-                        {% if contrato.diaPago == diasPago.dias %}
-                            checked
-                        {% endif %}
-                        value="{{diasPago.dias}}">{{diasPago.nombre}}
-                    </label>
-                    {% endfor %}
-                </div>
-            </div>
-            <div class="col-sm-12 col-md-3 mesPrimerPago">
-                <small class="text-muted  t-mes-pago">Mes Primer Pago</small>
-                <input type="text" name="txtFechaPago" class="form-control primer-pago">    
-            </div>
-            <div class="col-sm-12 col-md-3 vigenciaMeses">
-                <small class="text-muted o">Vigencia en Meses</small>
-                {{form_row(form.vigencia,{'label':false,'attr':{'class':'form-control','style':'visibility:hidden'}})}}
-                <strong><label for="">{{contrato.vigencia}}</label></strong> 
-            </div>
-            {% endif %}
+       
         </div>
 
         <hr>
