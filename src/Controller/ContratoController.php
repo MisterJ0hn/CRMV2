@@ -1456,12 +1456,13 @@ class ContratoController extends AbstractController
             $template_id=0;
             foreach ($contrato->getAgenda()->getCuenta()->getCuentaMaterias() as $cuenta_materia) {
                 switch($cuenta_materia->getMateria()->getId()){
-                    case 12:
+                    
                     case 1: //CIvil
                         $template_id=13;
                        
                         break;
                     case 11: //tributaria
+                    case 12:
                         $template_id=14;
                         break;
                     case 13: //familia
@@ -1478,15 +1479,10 @@ class ContratoController extends AbstractController
 
                 $entityManager->persist($mailPendienteEnvio);
                 $entityManager->flush();
+
             }else{
                 exec("cd .. && cd .. && cd Proyecto_Mailer/Desarrollo &&  node Mailer_bienvenida.js ".$contrato->getId()." $template_id envio-correo.log 2>&1");
-               
-                $mailPendienteEnvio->setContrato($contrato);
-                $mailPendienteEnvio->setEnviado(0);
-                $mailPendienteEnvio->setFechaIngreso(new \DateTime(date('Y-m-d H:i:s')));
-
-                $entityManager->persist($mailPendienteEnvio);
-                $entityManager->flush();
+                            
             }
                 
             if($contrato->getAceptaSuscripcion()){
