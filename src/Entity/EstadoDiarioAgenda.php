@@ -59,6 +59,11 @@ class EstadoDiarioAgenda
      */
     private $mensajeError;
 
+    /**
+     * @ORM\Column(type="string", length=64, nullable=true)
+     */
+    private $twilioSid;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -156,6 +161,18 @@ class EstadoDiarioAgenda
     public function setMensajeError(?string $mensajeError): self
     {
         $this->mensajeError = $mensajeError;
+
+        return $this;
+    }
+
+    public function getTwilioSid(): ?string
+    {
+        return $this->twilioSid;
+    }
+
+    public function setTwilioSid(?string $twilioSid): self
+    {
+        $this->twilioSid = $twilioSid;
 
         return $this;
     }

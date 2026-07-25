@@ -24,6 +24,7 @@ use App\Entity\PjudPdf;
 use App\Repository\CausaRepository;
 use App\Repository\ContratoRepository;
 use App\Repository\ConfiguracionRepository;
+use App\Repository\EstadoDiarioAgendaRepository;
 use App\Repository\PjudAnexoCausaRepository;
 use App\Repository\PjudAnexoMovimientoRepository;
 use App\Repository\PjudCausaRepository;
@@ -1208,7 +1209,7 @@ class ApiController extends AbstractController
      *
      * @Route("/api/estado-diario/request-tw", methods={"POST"})
      */
-    public function estadoDiarioRequestTw(Request $request, EntityManagerInterface $em, EstadoDiarioRepository $estadoDiarioRepository): JsonResponse
+    public function estadoDiarioRequestTw(Request $request, EntityManagerInterface $em,  EstadoDiarioAgendaRepository $estadoDiarioAgendaRepository): JsonResponse
     {
         $log = new ApiLlamadoEstadoDiario();
         $log->setEndpoint('request-tw');
@@ -1229,16 +1230,29 @@ class ApiController extends AbstractController
         try {
             $buttonText = $datos['ButtonText'] ?? null;
             $buttonPayload = $datos['ButtonPayload'] ?? null;
-
+            $twilioSid=$datos['OriginalRepliedMessageSid'] ?? null;
             if ($buttonPayload !== null && ctype_digit((string) $buttonPayload)) {
-                $estadoDiario = $estadoDiarioRepository->find((int) $buttonPayload);
-
+                $estadoDiarioAgenda = $estadoDiarioAgendaRepository->findOneBy(['twilioSid'=>$twilioSid]);
+                $estadoDiario = $estadoDiarioAgenda->getEstadoDiario();
                 if ($estadoDiario) {
                     $log->setEstadoDiario($estadoDiario);
 
-                    if ($buttonText !== null && mb_strtolower(trim($buttonText)) === 'resuelto') {
-                        $estadoDiario->setLeido(true);
-                        $estadoDiario->setFechaLeido(new \DateTime());
+                    switch(mb_strtolower(trim($buttonText))){
+                        case 'resuelto':
+                            $estadoDiario->setLeido(true);
+                            $estadoDiario->setFechaLeido(new \DateTime());
+                            break;
+                       default:                            
+                            $estadoDiarioAgendaNuevo = new EstadoDiarioAgenda();
+                            $estadoDiarioAgendaNuevo->setEstadoDiario($estadoDiario);
+                            $estadoDiarioAgendaNuevo->setDetalle($estadoDiarioAgenda->getDetalle());
+                            $estadoDiarioAgendaNuevo->setEnviado(0);
+                            $estadoDiarioAgendaNuevo->setFechaHora((new \DateTime())->modify("+".$buttonPayload." minutes"));
+                            $estadoDiarioAgendaNuevo->setFechaHoraRegistro(new \DateTime(date("Y-m-d H:i")));
+                            $em->persist($estadoDiarioAgendaNuevo);
+                            $em->flush();
+                            break;                        
+                            
                     }
                 }
             }

@@ -73,9 +73,12 @@ class EnviarMensajesEstadoDiarioAgendaCommand extends Command
                     array(
                     "from" => "whatsapp:".$this->twilioFromNumber,
                     //"contentSid" => "HX5f91b49fd936e355e8ca63c98b17d6e7",
-                    "contentSid" => "HX66425b928829f0816f606ba782c4558a",
-                    "contentVariables" => 
-                    '{"1":"'.$agenda->getEstadoDiario()->getRol().'","2": "'.$agenda->getDetalle().'","3":"'. $agenda->getEstadoDiario()->getId().'"}',
+                    "contentSid" => "HX18217576a6e15ef4968a5b04393d802c",
+                    "contentVariables" => json_encode([
+                        "1" => (string) $agenda->getEstadoDiario()->getRol(),
+                        "2" => (string) $agenda->getDetalle(),
+                        "3" => (string) $agenda->getEstadoDiario()->getId(),
+                    ]),
                     "body" => $agenda->getDetalle()
                     )
                 );
@@ -84,6 +87,7 @@ class EnviarMensajesEstadoDiarioAgendaCommand extends Command
                 // registros ya enviados no vuelvan a procesarse en la próxima corrida.
                 $agenda->setEnviado(true);
                 $agenda->setFechaEnvio(new \DateTime());
+                $agenda->setTwilioSid($message->sid);
                 $agenda->setMensajeError(null);
                 $this->em->flush();
 
