@@ -1446,12 +1446,12 @@ class ContratoController extends AbstractController
                 $template_id=0;
                 foreach ($contrato->getAgenda()->getCuenta()->getCuentaMaterias() as $cuenta_materia) {
                     switch($cuenta_materia->getMateria()->getId()){
-                        case 12:
-                        case 1: //CIvil
-                            $template_id=13;
                         
+                        case 1: //CIvil
+                            $template_id=13;                        
                             break;
                         case 11: //tributaria
+                        case 12:
                             $template_id=14;
                             break;
                         case 13: //familia
