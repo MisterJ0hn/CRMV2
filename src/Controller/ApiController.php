@@ -1247,6 +1247,7 @@ class ApiController extends AbstractController
                             $estadoDiarioAgendaNuevo->setEstadoDiario($estadoDiario);
                             $estadoDiarioAgendaNuevo->setDetalle($estadoDiarioAgenda->getDetalle());
                             $estadoDiarioAgendaNuevo->setEnviado(0);
+                            $estadoDiarioAgendaNuevo->setUsuarioRegistro($estadoDiarioAgenda->getUsuarioRegistro());
                             $estadoDiarioAgendaNuevo->setFechaHora((new \DateTime())->modify("+".$buttonPayload." minutes"));
                             $estadoDiarioAgendaNuevo->setFechaHoraRegistro(new \DateTime(date("Y-m-d H:i")));
                             $em->persist($estadoDiarioAgendaNuevo);
