@@ -366,8 +366,8 @@ class PagoController extends AbstractController
                 $sheet->setCellValue('G'.$i, $usuarioLote->getUsuario()->getNombre());
             }
 
-            $sheet->setCellValue('H'.$i, $resumen->getContrato()->getNombre());
-            $sheet->setCellValue('I'.$i, $resumen->getContrato()->getRut());
+            $sheet->setCellValue('H'.$i, $resumen->getContrato()->getCliente()->getNombre());
+            $sheet->setCellValue('I'.$i, $resumen->getContrato()->getCliente()->getRut());
             $sheet->setCellValue('J'.$i, $resumen->getContrato()->getFechaCreacion());
             $sheet->setCellValue('K'.$i, $resumen->getContrato()->getMontoContrato());
             $sheet->setCellValue('L'.$i, $resumen->getFechaPago()->format('d-m-Y'));

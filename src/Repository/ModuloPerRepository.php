@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\ModuloPer;
+use App\Entity\PrivilegioTipousuario;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -31,6 +32,30 @@ class ModuloPerRepository extends ServiceEntityRepository
             ->getOneOrNullResult()
         ;
     }
+    /**
+     * Módulos de la empresa que aún NO tienen privilegio asignado para el tipo de usuario.
+     *
+     * @return ModuloPer[]
+     */
+    public function findDisponiblesPorTipoUsuario($empresa, $tipoUsuario): array
+    {
+        $qb = $this->createQueryBuilder('m');
+
+        $sub = $this->getEntityManager()->createQueryBuilder()
+            ->select('IDENTITY(p.moduloPer)')
+            ->from(PrivilegioTipousuario::class, 'p')
+            ->andWhere('p.tipousuario = :tipoUsuario');
+
+        return $qb
+            ->andWhere('m.empresa = :empresa')
+            ->andWhere($qb->expr()->notIn('m.id', $sub->getDQL()))
+            ->setParameter('empresa', $empresa)
+            ->setParameter('tipoUsuario', $tipoUsuario)
+            ->orderBy('m.nombre', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     // /**
     //  * @return ModuloPer[] Returns an array of ModuloPer objects
     //  */

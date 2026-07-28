@@ -45,7 +45,6 @@ class ConsultasRepository
             ->join('cm.materia', 'm')
             ->join('a.abogado', 'cerrador')
             ->join('c.tramitador', 'tramitador')
-            ->join('c.cliente', 'cli')
             ->leftJoin('c.contratoAnexos', 'ca')
             ->leftJoin('c.cliente', 'cli')
             ->andWhere('c.fechaDesiste IS NULL')

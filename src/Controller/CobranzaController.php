@@ -467,12 +467,11 @@ class CobranzaController extends AbstractController
      */
     public function indexIncumplimiento(ContratoRepository $contratoRepository, 
                         VwCuotaPendienteRepository $cuotaRepository,
-                        ConfiguracionRepository $configuracionRepository,
                         PaginatorInterface $paginator,
                         ModuloPerRepository $moduloPerRepository,
                         Request $request,
                         CuentaRepository $cuentaRepository,
-                        VwContratoRepository $vwContratoRepository,
+                        
                         VencimientoRepository $vencimientoRepository,
                         EquipoTrabajoVencimientoRepository $equipoTrabajoVencimientoRepository,
                         EquipoTrabajoUsuarioRepository $equipoTrabajoUsuarioRepository): Response
@@ -510,8 +509,7 @@ class CobranzaController extends AbstractController
             $equipoTrabajovencimientos=$equipoTrabajoVencimientoRepository->findBy(['equipoTrabajo'=>$equipoTrabajoUsuario->getEquipoTrabajo()->getId()]);
             $vencimientosMap = array_map(function(EquipoTrabajoVencimiento $etv) {
                 return $etv->getVencimiento()->getId();
-            }, $equipoTrabajovencimientos);
-            
+            }, $equipoTrabajovencimientos);            
             $status=$vencimientosMap[0];
             $vencimientos=$vencimientoRepository->findBy(['empresa'=>$user->getEmpresaActual(),'id'=>$vencimientosMap,'soloPorAdmin'=>false],["valMin"=>'ASC']);
         }else{
@@ -616,6 +614,8 @@ class CobranzaController extends AbstractController
                 }else{
                     $fecha.="$and co.idLote is null ";
                 }
+                
+                $fecha.="and c.vencimiento in (".implode(",",$vencimientosMap).") ";
                 
                 $query=$cuotaRepository->findVencimientoIncumplimiento(null,null,null,$filtro,null,true,$fecha,true,true,$status);
                 $companias=$cuentaRepository->findByPers(null,$user->getEmpresaActual());

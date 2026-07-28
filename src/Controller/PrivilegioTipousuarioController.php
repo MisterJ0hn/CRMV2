@@ -32,7 +32,7 @@ class PrivilegioTipousuarioController extends AbstractController
     {
         $this->denyAccessUnlessGranted('view','privilegio_tipousuario');
         $user=$this->getUser();
-        $modulos= $moduloRepository->findBy(['empresa'=>$user->getEmpresaActual()]);
+        $modulos= $moduloRepository->findDisponiblesPorTipoUsuario($user->getEmpresaActual(),$usuarioTipo->getId());
         $acciones=$accionRepository->findBy(['empresa'=>$user->getEmpresaActual()]);
         return $this->render('privilegio_tipousuario/index.html.twig', [
             'privilegio_tipousuarios' => $privilegioTipousuarioRepository->findByEmpresa($user->getEmpresaActual(),$usuarioTipo->getId()),
