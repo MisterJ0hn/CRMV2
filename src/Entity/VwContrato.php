@@ -27,7 +27,10 @@ class VwContrato
     private $nombre;
 
     /**
-     * @ORM\Column(type="string", length=255,nullable=true)
+     * La vista vw_contrato expone cli.correo (cifrado en la tabla cliente), así que
+     * aquí hay que descifrarlo al leer.
+     *
+     * @ORM\Column(type="encrypted_string", length=255,nullable=true)
      */
     private $email;
 

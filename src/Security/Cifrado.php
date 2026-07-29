@@ -4,7 +4,7 @@ namespace App\Security;
 
 /**
  * Utilidad estática de cifrado/hash para datos sensibles de Cliente (rut, teléfono,
- * dirección, clave única).
+ * correo, dirección, clave única).
  *
  * Es estática (no un servicio inyectable) porque los tipos custom de Doctrine
  * (ver App\Doctrine\EncryptedStringType) son instanciados por el propio Doctrine,
@@ -126,6 +126,8 @@ class Cifrado
                 return $valor;
             case 'telefono':
                 return preg_replace('/\D+/', '', $valor);
+            case 'correo':
+                return mb_strtolower(trim($valor));
             default:
                 return trim($valor);
         }

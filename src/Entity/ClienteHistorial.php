@@ -38,7 +38,7 @@ class ClienteHistorial
     private $rut;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="encrypted_string", length=255)
      */
     private $correo;
 

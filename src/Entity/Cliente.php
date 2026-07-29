@@ -29,7 +29,7 @@ class Cliente
     private $nombre;
 
     /**
-     * rut, telefono, telefonoRecado, direccion y claveUnica se guardan cifrados
+     * rut, telefono, telefonoRecado, correo, direccion y claveUnica se guardan cifrados
      * (AES-256-GCM, ver App\Doctrine\EncryptedStringType / App\Security\Cifrado).
      * Los getters/setters siguen trabajando en texto plano de forma transparente.
      *
@@ -47,9 +47,18 @@ class Cliente
     private $rutHash;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="encrypted_string", length=255)
      */
     private $correo;
+
+    /**
+     * Hash determinístico (HMAC-SHA256) del correo, normalizado a minúsculas.
+     * Como la columna correo queda cifrada, la búsqueda por correo pasa a ser
+     * por igualdad exacta (ya no admite coincidencia parcial tipo LIKE).
+     *
+     * @ORM\Column(type="string", length=64, nullable=true)
+     */
+    private $correoHash;
 
     /**
      * @ORM\Column(type="encrypted_string", length=255)
@@ -271,13 +280,18 @@ class Cliente
         return $this->telefonoHash;
     }
 
+    public function getCorreoHash(): ?string
+    {
+        return $this->correoHash;
+    }
+
     public function getTelefonoRecadoHash(): ?string
     {
         return $this->telefonoRecadoHash;
     }
 
     /**
-     * Calcula los hashes de búsqueda (rutHash, telefonoHash, telefonoRecadoHash) al
+     * Calcula los hashes de búsqueda (rutHash, telefonoHash, telefonoRecadoHash, correoHash) al
      * crear un Cliente nuevo. En este punto del ciclo de vida de Doctrine las
      * propiedades aún son texto plano; el cifrado de las columnas ocurre después,
      * a nivel de EncryptedStringType.
@@ -289,6 +303,7 @@ class Cliente
         $this->rutHash = Cifrado::hash($this->rut, 'rut');
         $this->telefonoHash = Cifrado::hash($this->telefono, 'telefono');
         $this->telefonoRecadoHash = Cifrado::hash($this->telefonoRecado, 'telefono');
+        $this->correoHash = Cifrado::hash($this->correo, 'correo');
     }
 
     /**
@@ -305,6 +320,7 @@ class Cliente
         $rutHash = Cifrado::hash($this->rut, 'rut');
         $telefonoHash = Cifrado::hash($this->telefono, 'telefono');
         $telefonoRecadoHash = Cifrado::hash($this->telefonoRecado, 'telefono');
+        $correoHash = Cifrado::hash($this->correo, 'correo');
 
         if ($rutHash !== $this->rutHash) {
             $this->rutHash = $rutHash;
@@ -319,6 +335,11 @@ class Cliente
         if ($telefonoRecadoHash !== $this->telefonoRecadoHash) {
             $this->telefonoRecadoHash = $telefonoRecadoHash;
             $event->setNewValue('telefonoRecadoHash', $telefonoRecadoHash);
+        }
+
+        if ($correoHash !== $this->correoHash) {
+            $this->correoHash = $correoHash;
+            $event->setNewValue('correoHash', $correoHash);
         }
     }
 }

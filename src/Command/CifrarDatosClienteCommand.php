@@ -12,19 +12,21 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 /**
  * Backfill único: cifra (AES-256-GCM) los valores de rut, telefono, telefono_recado,
- * direccion y clave_unica que hoy están en texto plano en "cliente" y "cliente_historial",
- * y calcula rut_hash/telefono_hash/telefono_recado_hash en "cliente".
+ * correo, direccion y clave_unica que hoy están en texto plano en "cliente" y
+ * "cliente_historial", y calcula rut_hash/telefono_hash/telefono_recado_hash/correo_hash
+ * en "cliente".
  *
  * Usa la conexión DBAL directamente (no el ORM/EntityManager de Cliente) para no
  * cargar miles de entidades en memoria y para poder decidir fila por fila si el
  * valor ya está cifrado (idempotente: correrlo dos veces no vuelve a cifrar nada).
  *
- * Requiere que la migración Version20260723120000 ya se haya ejecutado.
+ * Requiere que las migraciones Version20260723120000 y Version20260729120000 (correo)
+ * ya se hayan ejecutado.
  */
 class CifrarDatosClienteCommand extends Command
 {
     protected static $defaultName        = 'app:cifrar-datos-cliente';
-    protected static $defaultDescription = 'Cifra (backfill) rut/telefono/telefono_recado/direccion/clave_unica existentes en cliente y cliente_historial';
+    protected static $defaultDescription = 'Cifra (backfill) rut/telefono/telefono_recado/correo/direccion/clave_unica existentes en cliente y cliente_historial';
 
     private Connection $conexion;
 
@@ -56,8 +58,8 @@ class CifrarDatosClienteCommand extends Command
     private function procesarCliente(SymfonyStyle $io): int
     {
         $filas = $this->conexion->fetchAllAssociative(
-            'SELECT id, rut, telefono, telefono_recado, direccion, clave_unica,
-                    rut_hash, telefono_hash, telefono_recado_hash
+            'SELECT id, rut, telefono, telefono_recado, correo, direccion, clave_unica,
+                    rut_hash, telefono_hash, telefono_recado_hash, correo_hash
              FROM cliente'
         );
 
@@ -69,16 +71,19 @@ class CifrarDatosClienteCommand extends Command
             $rutPlano = $this->obtenerPlano($fila['rut']);
             $telefonoPlano = $this->obtenerPlano($fila['telefono']);
             $telefonoRecadoPlano = $this->obtenerPlano($fila['telefono_recado']);
+            $correoPlano = $this->obtenerPlano($fila['correo']);
 
             $datos = [
                 'rut' => Cifrado::pareceCifrado($fila['rut']) ? null : Cifrado::encrypt($rutPlano),
                 'telefono' => Cifrado::pareceCifrado($fila['telefono']) ? null : Cifrado::encrypt($telefonoPlano),
                 'telefono_recado' => Cifrado::pareceCifrado($fila['telefono_recado']) ? null : Cifrado::encrypt($telefonoRecadoPlano),
+                'correo' => Cifrado::pareceCifrado($fila['correo']) ? null : Cifrado::encrypt($correoPlano),
                 'direccion' => Cifrado::pareceCifrado($fila['direccion']) ? null : Cifrado::encrypt($this->obtenerPlano($fila['direccion'])),
                 'clave_unica' => Cifrado::pareceCifrado($fila['clave_unica']) ? null : Cifrado::encrypt($this->obtenerPlano($fila['clave_unica'])),
                 'rut_hash' => $fila['rut_hash'] ?? Cifrado::hash($rutPlano, 'rut'),
                 'telefono_hash' => $fila['telefono_hash'] ?? Cifrado::hash($telefonoPlano, 'telefono'),
                 'telefono_recado_hash' => $fila['telefono_recado_hash'] ?? Cifrado::hash($telefonoRecadoPlano, 'telefono'),
+                'correo_hash' => $fila['correo_hash'] ?? Cifrado::hash($correoPlano, 'correo'),
             ];
 
             $datos = array_filter($datos, static fn ($valor) => $valor !== null);
@@ -100,7 +105,7 @@ class CifrarDatosClienteCommand extends Command
     private function procesarClienteHistorial(SymfonyStyle $io): int
     {
         $filas = $this->conexion->fetchAllAssociative(
-            'SELECT id, rut, telefono, telefono_recado, direccion, clave_unica FROM cliente_historial'
+            'SELECT id, rut, telefono, telefono_recado, correo, direccion, clave_unica FROM cliente_historial'
         );
 
         $io->text(sprintf('cliente_historial: %d filas encontradas.', count($filas)));
@@ -112,6 +117,7 @@ class CifrarDatosClienteCommand extends Command
                 'rut' => Cifrado::pareceCifrado($fila['rut']) ? null : Cifrado::encrypt($this->obtenerPlano($fila['rut'])),
                 'telefono' => Cifrado::pareceCifrado($fila['telefono']) ? null : Cifrado::encrypt($this->obtenerPlano($fila['telefono'])),
                 'telefono_recado' => Cifrado::pareceCifrado($fila['telefono_recado']) ? null : Cifrado::encrypt($this->obtenerPlano($fila['telefono_recado'])),
+                'correo' => Cifrado::pareceCifrado($fila['correo']) ? null : Cifrado::encrypt($this->obtenerPlano($fila['correo'])),
                 'direccion' => Cifrado::pareceCifrado($fila['direccion']) ? null : Cifrado::encrypt($this->obtenerPlano($fila['direccion'])),
                 'clave_unica' => Cifrado::pareceCifrado($fila['clave_unica']) ? null : Cifrado::encrypt($this->obtenerPlano($fila['clave_unica'])),
             ];
