@@ -51,7 +51,14 @@
     {% if mostrarMensaje=="SI" %}
         
 
-        <div class="card bg-light">
+        <div class="card bg-light collapsed-card">
+             <div class="card-header">
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
             <div class="card-body">
                 <small >Clientes morosos menor o igual a {{vencimientoSeleccionado.valMax}} dias con 3 o más cuotas pagadas ({{vencimientoSeleccionado.nombre}}) </small>
             </div>
