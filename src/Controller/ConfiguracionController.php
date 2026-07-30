@@ -6,6 +6,7 @@ use App\Entity\Configuracion;
 use App\Form\ConfiguracionType;
 use App\Repository\ConfiguracionRepository;
 use App\Repository\ModuloPerRepository;
+use Doctrine\DBAL\Types\TimeType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -37,6 +38,16 @@ class ConfiguracionController extends AbstractController
         $form->add('diasMorosidadPat');
         $form->add('crmApiKey');
         $form->add('crmSecretKey');
+        $form->add('jornadaCerradorStart',TimeType::class,[
+            'placeholder' => [
+                'hour' => 'Hora', 'minute' => 'Minuto', 'second' => 'Segundo',
+            ],
+        ]);
+        $form->add('jornadaCerradorEnd',TimeType::class,[
+            'placeholder' => [
+                'hour' => 'Hora', 'minute' => 'Minuto', 'second' => 'Segundo',
+            ],
+        ]);
         
         
         

@@ -10,6 +10,7 @@ use App\Entity\UsuarioStatus;
 use App\Entity\Privilegio;
 use App\Entity\PrivilegioTipousuario;
 use App\Form\UsuarioType;
+use App\Repository\ConfiguracionRepository;
 use App\Repository\UsuarioRepository;
 use App\Repository\UsuarioTipoRepository;
 use App\Repository\ModuloPerRepository;
@@ -74,15 +75,18 @@ class AbogadosController extends AbstractController
                         PrivilegioTipousuarioRepository $privilegioTipousuarioRepository,
                         PrivilegioRepository $privilegioRepository,
                         UsuarioRepository $usuarioRepository,
-                        UsuarioNoDisponibleRepository $suarioNoDisponibleRepository): Response
+                        UsuarioNoDisponibleRepository $suarioNoDisponibleRepository,
+                        ConfiguracionRepository $configuracionRepository): Response
     {
         $this->denyAccessUnlessGranted('create','abogados');
         $user=$this->getUser();
         $pagina=$moduloPerRepository->findOneByName('abogados',$user->getEmpresaActual());
         $usuario = new Usuario();
         $usuario->setEstado(1);
+        $usuario->setColor("#17a2b8");
         $empresa=$this->getDoctrine()->getRepository(Empresa::class)->find($user->getEmpresaActual());
-        
+        $configuracion=$configuracionRepository->find(1);
+
         $cuentas=$empresa->getCuentas();
         $choices= array();
         
@@ -91,6 +95,23 @@ class AbogadosController extends AbstractController
         $usuario->setFechaActivacion(new \DateTime(date('Y-m-d H:i:s')));
         //$usuario->setFechaIngreso(new \DateTime(date('Y-m-d H:i:s')));
 
+        $usuario->setLunesStart($configuracion->getJornadaCerradorStart());
+        $usuario->setMartesStart($configuracion->getJornadaCerradorStart());
+        $usuario->setMiercolesStart($configuracion->getJornadaCerradorStart());
+        $usuario->setJuevesStart($configuracion->getJornadaCerradorStart());
+        $usuario->setViernesStart($configuracion->getJornadaCerradorStart());
+        $usuario->setSabadoStart($configuracion->getJornadaCerradorStart());
+        $usuario->setDomingoStart($configuracion->getJornadaCerradorStart());
+        
+        $usuario->setLunesEnd($configuracion->getJornadaCerradorEnd());
+        $usuario->setMartesEnd($configuracion->getJornadaCerradorEnd());
+        $usuario->setMiercolesEnd($configuracion->getJornadaCerradorEnd());
+        $usuario->setJuevesEnd($configuracion->getJornadaCerradorEnd());
+        $usuario->setViernesEnd($configuracion->getJornadaCerradorEnd());
+        $usuario->setSabadoEnd($configuracion->getJornadaCerradorEnd());
+        $usuario->setDomingoEnd($configuracion->getJornadaCerradorEnd());
+        
+        
         $form = $this->createForm(UsuarioType::class, $usuario);
         $form->add('whatsapp',TextType::class);
         $form->add('color',TextType::class);

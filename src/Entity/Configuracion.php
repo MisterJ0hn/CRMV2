@@ -176,6 +176,15 @@ class Configuracion
      */
     private $aderesoApiKey;
 
+    /**
+     * @ORM\Column(type="time", nullable=true)
+     */
+    private $jornadaCerradorStart;
+
+    /**
+     * @ORM\Column(type="time", nullable=true)
+     */
+    private $jornadaCerradorEnd;
 
     public function getId(): ?int
     {
@@ -560,5 +569,28 @@ class Configuracion
     public function getAderesoApiKey(): ?string
     {
         return $this->aderesoApiKey;
+    }
+    public function getJornadaCerradorStart(): ?\DateTimeInterface
+    {
+        return $this->jornadaCerradorStart;
+    }
+
+    public function setJornadaCerradorStart(?\DateTimeInterface $jornadaCerradorStart): self
+    {
+        $this->jornadaCerradorStart = $jornadaCerradorStart;
+
+        return $this;
+    }
+
+    public function getJornadaCerradorEnd(): ?\DateTimeInterface
+    {
+        return $this->jornadaCerradorEnd;
+    }
+
+    public function setJornadaCerradorEnd(?\DateTimeInterface $jornadaCerradorEnd): self
+    {
+        $this->jornadaCerradorEnd = $jornadaCerradorEnd;
+
+        return $this;
     }
 }

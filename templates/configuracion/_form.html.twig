@@ -53,6 +53,20 @@
     <tr>
     <td><label>Secret KEY</label></td><td>{{form_row(form.crmSecretKey,{'label':false,'attr':{'class':'form-control'}})}}</td>
     </tr>
+    <tr>
+    <th ><h3>Jornada laboral Cerradores</h3></th>
+    <th>
+        <div class="row">
+            <div class="col-6">Inicio</div>
+            <div class="col-6">Fin</div>
+        </div>
+        <div class="row">
+            <div class="col-6">{{form_row(form.jornadaCerradorStart,{'label':false,'attr':{'class':'form-control'}})}}</div>
+            <div class="col-6">{{form_row(form.jornadaCerradorEnd,{'label':false,'attr':{'class':'form-control'}})}}</div>
+        </div>
+    
+    </th>
+    </tr>
   
     </table>
 </div>

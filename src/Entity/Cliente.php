@@ -308,38 +308,31 @@ class Cliente
 
     /**
      * Recalcula los hashes de búsqueda al actualizar. PreUpdate es especial en
-     * Doctrine: asignar una propiedad directamente en este callback NO alcanza a
-     * incluirse en el UPDATE, porque el changeset ya se calculó antes de que este
-     * evento se dispare — hay que registrar el valor nuevo explícitamente con
-     * PreUpdateEventArgs::setNewValue().
+     * Doctrine: el changeset ya se calculó antes de que este evento se dispare, así
+     * que asignar una propiedad acá no alcanza a incluirse en el UPDATE.
+     *
+     * Tampoco sirve PreUpdateEventArgs::setNewValue(): ese método solo puede cambiar
+     * el valor de un campo que YA está en el changeset, y un hash que no cambió (o
+     * que aún es NULL en la base) no está ahí — de hecho lanza
+     * "Field ... is not a valid field of the entity ... in PreUpdateEventArgs".
+     *
+     * La forma correcta de agregar campos al UPDATE desde PreUpdate es asignarlos y
+     * pedirle a la UnitOfWork que recalcule el changeset de esta entidad, que se
+     * fusiona con el que ya existía.
      *
      * @ORM\PreUpdate()
      */
     public function calcularHashesAlActualizar(PreUpdateEventArgs $event): void
     {
-        $rutHash = Cifrado::hash($this->rut, 'rut');
-        $telefonoHash = Cifrado::hash($this->telefono, 'telefono');
-        $telefonoRecadoHash = Cifrado::hash($this->telefonoRecado, 'telefono');
-        $correoHash = Cifrado::hash($this->correo, 'correo');
+        $this->rutHash = Cifrado::hash($this->rut, 'rut');
+        $this->telefonoHash = Cifrado::hash($this->telefono, 'telefono');
+        $this->telefonoRecadoHash = Cifrado::hash($this->telefonoRecado, 'telefono');
+        $this->correoHash = Cifrado::hash($this->correo, 'correo');
 
-        if ($rutHash !== $this->rutHash) {
-            $this->rutHash = $rutHash;
-            $event->setNewValue('rutHash', $rutHash);
-        }
-
-        if ($telefonoHash !== $this->telefonoHash) {
-            $this->telefonoHash = $telefonoHash;
-            $event->setNewValue('telefonoHash', $telefonoHash);
-        }
-
-        if ($telefonoRecadoHash !== $this->telefonoRecadoHash) {
-            $this->telefonoRecadoHash = $telefonoRecadoHash;
-            $event->setNewValue('telefonoRecadoHash', $telefonoRecadoHash);
-        }
-
-        if ($correoHash !== $this->correoHash) {
-            $this->correoHash = $correoHash;
-            $event->setNewValue('correoHash', $correoHash);
-        }
+        $em = $event->getEntityManager();
+        $em->getUnitOfWork()->recomputeSingleEntityChangeSet(
+            $em->getClassMetadata(self::class),
+            $this
+        );
     }
 }
