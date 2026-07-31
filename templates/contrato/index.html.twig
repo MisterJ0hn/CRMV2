@@ -333,6 +333,64 @@
             });
         }
 
+        // Muestra/oculta bajo cada campo del modal de observación el historial de
+        // cambios de ESE campo, cargado por ajax la primera vez que se abre.
+        $(document).on('click', '.btn-historial-campo', function(){
+            var boton = $(this);
+            var contenedor = $(boton.attr('data-historial'));
+
+            if (contenedor.hasClass('show')) {
+                contenedor.collapse('hide');
+                return;
+            }
+
+            if (!contenedor.data('cargado')) {
+                contenedor.html('<small class="text-muted">Cargando...</small>');
+                $.ajax({
+                    url: boton.attr('data-url'),
+                    type: 'get',
+                    dataType: 'html',
+                    cache: false,
+                    success: function(data) {
+                        contenedor.html(data).data('cargado', true);
+                    },
+                    error: function() {
+                        contenedor.html('<small class="text-danger">No fue posible cargar el historial.</small>');
+                    }
+                });
+            }
+
+            contenedor.collapse('show');
+        });
+
+        // Mientras se escribe, avisa si el valor ingresado ya quedó registrado antes
+        // en el historial de ese mismo campo (los valores vienen en data-valores-historial).
+        $(document).on('keyup change', '.campo-con-historial', function(){
+            var campo = $(this);
+            var valores = [];
+
+            try {
+                valores = JSON.parse(campo.attr('data-valores-historial') || '[]');
+            } catch (e) {
+                valores = [];
+            }
+
+            var actual = $.trim(campo.val()).toLowerCase();
+            var repetido = false;
+
+            if (actual !== '') {
+                for (var i = 0; i < valores.length; i++) {
+                    if ($.trim(String(valores[i])).toLowerCase() === actual) {
+                        repetido = true;
+                        break;
+                    }
+                }
+            }
+
+            campo.toggleClass('border-warning', repetido);
+            campo.closest('.input-group').nextAll('.aviso-valor-repetido').first().toggleClass('d-none', !repetido);
+        });
+
         $(document).on('submit', '.form-observacion', function(e){
             e.preventDefault();
             var form = $(this);

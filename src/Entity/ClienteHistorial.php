@@ -25,7 +25,10 @@ class ClienteHistorial
     private $cliente;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * Todos los campos de datos son nullable: en cada modificación se guarda solo
+     * el dato que cambió (con su valor anterior) y los demás quedan en null.
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $nombre;
 
@@ -33,22 +36,22 @@ class ClienteHistorial
      * Cifrado (AES-256-GCM, ver App\Doctrine\EncryptedStringType). Sin columna hash:
      * esta tabla es solo un historial de auditoría, no se busca por estos campos.
      *
-     * @ORM\Column(type="encrypted_string", length=255)
+     * @ORM\Column(type="encrypted_string", length=255, nullable=true)
      */
     private $rut;
 
     /**
-     * @ORM\Column(type="encrypted_string", length=255)
+     * @ORM\Column(type="encrypted_string", length=255, nullable=true)
      */
     private $correo;
 
     /**
-     * @ORM\Column(type="encrypted_string", length=255)
+     * @ORM\Column(type="encrypted_string", length=255, nullable=true)
      */
     private $telefono;
 
     /**
-     * @ORM\Column(type="string", length=20)
+     * @ORM\Column(type="string", length=20, nullable=true)
      */
     private $sexo;
 
@@ -72,7 +75,7 @@ class ClienteHistorial
      */
     private $direccion;
      /**
-     * @ORM\Column(type="encrypted_string", length=255)
+     * @ORM\Column(type="encrypted_string", length=255, nullable=true)
      */
     private $telefonoRecado;
 

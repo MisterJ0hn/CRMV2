@@ -50,6 +50,7 @@ use App\Repository\AgendaStatusRepository;
 use App\Repository\AnexoProcesalRepository;
 use App\Repository\CarteraRepository;
 use App\Repository\CausaObservacionRepository;
+use App\Repository\ClienteHistorialRepository;
 use App\Repository\ModuloPerRepository;
 use App\Repository\CuotaRepository;
 use App\Repository\ConfiguracionRepository;
@@ -1317,16 +1318,43 @@ class ContratoController extends AbstractController
      */
     public function observacionModal(Contrato $contrato,
                                     ContratoObservacionRepository $contratoObservacionRepository,
-                                    CausaObservacionRepository $causaObservacionRepository): Response
+                                    CausaObservacionRepository $causaObservacionRepository,
+                                    ClienteHistorialRepository $clienteHistorialRepository): Response
     {
         $this->denyAccessUnlessGranted('edit','modificar_contrato');
 
         $tieneObservaciones = $contratoObservacionRepository->count(['contrato'=>$contrato]) > 0
             || $causaObservacionRepository->count(['contrato'=>$contrato]) > 0;
 
+        $cliente = $contrato->getCliente();
+
         return $this->render('contrato/_observacion.html.twig', [
             'contrato' => $contrato,
             'tieneObservaciones' => $tieneObservaciones,
+            // Valores ya usados antes en cada campo, para avisar mientras se escribe.
+            'valoresHistorial' => $cliente ? $clienteHistorialRepository->valoresPorCampo($cliente) : [],
+        ]);
+    }
+
+    /**
+     * @Route("/{id}/historial_campo/{campo}", name="contrato_historial_campo", methods={"GET"})
+     */
+    public function historialCampo(Contrato $contrato,
+                                    string $campo,
+                                    ClienteHistorialRepository $clienteHistorialRepository): Response
+    {
+        $this->denyAccessUnlessGranted('edit','modificar_contrato');
+
+        if (!isset(ClienteHistorialRepository::CAMPOS_CONSULTABLES[$campo])) {
+            throw $this->createNotFoundException('Campo de historial no válido.');
+        }
+
+        $cliente = $contrato->getCliente();
+
+        return $this->render('contrato/_historial_campo.html.twig', [
+            'etiqueta' => ClienteHistorialRepository::CAMPOS_CONSULTABLES[$campo],
+            'campo' => $campo,
+            'historial' => $cliente ? $clienteHistorialRepository->findHistorialCampo($cliente, $campo) : [],
         ]);
     }
 
@@ -1353,38 +1381,51 @@ class ContratoController extends AbstractController
         }
 
         $txtNombre = trim((string) $request->request->get('txtNombre'));
-        $txtRut = trim((string) $request->request->get('txtRut'));
         $txtEmail = trim((string) $request->request->get('txtEmail'));
         $txtTelefono = trim((string) $request->request->get('txtTelefono'));
         $txtDireccion = trim((string) $request->request->get('txtDireccion'));
 
-        if ($txtNombre === '' || $txtRut === '' || $txtEmail === '' || $txtTelefono === '' || $txtDireccion === '') {
-            return new JsonResponse(['success' => false, 'message' => 'Debe completar nombre, rut, correo, teléfono y dirección.'], 400);
+        if ($txtNombre === '' || $txtEmail === '' || $txtTelefono === '' || $txtDireccion === '') {
+            return new JsonResponse(['success' => false, 'message' => 'Debe completar nombre, correo, teléfono y dirección.'], 400);
         }
 
+        // En el historial se guarda solo el dato que cambia: los campos que no se
+        // modificaron quedan en null en la fila de cliente_historial, y si no cambió
+        // nada no se genera fila.
         $clienteHistorial = new ClienteHistorial();
-        $clienteHistorial->setCliente($cliente);
-        $clienteHistorial->setNombre($cliente->getNombre());
-        $clienteHistorial->setRut($cliente->getRut());
-        $clienteHistorial->setCorreo($cliente->getCorreo());
-        $clienteHistorial->setTelefono($cliente->getTelefono());
-        $clienteHistorial->setSexo($cliente->getSexo());
-        $clienteHistorial->setClaveUnica($cliente->getClaveUnica());
-        $clienteHistorial->setTelefonoRecado($cliente->getTelefonoRecado());
-        $clienteHistorial->setDireccion($cliente->getDireccion());
-        $clienteHistorial->setFechaModificacion(new \DateTime());
-        $clienteHistorial->setUsuarioModificacion($user->getNombre());
-        $entityManager->persist($clienteHistorial);
+        $huboCambios = false;
 
-        $cliente->setNombre($txtNombre);
-        $cliente->setRut($txtRut);
-        $cliente->setTelefono($txtTelefono);
-        $cliente->setCorreo($txtEmail);
-        $cliente->setSexo($request->request->get('cboSexo'));
-        $cliente->setClaveUnica($request->request->get('txtClaveUnica'));
-        $cliente->setTelefonoRecado($request->request->get('txtTelefonoRecado'));
-        $cliente->setDireccion($txtDireccion);
-        $entityManager->persist($cliente);
+        if ($txtNombre !== (string) $cliente->getNombre()) {
+            $clienteHistorial->setNombre($cliente->getNombre());
+            $cliente->setNombre($txtNombre);
+            $huboCambios = true;
+        }
+
+        if ($txtEmail !== (string) $cliente->getCorreo()) {
+            $clienteHistorial->setCorreo($cliente->getCorreo());
+            $cliente->setCorreo($txtEmail);
+            $huboCambios = true;
+        }
+
+        if ($txtTelefono !== (string) $cliente->getTelefono()) {
+            $clienteHistorial->setTelefono($cliente->getTelefono());
+            $cliente->setTelefono($txtTelefono);
+            $huboCambios = true;
+        }
+
+        if ($txtDireccion !== (string) $cliente->getDireccion()) {
+            $clienteHistorial->setDireccion($cliente->getDireccion());
+            $cliente->setDireccion($txtDireccion);
+            $huboCambios = true;
+        }
+
+        if ($huboCambios) {
+            $clienteHistorial->setCliente($cliente);
+            $clienteHistorial->setFechaModificacion(new \DateTime());
+            $clienteHistorial->setUsuarioModificacion($user->getNombre());
+            $entityManager->persist($clienteHistorial);
+            $entityManager->persist($cliente);
+        }
 
         if (!$tieneObservaciones) {
 

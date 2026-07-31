@@ -55,7 +55,7 @@ class Adereso{
             $body='{
                 "account": "56964609256",
                 "phone": "'. str_replace("+","",$agenda->getTelefonoCliente()).'",
-                "department_id": null,
+                "department_id": 4236,
                 "agent_email": "'.$agenda->getAgendador()->getCorreo().'",
                 "should_reply_bot": false,
                 "second_delay_minutes": 2,
@@ -129,7 +129,7 @@ class Adereso{
             $body='{
                     "agent_email": "'.$agenda->getAbogado()->getCorreo().'",
                     "include_manual_assignment": true,
-                    "department_id": null
+                    "department_id": 4237
                     }';
             $log->setRequest($body);
             $response = $client->request('POST',$this->url.'/v2/ticket/'.$agenda->getAderesoTicketId().'/reassign/', 

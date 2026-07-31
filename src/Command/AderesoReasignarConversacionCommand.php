@@ -44,7 +44,7 @@ class AderesoReasignarConversacionCommand extends Command
 
 
         $io->note(sprintf('Enviando a Adereso'));        
-        $respuesta  = $adereso->iniciar_conversacion($agenda->getId());
+        $respuesta  = $adereso->reasingar_ticket($agenda->getId());
 
         $ticket = json_decode($respuesta,true);
         if($ticket['status_code']!=null){

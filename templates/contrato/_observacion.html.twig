@@ -3,47 +3,75 @@
     <div class="row">
         <div class="col-sm-12">
             <small class="text-muted">Folio</small>
-            <p>{{contrato.folio}}</p>
+            <p><strong>{{contrato.folio}}</strong></p>
         </div>
         <div class="col-sm-4">
             <small class="text-muted">Nombre *</small>
-            <input type="text" name="txtNombre" class="form-control" value="{{contrato.cliente.nombre}}">
+            <div class="input-group">
+                <input type="text" name="txtNombre" class="form-control campo-con-historial" value="{{contrato.cliente.nombre}}"
+                       data-valores-historial="{{ (valoresHistorial.nombre|default([]))|json_encode|e('html_attr') }}">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-outline-secondary btn-historial-campo"
+                            title="Ver historial de Nombre"
+                            data-historial="#historialNombre"
+                            data-url="{{path('contrato_historial_campo',{'id':contrato.id,'campo':'nombre'})}}">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </div>
+            <small class="text-danger aviso-valor-repetido d-none">Este campo ya se ha registrado con este valor.</small>
+            <div class="collapse mt-1" id="historialNombre"></div>
         </div>
-        <div class="col-sm-4">
-            <small class="text-muted">Rut *</small>
-            <input type="text" name="txtRut" class="form-control format-rut" value="{{contrato.cliente.rut}}">
-        </div>
-        
         <div class="col-sm-4">
             <small class="text-muted">Email *</small>
-            <input type="email" name="txtEmail" class="form-control" value="{{contrato.cliente.correo}}">
-        </div>
-        <div class="col-sm-4">
-            <small class="text-muted">Sexo *</small>
-            <select name="cboSexo" class="form-control">
-                <option value=""></option>
-                <option value="Masculino" {% if contrato.cliente.sexo == "Masculino" %}selected{% endif %}>Masculino</option>
-                <option value="Femenino" {% if contrato.cliente.sexo == "Femenino" %}selected{% endif %}>Femenino</option>
-            </select>
+            <div class="input-group">
+                <input type="email" name="txtEmail" class="form-control campo-con-historial" value="{{contrato.cliente.correo}}"
+                       data-valores-historial="{{ (valoresHistorial.correo|default([]))|json_encode|e('html_attr') }}">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-outline-secondary btn-historial-campo"
+                            title="Ver historial de Email"
+                            data-historial="#historialCorreo"
+                            data-url="{{path('contrato_historial_campo',{'id':contrato.id,'campo':'correo'})}}">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </div>
+            <small class="text-danger aviso-valor-repetido d-none">Este campo ya se ha registrado con este valor.</small>
+            <div class="collapse mt-1" id="historialCorreo"></div>
         </div>
         <div class="col-sm-4">
             <small class="text-muted">Teléfono *</small>
-            <input type="text" name="txtTelefono" class="form-control" value="{{contrato.cliente.telefono}}">
+            <div class="input-group">
+                <input type="text" name="txtTelefono" class="form-control campo-con-historial" value="{{contrato.cliente.telefono}}"
+                       data-valores-historial="{{ (valoresHistorial.telefono|default([]))|json_encode|e('html_attr') }}">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-outline-secondary btn-historial-campo"
+                            title="Ver historial de Teléfono"
+                            data-historial="#historialTelefono"
+                            data-url="{{path('contrato_historial_campo',{'id':contrato.id,'campo':'telefono'})}}">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </div>
+            <small class="text-danger aviso-valor-repetido d-none">Este campo ya se ha registrado con este valor.</small>
+            <div class="collapse mt-1" id="historialTelefono"></div>
         </div>
-        <div class="col-sm-4">
-            <small class="text-muted">Teléfono Recado</small>
-            <input type="text" name="txtTelefonoRecado" class="form-control" value="{{contrato.cliente.telefonoRecado}}">
-        </div>
-        
-        
-        
-        <div class="col-sm-8">
+        <div class="col-sm-12">
             <small class="text-muted">Dirección *</small>
-            <input type="text" name="txtDireccion" class="form-control" value="{{contrato.cliente.direccion}}">
-        </div>
-        <div class="col-sm-4">
-            <small class="text-muted">Clave Única</small>
-            <input type="text" name="txtClaveUnica" class="form-control" value="{{contrato.cliente.claveUnica}}">
+            <div class="input-group">
+                <input type="text" name="txtDireccion" class="form-control campo-con-historial" value="{{contrato.cliente.direccion}}"
+                       data-valores-historial="{{ (valoresHistorial.direccion|default([]))|json_encode|e('html_attr') }}">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-outline-secondary btn-historial-campo"
+                            title="Ver historial de Dirección"
+                            data-historial="#historialDireccion"
+                            data-url="{{path('contrato_historial_campo',{'id':contrato.id,'campo':'direccion'})}}">
+                        <i class="fas fa-history"></i>
+                    </button>
+                </div>
+            </div>
+            <small class="text-danger aviso-valor-repetido d-none">Este campo ya se ha registrado con este valor.</small>
+            <div class="collapse mt-1" id="historialDireccion"></div>
         </div>
         {% if tieneObservaciones %}
             <div class="col-sm-12 mt-2">
