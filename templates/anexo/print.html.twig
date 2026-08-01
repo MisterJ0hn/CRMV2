@@ -14,8 +14,7 @@ oficinas 803-804</strong>, comuna de Providencia, Regi&oacute;n Metropolitana, q
   han celebrado con fecha de hoy, de manera libre y espont&aacute;nea, un anexo de contrato, desglosando su contenido en lo siguiente.</p>
   
   <p align="justify"><strong>PRIMERO:</strong> El cliente contrat&oacute; {{anexo.contrato.agenda.reunion|special_chars|raw}} los Servicios Profesionales con el 
-  Estudio Jur&iacute;dico, el d&iacute;a {{anexo.contrato.fechaCreacion|date("d-m-Y")}}, para que &eacute;ste en su representaci&oacute;n, otorgue Asistencia Jur&iacute;dica respecto de las 
-  siguientes causas.</p>
+  Estudio Jur&iacute;dico, el d&iacute;a {{anexo.contrato.fechaCreacion|date("d-m-Y")}}, para que &eacute;ste en su representaci&oacute;n, otorgue Asistencia Jur&iacute;dica{% if anexo.tipoAnexo==1 %} respecto de las siguientes causas{% endif %}.</p>
   
   {% if anexo.tipoAnexo==1 %}
     
