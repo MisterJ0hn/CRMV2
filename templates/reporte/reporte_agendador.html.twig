@@ -54,7 +54,14 @@
 </section>
 </form>
 
-  <div class="card bg-light">
+  <div class="card bg-light  collapsed-card">
+        <div class="card-header">
+            <div class="card-tools">
+                <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i>
+                </button>
+                <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
         <div class="card-body">
             <small >Cuantos prospectos de los que se cargaron la fecha seleccionada fueron agendados o no calificaron, independiente del día que fue agendado o no calificado. Efectividad = (Agendó / Lead) * 100 </small>
         </div>
@@ -120,7 +127,7 @@
                         <th>{{ suma_total|number_format(0,",",".")}}</th>
                         <th>{{ suma_nocalifica + suma_nocalificaAB|number_format(0,",",".")}}</th>
                         <th>{{ suma_agendado|number_format(0,",",".")}}</th>
-                        <th>{{(suma_agendado/((suma_total))*100)|number_format(0,",",".") }}%</th>
+                        <th>{{suma_total?(suma_agendado/((suma_total))*100)|number_format(0,",","."):0 }}%</th>
                         <!--<th>{{ suma_contrato|number_format(0,",",".")}}</th>-->
                     </tr>
 

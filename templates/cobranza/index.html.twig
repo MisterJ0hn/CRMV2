@@ -74,8 +74,15 @@
     {% endif %}
     </section>
     {% if mostrarMensaje=="SI" %}
-        <div class="card bg-light">
-            <div class="card-body">
+        <div class="card bg-light collapsed-card">
+            <div class="card-header">
+                <div class="card-tools">
+                    <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i>
+                    </button>
+                    <button type="button" class="btn btn-tool" data-card-widget="remove"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="card-body" data-card-widget="remove">
                 <small >Contratos con pagos pendientes desde el día {{vencimientoMin.valMin}}
                 <ul>
                 {% for equipo in equipos %}
@@ -130,7 +137,7 @@
                     <!--<div class="col-sm-12 col-md-2">
                         <input type="text" class="form-control" name="bFecha" id="bFecha"  value="" >
                     </div>-->
-                    <div class="col-sm-12 col-md-1 mt-3">
+                    <div class="col-sm-12 col-md-2 mt-3">
                         <button type="button" class="btn btn-primary buscar mt-3">
                         <i class="fas fa-search"></i>
                         </button>
