@@ -51,7 +51,9 @@ class ContratoRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('c')
             ->leftJoin('c.cliente', 'cli')
+            ->leftJoin('c.agenda','a')
             ->where('cli.rutHash = :hash')
+            ->andWhere('a.status not in (13,15)')
             ->andWhere('c.isFinalizado = false OR c.isFinalizado IS NULL')
             ->setParameter('hash', Cifrado::hash($rut, 'rut'))
             ->orderBy('c.fechaCreacion', 'DESC')

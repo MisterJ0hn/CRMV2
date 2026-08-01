@@ -660,6 +660,37 @@ class CuotaRepository extends ServiceEntityRepository
         return $query->getQuery()
             ->getResult();
     }
+    /**
+     * Cuotas de pago automático (tienen invoiceId en VirtualPos) que están atrasadas
+     * y sin pago —o con pago parcial— en el CRM: la base para cruzarlas contra
+     * VirtualPos y detectar las que allá figuran pagadas.
+     *
+     * @return Cuota[]
+     */
+    public function findCuotasAtrasadasPagoAutomatico($contratoId = null, bool $soloSuscripcionActiva = true): array
+    {
+        $query = $this->createQueryBuilder('c')
+            ->join('c.contrato', 'co')
+            ->where('c.monto > c.pagado or c.pagado is null')
+            ->andWhere('c.anular is null or c.anular = false')
+            ->andWhere('c.invoiceId is not null')
+            ->andWhere('co.suscripcionId is not null')
+            ->andWhere('c.fechaPago < :hoy')
+            ->setParameter('hoy', new \DateTime(date('Y-m-d')))
+            ->orderBy('c.fechaPago', 'ASC');
+
+        if ($soloSuscripcionActiva) {
+            $query->andWhere("co.EstadoSuscripcion = 'ACTIVA'");
+        }
+
+        if ($contratoId) {
+            $query->andWhere('c.contrato = :contrato')
+                ->setParameter('contrato', $contratoId);
+        }
+
+        return $query->getQuery()->getResult();
+    }
+
     // /**
     //  * @return Cuota[] Returns an array of Cuota objects
     //  */
